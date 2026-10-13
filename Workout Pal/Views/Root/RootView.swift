@@ -1,19 +1,19 @@
 import SwiftUI
+import UIKit
 
 struct RootView: View {
-    @State private var selection: AppDestination = .home
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+    @State private var selection: AppDestination? = .home
+
+    private var usesSidebar: Bool {
+        UIDevice.current.userInterfaceIdiom == .pad && horizontalSizeClass == .regular
+    }
 
     var body: some View {
-        TabView(selection: $selection) {
-            ForEach(AppDestination.allCases) { destination in
-                NavigationStack {
-                    DestinationView(destination: destination)
-                }
-                .tabItem {
-                    Label(destination.title, systemImage: destination.symbolName)
-                }
-                .tag(destination)
-            }
+        if usesSidebar {
+            RegularRootView(selection: $selection)
+        } else {
+            CompactRootView(selection: $selection)
         }
     }
 }
