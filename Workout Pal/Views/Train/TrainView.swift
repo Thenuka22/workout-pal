@@ -8,6 +8,7 @@ struct TrainView: View {
             description: Text("Routines and the exercise library will appear here.")
         )
         .navigationTitle("Train")
+        .screenBackground()
     }
 }
 

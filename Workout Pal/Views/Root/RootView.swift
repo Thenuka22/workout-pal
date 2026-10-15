@@ -10,11 +10,14 @@ struct RootView: View {
     }
 
     var body: some View {
-        if usesSidebar {
-            RegularRootView(selection: $selection)
-        } else {
-            CompactRootView(selection: $selection)
+        Group {
+            if usesSidebar {
+                RegularRootView(selection: $selection)
+            } else {
+                CompactRootView(selection: $selection)
+            }
         }
+        .tint(AppColors.accent)
     }
 }
 

@@ -17,6 +17,7 @@ struct ProfileView: View {
             }
         }
         .navigationTitle("Profile")
+        .screenBackground()
     }
 }
 

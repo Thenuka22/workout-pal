@@ -8,6 +8,7 @@ struct ProgressHomeView: View {
             description: Text("Finish a workout to see your history and charts.")
         )
         .navigationTitle("Progress")
+        .screenBackground()
     }
 }
 

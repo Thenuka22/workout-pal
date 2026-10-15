@@ -8,6 +8,7 @@ struct DashboardView: View {
             description: Text("Create a routine in Train and log your first session.")
         )
         .navigationTitle("Home")
+        .screenBackground()
     }
 }
 
