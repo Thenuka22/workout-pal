@@ -3,7 +3,12 @@ import UIKit
 
 struct RootView: View {
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+    @State private var model: RootViewModel
     @State private var selection: AppDestination? = .home
+
+    init(model: RootViewModel) {
+        _model = State(initialValue: model)
+    }
 
     private var usesSidebar: Bool {
         UIDevice.current.userInterfaceIdiom == .pad && horizontalSizeClass == .regular
@@ -11,13 +16,25 @@ struct RootView: View {
 
     var body: some View {
         Group {
-            if usesSidebar {
-                RegularRootView(selection: $selection)
-            } else {
-                CompactRootView(selection: $selection)
+            switch model.storeState {
+            case .loading:
+                ProgressView("Opening your workout data")
+            case .failed(let message):
+                ErrorStateView(title: "Storage unavailable", message: message) {
+                    model.retryLoadingStore()
+                }
+            case .ready:
+                if usesSidebar {
+                    RegularRootView(selection: $selection)
+                } else {
+                    CompactRootView(selection: $selection)
+                }
             }
         }
         .tint(AppColors.accent)
+        .task {
+            await model.loadStore()
+        }
     }
 }
 
@@ -39,5 +56,7 @@ struct DestinationView: View {
 }
 
 #Preview {
-    RootView()
+    let container = AppContainer(inMemory: true)
+    return RootView(model: container.makeRootViewModel())
+        .environment(container)
 }
