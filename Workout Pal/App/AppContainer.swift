@@ -21,4 +21,8 @@ final class AppContainer {
     func makeRootViewModel() -> RootViewModel {
         RootViewModel(store: stack)
     }
+
+    func makeDashboardViewModel() -> DashboardViewModel {
+        DashboardViewModel(sessions: sessions, settings: settings)
+    }
 }
