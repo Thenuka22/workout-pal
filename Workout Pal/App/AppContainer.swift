@@ -4,9 +4,18 @@ import Observation
 @Observable
 final class AppContainer {
     private let stack: CoreDataStack
+    private let routines: any RoutineRepository
+    private let sessions: any WorkoutSessionRepository
+    private let catalog: any ExerciseCatalogRepository
+    private let settings: AppSettings
 
     init(inMemory: Bool = false) {
-        stack = CoreDataStack(inMemory: inMemory)
+        let stack = CoreDataStack(inMemory: inMemory)
+        self.stack = stack
+        routines = CoreDataRoutineRepository(stack: stack)
+        sessions = CoreDataWorkoutSessionRepository(stack: stack)
+        catalog = CoreDataExerciseCatalogRepository(stack: stack)
+        settings = AppSettings(store: UserDefaultsPreferencesStore())
     }
 
     func makeRootViewModel() -> RootViewModel {
