@@ -42,6 +42,28 @@ struct RoutineDetailView: View {
         .navigationDestination(item: $model.startedSession) { session in
             WorkoutSessionView(model: container.makeWorkoutSessionViewModel(session: session))
         }
+        .confirmationDialog(
+            "You have a workout in progress",
+            isPresented: $model.isAskingAboutActiveSession,
+            titleVisibility: .visible
+        ) {
+            if let active = model.activeSession {
+                Button("Resume \(active.routineName)") {
+                    model.resumeActiveSession()
+                }
+                Button("Discard it and start new", role: .destructive) {
+                    model.discardActiveSessionAndStart()
+                }
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("Finish or discard the current workout before starting another one.")
+        }
+        .alert("Could not start workout", isPresented: $model.isShowingStartError) {
+            Button("OK") {}
+        } message: {
+            Text(model.startErrorMessage ?? "")
+        }
         .task {
             await model.load()
         }

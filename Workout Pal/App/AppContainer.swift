@@ -39,7 +39,7 @@ final class AppContainer {
     }
 
     func makeRoutineDetailViewModel(routineID: UUID) -> RoutineDetailViewModel {
-        RoutineDetailViewModel(routineID: routineID, routines: routines, settings: settings)
+        RoutineDetailViewModel(routineID: routineID, routines: routines, sessions: sessions, settings: settings)
     }
 
     func makeRoutineEditorViewModel(routine: Routine?) -> RoutineEditorViewModel {
