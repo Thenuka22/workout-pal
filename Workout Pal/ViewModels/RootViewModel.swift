@@ -12,9 +12,15 @@ final class RootViewModel {
     private(set) var storeState: StoreState = .loading
 
     private let store: any PersistentStore
+    private let settings: AppSettings
 
-    init(store: any PersistentStore) {
+    init(store: any PersistentStore, settings: AppSettings) {
         self.store = store
+        self.settings = settings
+    }
+
+    var appearance: AppearancePreference {
+        settings.preferences.appearance
     }
 
     func loadStore() async {

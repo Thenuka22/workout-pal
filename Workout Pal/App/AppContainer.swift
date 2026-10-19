@@ -23,7 +23,7 @@ final class AppContainer {
     }
 
     func makeRootViewModel() -> RootViewModel {
-        RootViewModel(store: stack)
+        RootViewModel(store: stack, settings: settings)
     }
 
     func makeDashboardViewModel() -> DashboardViewModel {
@@ -52,5 +52,9 @@ final class AppContainer {
 
     func makeProgressViewModel() -> ProgressHomeViewModel {
         ProgressHomeViewModel(repository: sessions, settings: settings)
+    }
+
+    func makeProfileViewModel() -> ProfileViewModel {
+        ProfileViewModel(settings: settings)
     }
 }

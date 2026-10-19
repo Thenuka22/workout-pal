@@ -34,8 +34,17 @@ struct RootView: View {
         }
         .environment(navigation)
         .tint(AppColors.accent)
+        .preferredColorScheme(colorScheme(for: model.appearance))
         .task {
             await model.loadStore()
+        }
+    }
+
+    private func colorScheme(for appearance: AppearancePreference) -> ColorScheme? {
+        switch appearance {
+        case .system: nil
+        case .light: .light
+        case .dark: .dark
         }
     }
 }
@@ -53,7 +62,7 @@ struct DestinationView: View {
         case .progress:
             ProgressHomeView(model: container.makeProgressViewModel())
         case .profile:
-            ProfileView()
+            ProfileView(model: container.makeProfileViewModel())
         }
     }
 }
