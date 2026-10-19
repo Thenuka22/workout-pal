@@ -49,4 +49,8 @@ final class AppContainer {
     func makeWorkoutSessionViewModel(session: WorkoutSession) -> WorkoutSessionViewModel {
         WorkoutSessionViewModel(session: session, repository: sessions, settings: settings)
     }
+
+    func makeProgressViewModel() -> ProgressHomeViewModel {
+        ProgressHomeViewModel(repository: sessions, settings: settings)
+    }
 }

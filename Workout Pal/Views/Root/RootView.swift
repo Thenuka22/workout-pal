@@ -51,7 +51,7 @@ struct DestinationView: View {
         case .train:
             TrainView(model: container.makeTrainViewModel())
         case .progress:
-            ProgressHomeView()
+            ProgressHomeView(model: container.makeProgressViewModel())
         case .profile:
             ProfileView()
         }

@@ -29,6 +29,18 @@ struct WorkoutSession: Identifiable, Hashable, Sendable {
     var completedSetCount: Int {
         exercises.reduce(0) { $0 + $1.sets.filter(\.isCompleted).count }
     }
+
+    var loadedVolumeKilograms: Double {
+        exercises
+            .flatMap(\.sets)
+            .filter(\.isCompleted)
+            .reduce(0) { total, set in
+                guard let kilograms = set.load.kilograms else {
+                    return total
+                }
+                return total + kilograms * Double(set.reps)
+            }
+    }
 }
 
 struct SessionExercise: Identifiable, Hashable, Sendable {

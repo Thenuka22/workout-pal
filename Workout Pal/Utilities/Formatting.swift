@@ -17,6 +17,13 @@ enum Formatting {
         }
     }
 
+    static func volume(kilograms: Double, units: UnitPreference) -> String {
+        guard kilograms > 0 else {
+            return "Bodyweight only"
+        }
+        return "\(number(displayValue(kilograms: kilograms, units: units))) \(units.symbol)"
+    }
+
     static func displayValue(kilograms: Double, units: UnitPreference) -> Double {
         switch units {
         case .kilograms: kilograms
