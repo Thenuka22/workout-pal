@@ -1,12 +1,18 @@
 import SwiftUI
 
 struct TrainView: View {
+    @Environment(AppContainer.self) private var container
+
     var body: some View {
-        ContentUnavailableView(
-            "No routines yet",
-            systemImage: "list.bullet.rectangle",
-            description: Text("Routines and the exercise library will appear here.")
-        )
+        List {
+            Section("Library") {
+                NavigationLink {
+                    ExerciseLibraryView(model: container.makeExerciseLibraryViewModel())
+                } label: {
+                    Label("Exercise library", systemImage: "books.vertical.fill")
+                }
+            }
+        }
         .navigationTitle("Train")
         .screenBackground()
     }
@@ -16,4 +22,5 @@ struct TrainView: View {
     NavigationStack {
         TrainView()
     }
+    .environment(AppContainer(inMemory: true))
 }
