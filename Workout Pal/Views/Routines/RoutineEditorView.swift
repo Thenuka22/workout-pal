@@ -1,0 +1,86 @@
+import SwiftUI
+
+struct RoutineEditorView: View {
+    @Environment(\.dismiss) private var dismiss
+    @Environment(AppContainer.self) private var container
+    @State private var model: RoutineEditorViewModel
+    @State private var isPickingExercise = false
+
+    init(model: RoutineEditorViewModel) {
+        _model = State(initialValue: model)
+    }
+
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section("Routine") {
+                    TextField("Name", text: $model.draft.name)
+                    TextField("Notes", text: $model.draft.notes, axis: .vertical)
+                        .lineLimit(2...4)
+                }
+                Section {
+                    ForEach($model.draft.exercises) { $item in
+                        NavigationLink {
+                            RoutineExerciseEditor(item: $item, units: model.units)
+                        } label: {
+                            RoutineExerciseRow(item: item, units: model.units)
+                        }
+                    }
+                    .onMove { source, destination in
+                        model.moveExercises(from: source, to: destination)
+                    }
+                    .onDelete { offsets in
+                        model.removeExercises(at: offsets)
+                    }
+                    Button {
+                        isPickingExercise = true
+                    } label: {
+                        Label("Add exercise", systemImage: "plus")
+                    }
+                } header: {
+                    HStack {
+                        Text("Exercises")
+                        Spacer()
+                        if !model.draft.exercises.isEmpty {
+                            EditButton()
+                                .font(.caption)
+                        }
+                    }
+                } footer: {
+                    Text("Tap an exercise to change its sets, reps, load and rest. Use Edit to reorder or remove.")
+                }
+            }
+            .screenBackground()
+            .navigationTitle(model.title)
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") {
+                        dismiss()
+                    }
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Save") {
+                        model.save()
+                    }
+                    .disabled(!model.canSave)
+                }
+            }
+            .sheet(isPresented: $isPickingExercise) {
+                ExercisePickerView(model: container.makeExerciseLibraryViewModel()) { exercise in
+                    model.add(exercise)
+                }
+            }
+            .alert("Could not save routine", isPresented: $model.isShowingError) {
+                Button("OK") {}
+            } message: {
+                Text(model.errorMessage ?? "")
+            }
+            .onChange(of: model.isSaved) { _, isSaved in
+                if isSaved {
+                    dismiss()
+                }
+            }
+        }
+    }
+}

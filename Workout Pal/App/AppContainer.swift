@@ -1,3 +1,4 @@
+import Foundation
 import Observation
 
 @MainActor
@@ -31,5 +32,17 @@ final class AppContainer {
 
     func makeExerciseLibraryViewModel() -> ExerciseLibraryViewModel {
         ExerciseLibraryViewModel(catalog: catalog, sync: catalogSync)
+    }
+
+    func makeTrainViewModel() -> TrainViewModel {
+        TrainViewModel(repository: routines)
+    }
+
+    func makeRoutineDetailViewModel(routineID: UUID) -> RoutineDetailViewModel {
+        RoutineDetailViewModel(routineID: routineID, routines: routines, settings: settings)
+    }
+
+    func makeRoutineEditorViewModel(routine: Routine?) -> RoutineEditorViewModel {
+        RoutineEditorViewModel(routine: routine, routines: routines, settings: settings)
     }
 }
