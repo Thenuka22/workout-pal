@@ -7,6 +7,7 @@ final class RoutineDetailViewModel {
     private(set) var routine: Routine?
     private(set) var isLoading = true
     private(set) var errorMessage: String?
+    var startedSession: WorkoutSession?
 
     let routineID: UUID
     private let routines: any RoutineRepository
@@ -36,5 +37,12 @@ final class RoutineDetailViewModel {
         Task {
             await self.load()
         }
+    }
+
+    func startWorkout() {
+        guard let routine else {
+            return
+        }
+        startedSession = SessionBuilder.session(from: routine, ownerID: LocalProfile.ownerID)
     }
 }

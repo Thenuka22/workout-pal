@@ -45,4 +45,8 @@ final class AppContainer {
     func makeRoutineEditorViewModel(routine: Routine?) -> RoutineEditorViewModel {
         RoutineEditorViewModel(routine: routine, routines: routines, settings: settings)
     }
+
+    func makeWorkoutSessionViewModel(session: WorkoutSession) -> WorkoutSessionViewModel {
+        WorkoutSessionViewModel(session: session, repository: sessions, settings: settings)
+    }
 }

@@ -166,6 +166,7 @@ extension SessionExerciseEntity {
             id: id,
             exerciseID: Int(exerciseID),
             exerciseName: exerciseName,
+            restSeconds: Int(restSeconds),
             sets: items
         )
     }
@@ -174,6 +175,7 @@ extension SessionExerciseEntity {
         id = item.id
         exerciseID = Int64(item.exerciseID)
         exerciseName = item.exerciseName
+        restSeconds = Int16(item.restSeconds)
         sortOrder = Int16(order)
         for (index, set) in item.sets.enumerated() {
             let entity = WorkoutSetEntity(context: context)

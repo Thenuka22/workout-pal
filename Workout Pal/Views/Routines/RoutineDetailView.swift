@@ -39,6 +39,9 @@ struct RoutineDetailView: View {
                 RoutineEditorView(model: container.makeRoutineEditorViewModel(routine: routine))
             }
         }
+        .navigationDestination(item: $model.startedSession) { session in
+            WorkoutSessionView(model: container.makeWorkoutSessionViewModel(session: session))
+        }
         .task {
             await model.load()
         }
@@ -74,6 +77,17 @@ struct RoutineDetailView: View {
                         RoutineExerciseRow(item: item, units: model.units)
                     }
                 }
+            }
+            Section {
+                Button {
+                    model.startWorkout()
+                } label: {
+                    Label("Start workout", systemImage: "play.fill")
+                }
+                .buttonStyle(.primaryAction)
+                .disabled(routine.exercises.isEmpty)
+                .listRowInsets(EdgeInsets())
+                .listRowBackground(Color.clear)
             }
         }
         .screenBackground()

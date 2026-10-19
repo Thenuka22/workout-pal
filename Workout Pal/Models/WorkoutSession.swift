@@ -22,6 +22,10 @@ struct WorkoutSession: Identifiable, Hashable, Sendable {
     var notes: String
     var exercises: [SessionExercise]
 
+    var totalSetCount: Int {
+        exercises.reduce(0) { $0 + $1.sets.count }
+    }
+
     var completedSetCount: Int {
         exercises.reduce(0) { $0 + $1.sets.filter(\.isCompleted).count }
     }
@@ -31,7 +35,12 @@ struct SessionExercise: Identifiable, Hashable, Sendable {
     let id: UUID
     var exerciseID: Int
     var exerciseName: String
+    var restSeconds: Int
     var sets: [WorkoutSet]
+
+    var completedSetCount: Int {
+        sets.filter(\.isCompleted).count
+    }
 }
 
 struct WorkoutSet: Identifiable, Hashable, Sendable {

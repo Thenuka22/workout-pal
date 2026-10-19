@@ -52,6 +52,7 @@
         <attribute name="exerciseID" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="exerciseName" attributeType="String" defaultValueString=""/>
         <attribute name="id" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="restSeconds" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="sortOrder" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
         <relationship name="session" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="WorkoutSessionEntity" inverseName="exercises" inverseEntity="WorkoutSessionEntity"/>
         <relationship name="sets" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="WorkoutSetEntity" inverseName="exercise" inverseEntity="WorkoutSetEntity"/>
