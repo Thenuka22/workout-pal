@@ -1,6 +1,6 @@
 import Foundation
 
-struct UserDefaultsPreferencesStore: PreferencesStore {
+struct UserDefaultsPreferencesStore: PreferencesStore, @unchecked Sendable {
     private let defaults: UserDefaults
 
     init(defaults: UserDefaults = .standard) {

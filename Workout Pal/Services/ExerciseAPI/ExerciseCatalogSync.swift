@@ -1,6 +1,6 @@
 import Foundation
 
-struct ExerciseCatalogSync: ExerciseCatalogSyncing {
+struct ExerciseCatalogSync: ExerciseCatalogSyncing, @unchecked Sendable {
     static let pageSize = 100
 
     private let client: WgerClient
