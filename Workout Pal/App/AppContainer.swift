@@ -27,7 +27,7 @@ final class AppContainer {
     }
 
     func makeDashboardViewModel() -> DashboardViewModel {
-        DashboardViewModel(sessions: sessions, settings: settings)
+        DashboardViewModel(sessions: sessions, routines: routines, settings: settings)
     }
 
     func makeExerciseLibraryViewModel() -> ExerciseLibraryViewModel {

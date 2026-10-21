@@ -5,32 +5,35 @@ struct RecentWorkoutCard: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: AppSpacing.medium) {
-            SectionHeader(title: "Recent workout")
+            Text("Last workout")
+                .eyebrow()
             if let session {
                 VStack(alignment: .leading, spacing: AppSpacing.xSmall) {
                     Text(session.routineName)
-                        .font(.headline)
-                        .foregroundStyle(AppColors.textPrimary)
+                        .cardTitle()
                     Text(Formatting.dateTime(session.startedAt))
                         .font(.subheadline)
                         .foregroundStyle(AppColors.textSecondary)
                 }
-                HStack(spacing: AppSpacing.large) {
-                    Label(Formatting.minutes(fromSeconds: session.activeSeconds), systemImage: "clock")
-                    Label("\(session.completedSetCount) sets", systemImage: "checkmark.circle")
-                    Label("\(session.exercises.count) exercises", systemImage: "dumbbell")
+                HStack(spacing: AppSpacing.small) {
+                    TagPill(text: Formatting.minutes(fromSeconds: session.activeSeconds), symbolName: "clock")
+                    TagPill(text: "\(session.completedSetCount) sets", symbolName: "checkmark.circle")
+                    TagPill(text: "\(session.exercises.count) exercises", symbolName: "dumbbell")
                 }
-                .font(.subheadline)
-                .foregroundStyle(AppColors.textSecondary)
             } else {
                 Text("No workouts yet")
-                    .font(.headline)
-                    .foregroundStyle(AppColors.textPrimary)
-                Text("Create a routine in Train and log your first session.")
+                    .cardTitle()
+                Text("Start your first routine and it will show up here.")
                     .font(.subheadline)
                     .foregroundStyle(AppColors.textSecondary)
             }
         }
         .card()
     }
+}
+
+#Preview {
+    RecentWorkoutCard(session: nil)
+        .padding()
+        .background(AppColors.surface)
 }

@@ -3,6 +3,7 @@ import SwiftUI
 struct DashboardView: View {
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @Environment(AppContainer.self) private var container
+    @Environment(AppNavigation.self) private var navigation
     @State private var model: DashboardViewModel
     @State private var isConfirmingDiscard = false
 
@@ -12,33 +13,33 @@ struct DashboardView: View {
 
     var body: some View {
         ScrollView {
-            Group {
-                if let message = model.errorMessage {
-                    ErrorStateView(title: "Could not load your workouts", message: message) {
-                        model.retry()
+            VStack(alignment: .leading, spacing: AppSpacing.medium) {
+                ScreenHeader(title: model.title, overline: model.greeting) {
+                    Button {
+                        navigation.selection = .profile
+                    } label: {
+                        AvatarBadge(initial: model.initial)
                     }
-                } else if horizontalSizeClass == .regular {
-                    HStack(alignment: .top, spacing: AppSpacing.medium) {
-                        VStack(spacing: AppSpacing.medium) {
-                            resumeCard
-                            WeeklyProgressCard(summary: model.summary)
-                            QuickActionsView()
+                    .buttonStyle(.plain)
+                    .accessibilityLabel("Profile")
+                }
+                Group {
+                    if let message = model.errorMessage {
+                        ErrorStateView(title: "Could not load your workouts", message: message) {
+                            model.retry()
                         }
-                        RecentWorkoutCard(session: model.recentSession)
-                    }
-                } else {
-                    VStack(spacing: AppSpacing.medium) {
-                        resumeCard
-                        WeeklyProgressCard(summary: model.summary)
-                        RecentWorkoutCard(session: model.recentSession)
-                        QuickActionsView()
+                    } else if horizontalSizeClass == .regular {
+                        twoColumns
+                    } else {
+                        singleColumn
                     }
                 }
+                .padding(.horizontal, AppSpacing.medium)
             }
-            .padding(AppSpacing.medium)
+            .padding(.bottom, AppSpacing.large)
         }
         .screenBackground()
-        .navigationTitle("Home")
+        .toolbar(.hidden, for: .navigationBar)
         .overlay {
             if model.isLoading {
                 ProgressView()
@@ -46,6 +47,12 @@ struct DashboardView: View {
         }
         .navigationDestination(item: $model.resumingSession) { session in
             WorkoutSessionView(model: container.makeWorkoutSessionViewModel(session: session))
+        }
+        .navigationDestination(for: TrainRoute.self) { route in
+            switch route {
+            case .routine(let id):
+                RoutineDetailView(model: container.makeRoutineDetailViewModel(routineID: id), embedded: false)
+            }
         }
         .confirmationDialog("Discard this workout?", isPresented: $isConfirmingDiscard, titleVisibility: .visible) {
             Button("Discard workout", role: .destructive) {
@@ -63,6 +70,31 @@ struct DashboardView: View {
         }
     }
 
+    private var singleColumn: some View {
+        VStack(spacing: AppSpacing.medium) {
+            resumeCard
+            WeeklyProgressCard(summary: model.summary, statusText: model.weekStatusText, showsWeekdays: false)
+            todayPlanCard
+            MovementCard(summary: model.summary)
+            RecentWorkoutCard(session: model.recentSession)
+        }
+    }
+
+    private var twoColumns: some View {
+        HStack(alignment: .top, spacing: AppSpacing.medium) {
+            VStack(spacing: AppSpacing.medium) {
+                resumeCard
+                WeeklyProgressCard(summary: model.summary, statusText: model.weekStatusText, showsWeekdays: true)
+                todayPlanCard
+            }
+            VStack(spacing: AppSpacing.medium) {
+                MovementCard(summary: model.summary)
+                RecentWorkoutCard(session: model.recentSession)
+            }
+            .frame(width: 320)
+        }
+    }
+
     @ViewBuilder
     private var resumeCard: some View {
         if let active = model.activeSession {
@@ -71,6 +103,33 @@ struct DashboardView: View {
                 onResume: { model.resumeActiveSession() },
                 onDiscard: { isConfirmingDiscard = true }
             )
+        }
+    }
+
+    @ViewBuilder
+    private var todayPlanCard: some View {
+        if let routine = model.suggestedRoutine {
+            NavigationLink(value: TrainRoute.routine(routine.id)) {
+                HeroCard(
+                    eyebrow: "Today's plan",
+                    title: routine.name,
+                    subtitle: "\(routine.exercises.count) exercises · about \(routine.estimatedMinutes) min",
+                    symbolName: "dumbbell.fill"
+                )
+            }
+            .buttonStyle(.plain)
+        } else {
+            Button {
+                navigation.selection = .train
+            } label: {
+                HeroCard(
+                    eyebrow: "Get started",
+                    title: "Create your first routine",
+                    subtitle: "Pick exercises from the library and plan your sets.",
+                    symbolName: "plus.circle.fill"
+                )
+            }
+            .buttonStyle(.plain)
         }
     }
 }

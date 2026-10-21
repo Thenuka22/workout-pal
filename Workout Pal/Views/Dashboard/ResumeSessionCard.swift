@@ -7,15 +7,23 @@ struct ResumeSessionCard: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: AppSpacing.medium) {
-            SectionHeader(title: "Workout in progress")
+            HStack {
+                Text("Workout in progress")
+                    .eyebrow()
+                Spacer()
+                Circle()
+                    .fill(AppColors.accent)
+                    .frame(width: 8, height: 8)
+            }
             VStack(alignment: .leading, spacing: AppSpacing.xSmall) {
                 Text(session.routineName)
-                    .font(.headline)
-                    .foregroundStyle(AppColors.textPrimary)
+                    .cardTitle()
                 Text("Started \(Formatting.dateTime(session.startedAt)) · \(session.completedSetCount) of \(session.totalSetCount) sets done")
                     .font(.subheadline)
                     .foregroundStyle(AppColors.textSecondary)
             }
+            ProgressView(value: Double(session.completedSetCount), total: Double(max(session.totalSetCount, 1)))
+                .tint(AppColors.accent)
             HStack(spacing: AppSpacing.small) {
                 Button(action: onResume) {
                     Label("Resume", systemImage: "play.fill")

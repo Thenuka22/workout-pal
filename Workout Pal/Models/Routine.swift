@@ -8,6 +8,20 @@ struct Routine: Identifiable, Hashable, Sendable {
     var exercises: [RoutineExercise]
     var createdAt: Date
     var updatedAt: Date
+
+    var plannedSetCount: Int {
+        exercises.reduce(0) { $0 + $1.plannedSets }
+    }
+
+    var estimatedMinutes: Int {
+        let seconds = exercises.reduce(0) { total, exercise in
+            total + exercise.plannedSets * (exercise.plannedReps * 3 + exercise.restSeconds)
+        }
+        guard seconds > 0 else {
+            return 0
+        }
+        return max(Int((Double(seconds) / 60).rounded()), 1)
+    }
 }
 
 struct RoutineExercise: Identifiable, Hashable, Sendable {
