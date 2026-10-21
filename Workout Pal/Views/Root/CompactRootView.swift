@@ -9,6 +9,8 @@ struct CompactRootView: View {
                 NavigationStack {
                     DestinationView(destination: destination)
                 }
+                .toolbarBackground(AppColors.surface, for: .tabBar)
+                .toolbarBackground(.visible, for: .tabBar)
                 .tabItem {
                     Label(destination.title, systemImage: destination.symbolName)
                 }

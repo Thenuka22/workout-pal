@@ -34,5 +34,5 @@ struct UserPreferences: Hashable, Sendable {
     var units: UnitPreference
     var appearance: AppearancePreference
 
-    static let standard = UserPreferences(displayName: "", weeklyGoal: 3, units: .kilograms, appearance: .system)
+    static let standard = UserPreferences(displayName: "", weeklyGoal: 3, units: .kilograms, appearance: .dark)
 }
