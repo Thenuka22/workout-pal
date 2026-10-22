@@ -23,7 +23,7 @@ struct RoutineEditorView: View {
                         NavigationLink {
                             RoutineExerciseEditor(item: $item, units: model.units)
                         } label: {
-                            RoutineExerciseRow(item: item, units: model.units)
+                            RoutineExerciseRow(index: model.draft.exercises.firstIndex { $0.id == item.id } ?? 0, item: item, units: model.units)
                         }
                     }
                     .onMove { source, destination in

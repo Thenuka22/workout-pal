@@ -34,6 +34,18 @@ struct RoutineDetailView: View {
                 .screenBackground()
             }
         }
+        .navigationTitle("Workout details")
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbarBackground(AppColors.surface, for: .navigationBar)
+        .toolbar {
+            if !embedded {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button("Edit") {
+                        isEditing = true
+                    }
+                }
+            }
+        }
         .sheet(isPresented: $isEditing, onDismiss: { routineEdited() }) {
             if let routine = model.routine {
                 RoutineEditorView(model: container.makeRoutineEditorViewModel(routine: routine))
@@ -70,58 +82,106 @@ struct RoutineDetailView: View {
     }
 
     private func routineContent(_ routine: Routine) -> some View {
-        List {
-            if embedded {
-                Section {
-                    HStack {
-                        Text(routine.name)
-                            .font(.title2.weight(.bold))
-                            .foregroundStyle(AppColors.textPrimary)
-                        Spacer()
-                        Button("Edit") {
-                            isEditing = true
-                        }
-                    }
+        ScrollView {
+            VStack(alignment: .leading, spacing: AppSpacing.medium) {
+                heroBlock(routine)
+                HStack(spacing: AppSpacing.small) {
+                    TagPill(text: "about \(routine.estimatedMinutes) min", symbolName: "clock")
+                    TagPill(text: "\(routine.exercises.count) exercises", symbolName: "dumbbell")
+                    TagPill(text: "\(routine.plannedSetCount) sets", symbolName: "checkmark.circle")
                 }
+                Text("Your session")
+                    .cardTitle()
+                    .padding(.top, AppSpacing.small)
+                exerciseList(routine)
             }
-            if !routine.notes.isEmpty {
-                Section("Notes") {
-                    Text(routine.notes)
-                        .foregroundStyle(AppColors.textPrimary)
-                }
-            }
-            Section("Exercises") {
-                if routine.exercises.isEmpty {
-                    Text("No exercises yet. Edit the routine to add some.")
-                        .foregroundStyle(AppColors.textSecondary)
-                } else {
-                    ForEach(routine.exercises) { item in
-                        RoutineExerciseRow(item: item, units: model.units)
-                    }
-                }
-            }
-            Section {
-                Button {
-                    model.startWorkout()
-                } label: {
-                    Label("Start workout", systemImage: "play.fill")
-                }
-                .buttonStyle(.primaryAction)
-                .disabled(routine.exercises.isEmpty)
-                .listRowInsets(EdgeInsets())
-                .listRowBackground(Color.clear)
-            }
+            .padding(AppSpacing.medium)
+            .padding(.bottom, AppSpacing.xLarge)
         }
         .screenBackground()
-        .navigationTitle(embedded ? "Train" : routine.name)
-        .toolbar {
-            if !embedded {
-                ToolbarItem(placement: .topBarTrailing) {
+        .safeAreaInset(edge: .bottom) {
+            Button {
+                model.startWorkout()
+            } label: {
+                Label("Start this workout", systemImage: "play.fill")
+            }
+            .buttonStyle(.primaryAction)
+            .disabled(routine.exercises.isEmpty)
+            .padding(.horizontal, AppSpacing.medium)
+            .padding(.vertical, AppSpacing.small)
+            .background(AppColors.surface)
+        }
+    }
+
+    private func heroBlock(_ routine: Routine) -> some View {
+        VStack(alignment: .leading, spacing: AppSpacing.small) {
+            HStack(alignment: .top) {
+                Text("Routine")
+                    .font(.caption.weight(.bold))
+                    .textCase(.uppercase)
+                    .kerning(0.8)
+                    .foregroundStyle(AppColors.onAccent)
+                    .padding(.horizontal, AppSpacing.small)
+                    .padding(.vertical, AppSpacing.xSmall)
+                    .background(AppColors.accent, in: Capsule())
+                Spacer()
+                if embedded {
                     Button("Edit") {
                         isEditing = true
                     }
+                    .font(.subheadline.weight(.semibold))
                 }
             }
+            Text(routine.name)
+                .font(.title.weight(.bold))
+                .foregroundStyle(AppColors.textPrimary)
+                .fixedSize(horizontal: false, vertical: true)
+            if !routine.notes.isEmpty {
+                Text(routine.notes)
+                    .font(.subheadline)
+                    .foregroundStyle(AppColors.textSecondary)
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(AppSpacing.medium)
+        .background(
+            LinearGradient(
+                colors: [AppColors.accentSoft, AppColors.surfaceElevated],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            ),
+            in: RoundedRectangle(cornerRadius: AppRadius.card, style: .continuous)
+        )
+        .overlay {
+            RoundedRectangle(cornerRadius: AppRadius.card, style: .continuous)
+                .strokeBorder(AppColors.outline, lineWidth: 1)
+        }
+    }
+
+    @ViewBuilder
+    private func exerciseList(_ routine: Routine) -> some View {
+        if routine.exercises.isEmpty {
+            VStack(alignment: .leading, spacing: AppSpacing.small) {
+                Text("No exercises yet")
+                    .font(.headline)
+                    .foregroundStyle(AppColors.textPrimary)
+                Text("Edit the routine to add exercises from the library.")
+                    .font(.subheadline)
+                    .foregroundStyle(AppColors.textSecondary)
+            }
+            .card()
+        } else {
+            VStack(spacing: 0) {
+                ForEach(Array(routine.exercises.enumerated()), id: \.element.id) { index, item in
+                    RoutineExerciseRow(index: index, item: item, units: model.units)
+                        .padding(.vertical, AppSpacing.small)
+                    if index < routine.exercises.count - 1 {
+                        Divider()
+                            .overlay(AppColors.outline)
+                    }
+                }
+            }
+            .card()
         }
     }
 
@@ -132,25 +192,29 @@ struct RoutineDetailView: View {
 }
 
 struct RoutineExerciseRow: View {
+    let index: Int
     let item: RoutineExercise
     let units: UnitPreference
 
     var body: some View {
-        VStack(alignment: .leading, spacing: AppSpacing.xSmall) {
-            Text(item.exerciseName)
-                .font(.body.weight(.medium))
-                .foregroundStyle(AppColors.textPrimary)
-            Text(detail)
-                .font(.caption)
-                .foregroundStyle(AppColors.textSecondary)
+        HStack(spacing: AppSpacing.medium) {
+            NumberBadge(index: index)
+            VStack(alignment: .leading, spacing: AppSpacing.xSmall) {
+                Text(item.exerciseName)
+                    .font(.body.weight(.semibold))
+                    .foregroundStyle(AppColors.textPrimary)
+                Text(detail)
+                    .font(.caption)
+                    .foregroundStyle(AppColors.textSecondary)
+            }
+            Spacer(minLength: 0)
         }
-        .padding(.vertical, AppSpacing.xSmall)
     }
 
     private var detail: String {
-        var parts = ["\(item.plannedSets) × \(item.plannedReps)", Formatting.load(item.plannedLoad, units: units)]
+        var parts = ["\(item.plannedSets) sets · \(item.plannedReps) reps", Formatting.load(item.plannedLoad, units: units)]
         if item.restSeconds > 0 {
-            parts.append("Rest \(item.restSeconds) s")
+            parts.append("rest \(item.restSeconds) s")
         }
         return parts.joined(separator: " · ")
     }
