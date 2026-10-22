@@ -5,6 +5,7 @@ import Observation
 @Observable
 final class WorkoutSessionViewModel {
     private(set) var session: WorkoutSession
+    private(set) var restStartedAt: Date?
     private(set) var restEndsAt: Date?
     private(set) var errorMessage: String?
     private(set) var isFinished = false
@@ -28,6 +29,31 @@ final class WorkoutSessionViewModel {
 
     var selectedExercise: SessionExercise? {
         session.exercises.first { $0.id == selectedExerciseID } ?? session.exercises.first
+    }
+
+    var progressText: String {
+        "\(session.completedSetCount) of \(session.totalSetCount) sets"
+    }
+
+    var nextExerciseName: String? {
+        let exercises = session.exercises
+        var latestIndex = -1
+        var latestDate = Date.distantPast
+        for (index, exercise) in exercises.enumerated() {
+            for set in exercise.sets {
+                if let date = set.completedAt, date > latestDate {
+                    latestDate = date
+                    latestIndex = index
+                }
+            }
+        }
+        let start = latestIndex + 1
+        guard start < exercises.count else {
+            return nil
+        }
+        return exercises[start...].first { exercise in
+            exercise.sets.contains { !$0.isCompleted }
+        }?.exerciseName
     }
 
     var isShowingError: Bool {
@@ -93,6 +119,7 @@ final class WorkoutSessionViewModel {
     func skipRest() {
         restTask?.cancel()
         restTask = nil
+        restStartedAt = nil
         restEndsAt = nil
     }
 
@@ -118,13 +145,17 @@ final class WorkoutSessionViewModel {
     private func startRest(seconds: Int) {
         restTask?.cancel()
         guard seconds > 0 else {
+            restStartedAt = nil
             restEndsAt = nil
             return
         }
-        restEndsAt = Date.now.addingTimeInterval(TimeInterval(seconds))
+        let start = Date.now
+        restStartedAt = start
+        restEndsAt = start.addingTimeInterval(TimeInterval(seconds))
         restTask = Task {
             try? await Task.sleep(for: .seconds(seconds))
             if !Task.isCancelled {
+                self.restStartedAt = nil
                 self.restEndsAt = nil
             }
         }
