@@ -8,74 +8,111 @@ struct ProgressChartsView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: AppSpacing.medium) {
-                Picker("Range", selection: $model.range) {
-                    ForEach(ProgressRange.allCases) { range in
-                        Text(range.title).tag(range)
-                    }
-                }
-                .pickerStyle(.segmented)
-
-                workoutsChart
-                minutesChart
-                exerciseChart
+                ChipPicker(options: ProgressRange.allCases, selection: $model.range) { $0.title }
+                minutesCard
+                workoutsCard
+                thisWeekTiles
+                exerciseCard
+                Text("Your activity stays on your device.")
+                    .font(.footnote)
+                    .foregroundStyle(AppColors.textSecondary)
+                    .frame(maxWidth: .infinity)
             }
             .padding(AppSpacing.medium)
         }
         .screenBackground()
     }
 
-    private var workoutsChart: some View {
+    private var minutesCard: some View {
         VStack(alignment: .leading, spacing: AppSpacing.small) {
-            SectionHeader(title: "Workouts per week")
+            Text("Workout minutes")
+                .eyebrow()
+            HStack(alignment: .firstTextBaseline, spacing: AppSpacing.small) {
+                Text("\(model.totalMinutes)")
+                    .font(.system(size: 34, weight: .bold, design: .rounded))
+                    .foregroundStyle(AppColors.textPrimary)
+                Text("min in the last \(model.range.rawValue) weeks")
+                    .font(.subheadline)
+                    .foregroundStyle(AppColors.textSecondary)
+            }
+            Chart(model.weekBuckets) { bucket in
+                BarMark(
+                    x: .value("Week", bucket.weekStart, unit: .weekOfYear),
+                    y: .value("Minutes", bucket.activeMinutes)
+                )
+                .foregroundStyle(barColor(for: bucket))
+                .cornerRadius(6)
+            }
+            .chartXAxis {
+                AxisMarks(values: .automatic(desiredCount: 4))
+            }
+            .frame(height: 180)
+            .accessibilityLabel(model.minutesSummary)
+        }
+        .card()
+    }
+
+    private var workoutsCard: some View {
+        VStack(alignment: .leading, spacing: AppSpacing.small) {
+            Text("Workouts")
+                .eyebrow()
+            HStack(alignment: .firstTextBaseline, spacing: AppSpacing.small) {
+                Text("\(model.totalWorkouts)")
+                    .font(.system(size: 34, weight: .bold, design: .rounded))
+                    .foregroundStyle(AppColors.textPrimary)
+                Text("in the last \(model.range.rawValue) weeks")
+                    .font(.subheadline)
+                    .foregroundStyle(AppColors.textSecondary)
+            }
             Chart(model.weekBuckets) { bucket in
                 BarMark(
                     x: .value("Week", bucket.weekStart, unit: .weekOfYear),
                     y: .value("Workouts", bucket.workouts)
                 )
-                .foregroundStyle(AppColors.accent)
+                .foregroundStyle(barColor(for: bucket))
+                .cornerRadius(6)
             }
             .chartXAxis {
                 AxisMarks(values: .automatic(desiredCount: 4))
             }
-            .frame(height: 200)
+            .frame(height: 180)
             .accessibilityLabel(model.workoutsSummary)
-            Text(model.workoutsSummary)
-                .font(.footnote)
-                .foregroundStyle(AppColors.textSecondary)
         }
         .card()
     }
 
-    private var minutesChart: some View {
-        VStack(alignment: .leading, spacing: AppSpacing.small) {
-            SectionHeader(title: "Active minutes per week")
-            Chart(model.weekBuckets) { bucket in
-                LineMark(
-                    x: .value("Week", bucket.weekStart, unit: .weekOfYear),
-                    y: .value("Minutes", bucket.activeMinutes)
+    private var thisWeekTiles: some View {
+        let summary = model.weeklySummary
+        return VStack(alignment: .leading, spacing: AppSpacing.small) {
+            Text("This week")
+                .cardTitle()
+            HStack(alignment: .top, spacing: AppSpacing.small) {
+                StatTile(
+                    title: "Workouts",
+                    value: "\(summary.workoutCount) of \(summary.goal)",
+                    caption: "weekly goal",
+                    dotColor: AppColors.infoOrange
                 )
-                .foregroundStyle(AppColors.accent)
-                PointMark(
-                    x: .value("Week", bucket.weekStart, unit: .weekOfYear),
-                    y: .value("Minutes", bucket.activeMinutes)
+                StatTile(
+                    title: "Active time",
+                    value: "\(summary.activeMinutes) min",
+                    caption: "of \(summary.minutesTarget) min",
+                    dotColor: AppColors.infoBlue
                 )
-                .foregroundStyle(AppColors.accent)
+                StatTile(
+                    title: "Volume",
+                    value: model.weeklyVolumeText,
+                    caption: "lifted",
+                    dotColor: AppColors.infoPurple
+                )
             }
-            .chartXAxis {
-                AxisMarks(values: .automatic(desiredCount: 4))
-            }
-            .frame(height: 200)
-            .accessibilityLabel(model.minutesSummary)
-            Text(model.minutesSummary)
-                .font(.footnote)
-                .foregroundStyle(AppColors.textSecondary)
         }
-        .card()
     }
 
-    private var exerciseChart: some View {
+    private var exerciseCard: some View {
         VStack(alignment: .leading, spacing: AppSpacing.small) {
-            SectionHeader(title: "Exercise progress")
+            Text("Exercise progress")
+                .eyebrow()
             if model.exerciseOptions.isEmpty {
                 Text("Complete sets in a workout to track an exercise.")
                     .font(.footnote)
@@ -87,6 +124,7 @@ struct ProgressChartsView: View {
                     }
                 }
                 .pickerStyle(.menu)
+                .tint(AppColors.accent)
                 let label = model.exerciseChartLabel
                 Chart(model.exerciseChartPoints) { point in
                     LineMark(
@@ -103,7 +141,7 @@ struct ProgressChartsView: View {
                 .chartXAxis {
                     AxisMarks(values: .automatic(desiredCount: 4))
                 }
-                .frame(height: 200)
+                .frame(height: 180)
                 .accessibilityLabel(model.exerciseSummary)
                 Text(model.exerciseSummary)
                     .font(.footnote)
@@ -111,5 +149,9 @@ struct ProgressChartsView: View {
             }
         }
         .card()
+    }
+
+    private func barColor(for bucket: WeekBucket) -> Color {
+        bucket.weekStart == model.currentWeekStart ? AppColors.accent : AppColors.accent.opacity(0.35)
     }
 }

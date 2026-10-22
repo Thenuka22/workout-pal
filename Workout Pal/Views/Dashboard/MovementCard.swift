@@ -33,7 +33,7 @@ struct MovementCard: View {
 }
 
 #Preview {
-    MovementCard(summary: WeeklySummary(workoutCount: 2, activeMinutes: 42, completedSets: 30, goal: 3, trainedWeekdays: [2, 5]))
+    MovementCard(summary: WeeklySummary(workoutCount: 2, activeMinutes: 42, completedSets: 30, goal: 3, trainedWeekdays: [2, 5], volumeKilograms: 1240))
         .padding()
         .background(AppColors.surface)
 }

@@ -30,11 +30,11 @@ struct WeeklyProgressCard: View {
 #Preview {
     VStack(spacing: AppSpacing.medium) {
         WeeklyProgressCard(
-            summary: WeeklySummary(workoutCount: 3, activeMinutes: 96, completedSets: 42, goal: 4, trainedWeekdays: [2, 3, 4]),
+            summary: WeeklySummary(workoutCount: 3, activeMinutes: 96, completedSets: 42, goal: 4, trainedWeekdays: [2, 3, 4], volumeKilograms: 0),
             statusText: "One more to hit your goal."
         )
         WeeklyProgressCard(
-            summary: WeeklySummary(workoutCount: 3, activeMinutes: 96, completedSets: 42, goal: 4, trainedWeekdays: [2, 3, 4]),
+            summary: WeeklySummary(workoutCount: 3, activeMinutes: 96, completedSets: 42, goal: 4, trainedWeekdays: [2, 3, 4], volumeKilograms: 0),
             statusText: "One more to hit your goal.",
             showsWeekdays: true
         )

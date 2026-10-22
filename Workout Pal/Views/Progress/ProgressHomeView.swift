@@ -1,16 +1,16 @@
 import SwiftUI
 
 struct ProgressHomeView: View {
-    private enum Tab: String, CaseIterable, Identifiable {
-        case history = "History"
+    private enum Panel: String, CaseIterable, Identifiable {
         case charts = "Charts"
+        case history = "History"
 
         var id: String { rawValue }
     }
 
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @State private var model: ProgressHomeViewModel
-    @State private var tab: Tab = .history
+    @State private var panel: Panel = .charts
     @State private var selectedSession: WorkoutSession?
 
     init(model: ProgressHomeViewModel) {
@@ -18,60 +18,17 @@ struct ProgressHomeView: View {
     }
 
     var body: some View {
-        Group {
-            if let message = model.errorMessage {
-                ErrorStateView(title: "Could not load your history", message: message) {
-                    model.retry()
-                }
-                .screenBackground()
-            } else if model.sessions.isEmpty && !model.isLoading {
-                ContentUnavailableView(
-                    "No completed workouts",
-                    systemImage: "chart.line.uptrend.xyaxis",
-                    description: Text("Finish a workout to see your history and charts.")
-                )
-                .screenBackground()
-            } else if horizontalSizeClass == .regular {
-                HStack(spacing: 0) {
-                    WorkoutHistoryView(groups: model.historyGroups, units: model.units, selectedSession: $selectedSession)
-                        .frame(width: 380)
-                    Divider()
-                    if let selectedSession {
-                        WorkoutDetailView(session: selectedSession, units: model.units)
-                    } else {
-                        ProgressChartsView(model: model)
-                    }
-                }
-            } else {
-                VStack(spacing: 0) {
-                    Picker("Section", selection: $tab) {
-                        ForEach(Tab.allCases) { tab in
-                            Text(tab.rawValue).tag(tab)
-                        }
-                    }
-                    .pickerStyle(.segmented)
+        VStack(spacing: 0) {
+            ScreenHeader(title: "Your progress", subtitle: model.subtitle)
+            if horizontalSizeClass != .regular {
+                ChipPicker(options: Panel.allCases, selection: $panel) { $0.rawValue }
                     .padding(.horizontal, AppSpacing.medium)
                     .padding(.vertical, AppSpacing.small)
-                    .background(AppColors.surface)
-                    switch tab {
-                    case .history:
-                        WorkoutHistoryView(groups: model.historyGroups, units: model.units, selectedSession: nil)
-                    case .charts:
-                        ProgressChartsView(model: model)
-                    }
-                }
             }
+            content
         }
-        .navigationTitle("Progress")
-        .toolbar {
-            if horizontalSizeClass == .regular && selectedSession != nil {
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button("Show charts") {
-                        selectedSession = nil
-                    }
-                }
-            }
-        }
+        .screenBackground()
+        .toolbar(.hidden, for: .navigationBar)
         .navigationDestination(for: WorkoutSession.self) { session in
             WorkoutDetailView(session: session, units: model.units)
         }
@@ -82,6 +39,50 @@ struct ProgressHomeView: View {
         }
         .task {
             await model.load()
+        }
+    }
+
+    @ViewBuilder
+    private var content: some View {
+        if let message = model.errorMessage {
+            ErrorStateView(title: "Could not load your history", message: message) {
+                model.retry()
+            }
+        } else if model.sessions.isEmpty && !model.isLoading {
+            ContentUnavailableView(
+                "No completed workouts",
+                systemImage: "chart.line.uptrend.xyaxis",
+                description: Text("Finish a workout to see your history and charts.")
+            )
+        } else if horizontalSizeClass == .regular {
+            HStack(spacing: 0) {
+                WorkoutHistoryView(groups: model.historyGroups, units: model.units, selectedSession: $selectedSession)
+                    .frame(width: 380)
+                Divider()
+                if let selectedSession {
+                    VStack(spacing: 0) {
+                        HStack {
+                            Spacer()
+                            Button("Show charts") {
+                                self.selectedSession = nil
+                            }
+                            .font(.subheadline.weight(.semibold))
+                        }
+                        .padding(.horizontal, AppSpacing.medium)
+                        .padding(.top, AppSpacing.small)
+                        WorkoutDetailView(session: selectedSession, units: model.units)
+                    }
+                } else {
+                    ProgressChartsView(model: model)
+                }
+            }
+        } else {
+            switch panel {
+            case .charts:
+                ProgressChartsView(model: model)
+            case .history:
+                WorkoutHistoryView(groups: model.historyGroups, units: model.units, selectedSession: nil)
+            }
         }
     }
 }

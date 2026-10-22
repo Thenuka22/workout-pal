@@ -9,7 +9,11 @@ enum ProgressRange: Int, CaseIterable, Identifiable {
     var id: Int { rawValue }
 
     var title: String {
-        "\(rawValue) weeks"
+        switch self {
+        case .fourWeeks: "Month"
+        case .twelveWeeks: "3 months"
+        case .twentySixWeeks: "6 months"
+        }
     }
 }
 
@@ -41,12 +45,42 @@ final class ProgressHomeViewModel {
         settings.preferences.units
     }
 
+    var weeklySummary: WeeklySummary {
+        WeeklySummary.make(sessions: sessions, goal: settings.preferences.weeklyGoal)
+    }
+
+    var weeklyVolumeText: String {
+        let value = Formatting.displayValue(kilograms: weeklySummary.volumeKilograms, units: units)
+        return "\(Formatting.number(value)) \(units.symbol)"
+    }
+
     var historyGroups: [HistoryGroup] {
         ProgressCalculator.groupByWeek(sessions: sessions)
     }
 
     var weekBuckets: [WeekBucket] {
         ProgressCalculator.weekBuckets(sessions: sessions, weeks: range.rawValue)
+    }
+
+    var currentWeekStart: Date? {
+        weekBuckets.last?.weekStart
+    }
+
+    var totalWorkouts: Int {
+        weekBuckets.reduce(0) { $0 + $1.workouts }
+    }
+
+    var totalMinutes: Int {
+        weekBuckets.reduce(0) { $0 + $1.activeMinutes }
+    }
+
+    var subtitle: String {
+        let count = sessions.count
+        switch count {
+        case 0: return "Small steps are adding up."
+        case 1: return "1 workout logged so far."
+        default: return "\(count) workouts logged so far."
+        }
     }
 
     var exerciseOptions: [ExerciseOption] {
@@ -90,17 +124,13 @@ final class ProgressHomeViewModel {
     }
 
     var workoutsSummary: String {
-        let buckets = weekBuckets
-        let total = buckets.reduce(0) { $0 + $1.workouts }
-        let best = buckets.map(\.workouts).max() ?? 0
-        return "\(total) workouts in the last \(buckets.count) weeks, best week \(best)."
+        let best = weekBuckets.map(\.workouts).max() ?? 0
+        return "\(totalWorkouts) workouts in the last \(range.rawValue) weeks, best week \(best)."
     }
 
     var minutesSummary: String {
-        let buckets = weekBuckets
-        let total = buckets.reduce(0) { $0 + $1.activeMinutes }
-        let best = buckets.map(\.activeMinutes).max() ?? 0
-        return "\(total) active minutes in the last \(buckets.count) weeks, best week \(best) minutes."
+        let best = weekBuckets.map(\.activeMinutes).max() ?? 0
+        return "\(totalMinutes) active minutes in the last \(range.rawValue) weeks, best week \(best) minutes."
     }
 
     var exerciseSummary: String {

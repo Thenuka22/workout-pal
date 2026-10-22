@@ -8,26 +8,27 @@ struct WorkoutHistoryView: View {
     var body: some View {
         List {
             ForEach(groups) { group in
-                Section("Week of \(Formatting.date(group.weekStart))") {
-                    ForEach(group.sessions) { session in
-                        if let selectedSession {
-                            Button {
-                                selectedSession.wrappedValue = session
-                            } label: {
-                                SessionRow(session: session, units: units)
-                            }
-                            .listRowBackground(
-                                session.id == selectedSession.wrappedValue?.id ? AppColors.accent.opacity(0.2) : nil
-                            )
-                        } else {
-                            NavigationLink(value: session) {
-                                SessionRow(session: session, units: units)
-                            }
+                Text("Week of \(Formatting.date(group.weekStart))")
+                    .eyebrow()
+                    .plainRow(top: AppSpacing.medium, bottom: AppSpacing.xSmall)
+                ForEach(group.sessions) { session in
+                    if let selectedSession {
+                        Button {
+                            selectedSession.wrappedValue = session
+                        } label: {
+                            SessionRow(session: session, units: units)
                         }
+                        .cardRow(isSelected: session.id == selectedSession.wrappedValue?.id)
+                    } else {
+                        NavigationLink(value: session) {
+                            SessionRow(session: session, units: units)
+                        }
+                        .cardRow()
                     }
                 }
             }
         }
+        .listStyle(.plain)
         .screenBackground()
     }
 }
@@ -39,7 +40,7 @@ struct SessionRow: View {
     var body: some View {
         VStack(alignment: .leading, spacing: AppSpacing.xSmall) {
             Text(session.routineName)
-                .font(.body.weight(.medium))
+                .font(.body.weight(.semibold))
                 .foregroundStyle(AppColors.textPrimary)
             Text(Formatting.dateTime(session.startedAt))
                 .font(.caption)
@@ -48,7 +49,6 @@ struct SessionRow: View {
                 .font(.caption)
                 .foregroundStyle(AppColors.textSecondary)
         }
-        .padding(.vertical, AppSpacing.xSmall)
     }
 
     private var detail: String {

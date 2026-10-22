@@ -8,6 +8,7 @@ struct WeeklySummary: Hashable, Sendable {
     var completedSets: Int
     var goal: Int
     var trainedWeekdays: Set<Int>
+    var volumeKilograms: Double
 
     var goalProgress: Double {
         guard goal > 0 else {
@@ -28,7 +29,14 @@ struct WeeklySummary: Hashable, Sendable {
         min(Double(activeMinutes) / Double(minutesTarget), 1)
     }
 
-    static let empty = WeeklySummary(workoutCount: 0, activeMinutes: 0, completedSets: 0, goal: 3, trainedWeekdays: [])
+    static let empty = WeeklySummary(
+        workoutCount: 0,
+        activeMinutes: 0,
+        completedSets: 0,
+        goal: 3,
+        trainedWeekdays: [],
+        volumeKilograms: 0
+    )
 
     static func make(
         sessions: [WorkoutSession],
@@ -37,18 +45,27 @@ struct WeeklySummary: Hashable, Sendable {
         calendar: Calendar = .current
     ) -> WeeklySummary {
         guard let week = calendar.dateInterval(of: .weekOfYear, for: now) else {
-            return WeeklySummary(workoutCount: 0, activeMinutes: 0, completedSets: 0, goal: goal, trainedWeekdays: [])
+            return WeeklySummary(
+                workoutCount: 0,
+                activeMinutes: 0,
+                completedSets: 0,
+                goal: goal,
+                trainedWeekdays: [],
+                volumeKilograms: 0
+            )
         }
         let thisWeek = sessions.filter { $0.status == .completed && week.contains($0.startedAt) }
         let seconds = thisWeek.reduce(0.0) { $0 + $1.activeSeconds }
         let sets = thisWeek.reduce(0) { $0 + $1.completedSetCount }
         let weekdays = Set(thisWeek.map { calendar.component(.weekday, from: $0.startedAt) })
+        let volume = thisWeek.reduce(0.0) { $0 + $1.loadedVolumeKilograms }
         return WeeklySummary(
             workoutCount: thisWeek.count,
             activeMinutes: Int((seconds / 60).rounded()),
             completedSets: sets,
             goal: goal,
-            trainedWeekdays: weekdays
+            trainedWeekdays: weekdays,
+            volumeKilograms: volume
         )
     }
 }
