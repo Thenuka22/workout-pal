@@ -15,6 +15,7 @@ struct ExercisePickerView: View {
             content
                 .navigationTitle("Add exercise")
                 .navigationBarTitleDisplayMode(.inline)
+                .toolbarBackground(AppColors.surface, for: .navigationBar)
                 .searchable(text: $model.searchText, prompt: "Search exercises")
                 .toolbar {
                     ToolbarItem(placement: .cancellationAction) {
@@ -32,42 +33,70 @@ struct ExercisePickerView: View {
     @ViewBuilder
     private var content: some View {
         if model.exercises.isEmpty {
-            if model.isLoading || model.isRefreshing {
-                ProgressView(model.statusText)
-                    .screenBackground()
-            } else if let message = model.errorMessage {
-                ErrorStateView(title: "Could not download exercises", message: message) {
-                    model.refresh()
-                }
-                .screenBackground()
-            } else {
-                ContentUnavailableView {
-                    Label("No exercises yet", systemImage: "books.vertical")
-                } description: {
-                    Text("Download the exercise catalogue to add exercises to a routine.")
-                } actions: {
-                    Button("Download catalogue") {
-                        model.refresh()
+            ScrollView {
+                VStack(alignment: .leading, spacing: AppSpacing.medium) {
+                    Image(systemName: "books.vertical.fill")
+                        .font(.largeTitle)
+                        .foregroundStyle(AppColors.accent)
+                    if model.isLoading || model.isRefreshing {
+                        Text("Downloading the catalogue")
+                            .cardTitle()
+                        HStack(spacing: AppSpacing.small) {
+                            ProgressView()
+                            Text(model.statusText)
+                                .font(.subheadline)
+                                .foregroundStyle(AppColors.textSecondary)
+                        }
+                    } else if let message = model.errorMessage {
+                        Text("Could not download exercises")
+                            .cardTitle()
+                        Text(message)
+                            .font(.subheadline)
+                            .foregroundStyle(AppColors.textSecondary)
+                        Button("Try again") {
+                            model.refresh()
+                        }
+                        .buttonStyle(.primaryAction)
+                    } else {
+                        Text("No exercises yet")
+                            .cardTitle()
+                        Text("Download the exercise catalogue to add exercises to a routine.")
+                            .font(.subheadline)
+                            .foregroundStyle(AppColors.textSecondary)
+                        Button {
+                            model.refresh()
+                        } label: {
+                            Label("Download catalogue", systemImage: "arrow.down.circle.fill")
+                        }
+                        .buttonStyle(.primaryAction)
                     }
-                    .buttonStyle(.borderedProminent)
                 }
-                .screenBackground()
+                .card()
+                .padding(AppSpacing.medium)
             }
+            .screenBackground()
         } else {
             List {
                 if model.filteredExercises.isEmpty {
                     ContentUnavailableView.search(text: model.searchText)
+                        .plainRow()
                 } else {
                     ForEach(model.filteredExercises) { exercise in
                         Button {
                             onPick(exercise)
                             dismiss()
                         } label: {
-                            ExerciseRow(exercise: exercise)
+                            HStack {
+                                ExerciseRow(exercise: exercise)
+                                Image(systemName: "plus.circle.fill")
+                                    .foregroundStyle(AppColors.accent)
+                            }
                         }
+                        .cardRow()
                     }
                 }
             }
+            .listStyle(.plain)
             .screenBackground()
         }
     }

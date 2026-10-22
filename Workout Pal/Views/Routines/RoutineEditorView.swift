@@ -13,17 +13,25 @@ struct RoutineEditorView: View {
     var body: some View {
         NavigationStack {
             Form {
-                Section("Routine") {
+                Section {
                     TextField("Name", text: $model.draft.name)
                     TextField("Notes", text: $model.draft.notes, axis: .vertical)
                         .lineLimit(2...4)
+                } header: {
+                    Text("Routine")
+                        .eyebrow()
                 }
+                .listRowBackground(AppColors.surfaceElevated)
                 Section {
                     ForEach($model.draft.exercises) { $item in
                         NavigationLink {
                             RoutineExerciseEditor(item: $item, units: model.units)
                         } label: {
-                            RoutineExerciseRow(index: model.draft.exercises.firstIndex { $0.id == item.id } ?? 0, item: item, units: model.units)
+                            RoutineExerciseRow(
+                                index: model.draft.exercises.firstIndex { $0.id == item.id } ?? 0,
+                                item: item,
+                                units: model.units
+                            )
                         }
                     }
                     .onMove { source, destination in
@@ -36,10 +44,12 @@ struct RoutineEditorView: View {
                         isPickingExercise = true
                     } label: {
                         Label("Add exercise", systemImage: "plus")
+                            .font(.body.weight(.semibold))
                     }
                 } header: {
                     HStack {
                         Text("Exercises")
+                            .eyebrow()
                         Spacer()
                         if !model.draft.exercises.isEmpty {
                             EditButton()
@@ -49,10 +59,12 @@ struct RoutineEditorView: View {
                 } footer: {
                     Text("Tap an exercise to change its sets, reps, load and rest. Use Edit to reorder or remove.")
                 }
+                .listRowBackground(AppColors.surfaceElevated)
             }
             .screenBackground()
             .navigationTitle(model.title)
             .navigationBarTitleDisplayMode(.inline)
+            .toolbarBackground(AppColors.surface, for: .navigationBar)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") {
@@ -63,6 +75,7 @@ struct RoutineEditorView: View {
                     Button("Save") {
                         model.save()
                     }
+                    .fontWeight(.semibold)
                     .disabled(!model.canSave)
                 }
             }

@@ -39,7 +39,7 @@ struct ExerciseDetailView: View {
 
                 if !exercise.summary.isEmpty {
                     VStack(alignment: .leading, spacing: AppSpacing.small) {
-                        SectionHeader(title: "Instructions")
+                        Text("Instructions").eyebrow()
                         Text(exercise.summary)
                             .font(.body)
                             .foregroundStyle(AppColors.textPrimary)
@@ -48,7 +48,7 @@ struct ExerciseDetailView: View {
                 }
 
                 VStack(alignment: .leading, spacing: AppSpacing.small) {
-                    SectionHeader(title: "Attribution")
+                    Text("Attribution").eyebrow()
                     Text("Exercise data from wger.de.")
                         .font(.footnote)
                         .foregroundStyle(AppColors.textSecondary)
@@ -69,13 +69,14 @@ struct ExerciseDetailView: View {
         .screenBackground()
         .navigationTitle(exercise.name)
         .navigationBarTitleDisplayMode(.inline)
+        .toolbarBackground(AppColors.surface, for: .navigationBar)
     }
 
     @ViewBuilder
     private func detailCard(title: String, items: [String]) -> some View {
         if !items.isEmpty {
             VStack(alignment: .leading, spacing: AppSpacing.small) {
-                SectionHeader(title: title)
+                Text(title).eyebrow()
                 Text(items.joined(separator: ", "))
                     .font(.body)
                     .foregroundStyle(AppColors.textPrimary)

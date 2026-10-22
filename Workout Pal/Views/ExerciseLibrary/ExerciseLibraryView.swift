@@ -10,6 +10,7 @@ struct ExerciseLibraryView: View {
     var body: some View {
         content
             .navigationTitle("Exercise library")
+            .toolbarBackground(AppColors.surface, for: .navigationBar)
             .searchable(text: $model.searchText, prompt: "Search exercises")
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
@@ -32,68 +33,91 @@ struct ExerciseLibraryView: View {
     @ViewBuilder
     private var content: some View {
         if model.exercises.isEmpty {
-            if model.isLoading || model.isRefreshing {
-                VStack(spacing: AppSpacing.medium) {
-                    ProgressView()
-                    Text(model.statusText)
-                        .font(.subheadline)
-                        .foregroundStyle(AppColors.textSecondary)
-                }
-                .screenBackground()
-            } else if let message = model.errorMessage {
-                ErrorStateView(title: "Could not download exercises", message: message) {
-                    model.refresh()
-                }
-                .screenBackground()
-            } else {
-                ContentUnavailableView {
-                    Label("No exercises yet", systemImage: "books.vertical")
-                } description: {
-                    Text("Download the exercise catalogue from wger to search exercises and build routines.")
-                } actions: {
-                    Button("Download catalogue") {
-                        model.refresh()
-                    }
-                    .buttonStyle(.borderedProminent)
-                }
-                .screenBackground()
+            ScrollView {
+                emptyCard
+                    .padding(AppSpacing.medium)
             }
+            .screenBackground()
         } else {
             List {
                 if model.isRefreshing {
-                    Section {
-                        HStack(spacing: AppSpacing.small) {
-                            ProgressView()
-                            Text(model.statusText)
-                                .foregroundStyle(AppColors.textSecondary)
-                        }
+                    HStack(spacing: AppSpacing.small) {
+                        ProgressView()
+                        Text(model.statusText)
+                            .font(.subheadline)
+                            .foregroundStyle(AppColors.textSecondary)
                     }
+                    .plainRow()
                 }
                 if let message = model.errorMessage {
-                    Section {
-                        Label(message, systemImage: "exclamationmark.triangle.fill")
-                            .foregroundStyle(AppColors.warning)
-                    }
+                    Label(message, systemImage: "exclamationmark.triangle.fill")
+                        .font(.subheadline)
+                        .foregroundStyle(AppColors.warning)
+                        .plainRow()
                 }
                 if model.filteredExercises.isEmpty {
                     ContentUnavailableView.search(text: model.searchText)
+                        .plainRow()
                 } else {
-                    Section {
-                        ForEach(model.filteredExercises) { exercise in
-                            NavigationLink(value: exercise) {
-                                ExerciseRow(exercise: exercise)
-                            }
+                    ForEach(model.filteredExercises) { exercise in
+                        NavigationLink(value: exercise) {
+                            ExerciseRow(exercise: exercise)
                         }
-                    } footer: {
-                        Text(model.attributionText)
+                        .cardRow()
                     }
+                    Text(model.attributionText)
+                        .font(.footnote)
+                        .foregroundStyle(AppColors.textSecondary)
+                        .plainRow(top: AppSpacing.medium, bottom: AppSpacing.large)
                 }
             }
+            .listStyle(.plain)
             .navigationDestination(for: Exercise.self) { exercise in
                 ExerciseDetailView(exercise: exercise)
             }
             .screenBackground()
         }
+    }
+
+    private var emptyCard: some View {
+        VStack(alignment: .leading, spacing: AppSpacing.medium) {
+            Image(systemName: "books.vertical.fill")
+                .font(.largeTitle)
+                .foregroundStyle(AppColors.accent)
+            if model.isLoading || model.isRefreshing {
+                Text("Downloading the catalogue")
+                    .cardTitle()
+                HStack(spacing: AppSpacing.small) {
+                    ProgressView()
+                    Text(model.statusText)
+                        .font(.subheadline)
+                        .foregroundStyle(AppColors.textSecondary)
+                }
+            } else if let message = model.errorMessage {
+                Text("Could not download exercises")
+                    .cardTitle()
+                Text(message)
+                    .font(.subheadline)
+                    .foregroundStyle(AppColors.textSecondary)
+                Button("Try again") {
+                    model.refresh()
+                }
+                .buttonStyle(.primaryAction)
+            } else {
+                Text("No exercises yet")
+                    .cardTitle()
+                Text("Download the exercise catalogue from wger to search exercises and build routines.")
+                    .font(.subheadline)
+                    .foregroundStyle(AppColors.textSecondary)
+                Button {
+                    model.refresh()
+                } label: {
+                    Label("Download catalogue", systemImage: "arrow.down.circle.fill")
+                }
+                .buttonStyle(.primaryAction)
+            }
+        }
+        .card()
     }
 
     private var filterMenu: some View {

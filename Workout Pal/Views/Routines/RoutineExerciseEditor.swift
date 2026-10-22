@@ -6,13 +6,18 @@ struct RoutineExerciseEditor: View {
 
     var body: some View {
         Form {
-            Section("Plan") {
+            Section {
                 Stepper("Sets: \(item.plannedSets)", value: $item.plannedSets, in: 1...10)
                 Stepper("Reps: \(item.plannedReps)", value: $item.plannedReps, in: 1...100)
                 Stepper("Rest: \(item.restSeconds) s", value: $item.restSeconds, in: 0...300, step: 15)
+            } header: {
+                Text("Plan")
+                    .eyebrow()
             }
-            Section("Load") {
+            .listRowBackground(AppColors.surfaceElevated)
+            Section {
                 Toggle("Bodyweight", isOn: bodyweightBinding)
+                    .tint(AppColors.accent)
                 if !item.plannedLoad.isBodyweight {
                     HStack {
                         TextField("Load", value: loadBinding, format: .number.precision(.fractionLength(0...1)))
@@ -21,11 +26,16 @@ struct RoutineExerciseEditor: View {
                             .foregroundStyle(AppColors.textSecondary)
                     }
                 }
+            } header: {
+                Text("Load")
+                    .eyebrow()
             }
+            .listRowBackground(AppColors.surfaceElevated)
         }
         .screenBackground()
         .navigationTitle(item.exerciseName)
         .navigationBarTitleDisplayMode(.inline)
+        .toolbarBackground(AppColors.surface, for: .navigationBar)
     }
 
     private var bodyweightBinding: Binding<Bool> {
