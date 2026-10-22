@@ -9,7 +9,7 @@ enum AppDestination: String, CaseIterable, Identifiable {
     var title: String {
         switch self {
         case .home: "Home"
-        case .train: "Train"
+        case .train: "Move"
         case .progress: "Progress"
         case .profile: "Profile"
         }

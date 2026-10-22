@@ -7,11 +7,20 @@ final class TrainViewModel {
     private(set) var routines: [Routine] = []
     private(set) var isLoading = true
     private(set) var errorMessage: String?
+    var searchText = ""
 
     private let repository: any RoutineRepository
 
     init(repository: any RoutineRepository) {
         self.repository = repository
+    }
+
+    var filteredRoutines: [Routine] {
+        let query = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !query.isEmpty else {
+            return routines
+        }
+        return routines.filter { $0.name.localizedCaseInsensitiveContains(query) }
     }
 
     func load() async {
@@ -31,7 +40,8 @@ final class TrainViewModel {
     }
 
     func delete(at offsets: IndexSet) {
-        let targets = offsets.compactMap { routines.indices.contains($0) ? routines[$0] : nil }
+        let visible = filteredRoutines
+        let targets = offsets.compactMap { visible.indices.contains($0) ? visible[$0] : nil }
         Task {
             do {
                 for routine in targets {

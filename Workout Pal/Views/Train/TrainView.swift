@@ -6,6 +6,7 @@ struct TrainView: View {
     @Environment(AppContainer.self) private var container
     @State private var model: TrainViewModel
     @State private var isCreating = false
+    @State private var isShowingLibrary = false
     @State private var selectedRoutineID: UUID?
 
     init(model: TrainViewModel) {
@@ -17,7 +18,7 @@ struct TrainView: View {
             if horizontalSizeClass == .regular {
                 HStack(spacing: 0) {
                     routineList
-                        .frame(width: 360)
+                        .frame(width: 380)
                     Divider()
                     detailPane
                 }
@@ -25,16 +26,7 @@ struct TrainView: View {
                 routineList
             }
         }
-        .navigationTitle("Train")
-        .toolbar {
-            ToolbarItem(placement: .topBarTrailing) {
-                Button {
-                    isCreating = true
-                } label: {
-                    Label("New routine", systemImage: "plus")
-                }
-            }
-        }
+        .toolbar(.hidden, for: .navigationBar)
         .sheet(isPresented: $isCreating, onDismiss: { model.reload() }) {
             RoutineEditorView(model: container.makeRoutineEditorViewModel(routine: nil))
         }
@@ -44,6 +36,9 @@ struct TrainView: View {
                 RoutineDetailView(model: container.makeRoutineDetailViewModel(routineID: id), embedded: false)
             }
         }
+        .navigationDestination(isPresented: $isShowingLibrary) {
+            ExerciseLibraryView(model: container.makeExerciseLibraryViewModel())
+        }
         .task {
             await model.load()
         }
@@ -51,49 +46,95 @@ struct TrainView: View {
 
     private var routineList: some View {
         List {
-            Section("Routines") {
-                if model.isLoading {
-                    ProgressView()
-                } else if model.routines.isEmpty {
-                    Text("No routines yet. Tap + to create one.")
-                        .foregroundStyle(AppColors.textSecondary)
-                } else {
-                    ForEach(model.routines) { routine in
-                        if horizontalSizeClass == .regular {
-                            Button {
-                                selectedRoutineID = routine.id
-                            } label: {
-                                RoutineRow(routine: routine)
-                            }
-                            .listRowBackground(
-                                routine.id == selectedRoutineID ? AppColors.accent.opacity(0.2) : nil
-                            )
-                        } else {
-                            NavigationLink(value: TrainRoute.routine(routine.id)) {
-                                RoutineRow(routine: routine)
-                            }
-                        }
-                    }
-                    .onDelete { offsets in
-                        model.delete(at: offsets)
-                    }
-                }
-            }
-            if let message = model.errorMessage {
-                Section {
-                    Label(message, systemImage: "exclamationmark.triangle.fill")
-                        .foregroundStyle(AppColors.warning)
-                }
-            }
-            Section("Library") {
-                NavigationLink {
-                    ExerciseLibraryView(model: container.makeExerciseLibraryViewModel())
+            ScreenHeader(title: "Move", subtitle: "Pick a routine for today.") {
+                Button {
+                    isCreating = true
                 } label: {
-                    Label("Exercise library", systemImage: "books.vertical.fill")
+                    Image(systemName: "plus")
+                        .font(.headline)
+                        .foregroundStyle(AppColors.onAccent)
+                        .frame(width: 44, height: 44)
+                        .background(AppColors.accent, in: Circle())
                 }
+                .buttonStyle(.plain)
+                .accessibilityLabel("New routine")
+            }
+            .plainRow(top: 0, bottom: AppSpacing.small, horizontal: 0)
+            SearchField(text: $model.searchText, prompt: "Search routines")
+                .plainRow()
+            Button {
+                isShowingLibrary = true
+            } label: {
+                HeroCard(
+                    eyebrow: "Explore",
+                    title: "Exercise library",
+                    subtitle: "Browse exercises from wger and add them to a routine.",
+                    symbolName: "books.vertical.fill"
+                )
+            }
+            .buttonStyle(.plain)
+            .plainRow()
+            Text("Your routines")
+                .cardTitle()
+                .plainRow(top: AppSpacing.medium, bottom: AppSpacing.xSmall)
+            routineRows
+            if let message = model.errorMessage {
+                Label(message, systemImage: "exclamationmark.triangle.fill")
+                    .foregroundStyle(AppColors.warning)
+                    .plainRow()
             }
         }
+        .listStyle(.plain)
         .screenBackground()
+    }
+
+    @ViewBuilder
+    private var routineRows: some View {
+        if model.isLoading {
+            ProgressView()
+                .frame(maxWidth: .infinity)
+                .plainRow()
+        } else if model.routines.isEmpty {
+            VStack(alignment: .leading, spacing: AppSpacing.medium) {
+                Text("No routines yet")
+                    .cardTitle()
+                Text("Create a routine with the exercises you want to log.")
+                    .font(.subheadline)
+                    .foregroundStyle(AppColors.textSecondary)
+                Button {
+                    isCreating = true
+                } label: {
+                    Label("Create a routine", systemImage: "plus")
+                }
+                .buttonStyle(.primaryAction)
+            }
+            .card()
+            .plainRow()
+        } else if model.filteredRoutines.isEmpty {
+            Text("No routines match \"\(model.searchText)\".")
+                .font(.subheadline)
+                .foregroundStyle(AppColors.textSecondary)
+                .plainRow()
+        } else {
+            ForEach(Array(model.filteredRoutines.enumerated()), id: \.element.id) { index, routine in
+                if horizontalSizeClass == .regular {
+                    Button {
+                        selectedRoutineID = routine.id
+                    } label: {
+                        RoutineRow(index: index, routine: routine)
+                    }
+                    .cardRow(isSelected: routine.id == selectedRoutineID)
+                } else {
+                    NavigationLink(value: TrainRoute.routine(routine.id)) {
+                        RoutineRow(index: index, routine: routine)
+                    }
+                    .cardRow()
+                }
+            }
+            .onDelete { offsets in
+                model.delete(at: offsets)
+            }
+        }
     }
 
     @ViewBuilder
@@ -117,18 +158,21 @@ struct TrainView: View {
 }
 
 struct RoutineRow: View {
+    let index: Int
     let routine: Routine
 
     var body: some View {
-        VStack(alignment: .leading, spacing: AppSpacing.xSmall) {
-            Text(routine.name)
-                .font(.body.weight(.medium))
-                .foregroundStyle(AppColors.textPrimary)
-            Text("\(routine.exercises.count) exercises")
-                .font(.caption)
-                .foregroundStyle(AppColors.textSecondary)
+        HStack(spacing: AppSpacing.medium) {
+            NumberBadge(index: index)
+            VStack(alignment: .leading, spacing: AppSpacing.xSmall) {
+                Text(routine.name)
+                    .font(.body.weight(.semibold))
+                    .foregroundStyle(AppColors.textPrimary)
+                Text("\(routine.exercises.count) exercises · about \(routine.estimatedMinutes) min")
+                    .font(.caption)
+                    .foregroundStyle(AppColors.textSecondary)
+            }
         }
-        .padding(.vertical, AppSpacing.xSmall)
     }
 }
 
