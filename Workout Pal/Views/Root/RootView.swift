@@ -3,6 +3,7 @@ import UIKit
 
 struct RootView: View {
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+    @Environment(AppContainer.self) private var container
     @State private var model: RootViewModel
     @State private var navigation = AppNavigation()
 
@@ -25,7 +26,9 @@ struct RootView: View {
                     model.retryLoadingStore()
                 }
             case .ready:
-                if usesSidebar {
+                if model.needsOnboarding {
+                    OnboardingView(model: container.makeOnboardingViewModel())
+                } else if usesSidebar {
                     RegularRootView(selection: $navigation.selection)
                 } else {
                     CompactRootView(selection: $navigation.selection)

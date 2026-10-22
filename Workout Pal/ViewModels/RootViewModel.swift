@@ -24,6 +24,14 @@ final class RootViewModel {
         settings.preferences.appearance
     }
 
+    var needsOnboarding: Bool {
+        !settings.preferences.hasCompletedOnboarding
+    }
+
+    var displayName: String {
+        settings.preferences.displayName
+    }
+
     func loadStore() async {
         if case .ready = storeState {
             return

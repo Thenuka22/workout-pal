@@ -54,6 +54,10 @@ final class AppContainer {
         ProgressHomeViewModel(repository: sessions, settings: settings)
     }
 
+    func makeOnboardingViewModel() -> OnboardingViewModel {
+        OnboardingViewModel(settings: settings)
+    }
+
     func makeProfileViewModel() -> ProfileViewModel {
         ProfileViewModel(settings: settings)
     }
