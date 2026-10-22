@@ -20,6 +20,17 @@ struct UserDefaultsPreferencesStore: PreferencesStore, @unchecked Sendable {
         if let raw = defaults.string(forKey: Keys.appearance), let appearance = AppearancePreference(rawValue: raw) {
             preferences.appearance = appearance
         }
+        if let raw = defaults.string(forKey: Keys.gender) {
+            preferences.gender = GenderPreference(rawValue: raw)
+        }
+        let height = defaults.integer(forKey: Keys.heightCentimetres)
+        if UserPreferences.heightRange.contains(height) {
+            preferences.heightCentimetres = height
+        }
+        if let raw = defaults.string(forKey: Keys.fitnessLevel) {
+            preferences.fitnessLevel = FitnessLevel(rawValue: raw)
+        }
+        preferences.hasCompletedOnboarding = defaults.bool(forKey: Keys.hasCompletedOnboarding)
         return preferences
     }
 
@@ -28,6 +39,10 @@ struct UserDefaultsPreferencesStore: PreferencesStore, @unchecked Sendable {
         defaults.set(preferences.weeklyGoal, forKey: Keys.weeklyGoal)
         defaults.set(preferences.units.rawValue, forKey: Keys.units)
         defaults.set(preferences.appearance.rawValue, forKey: Keys.appearance)
+        defaults.set(preferences.gender?.rawValue, forKey: Keys.gender)
+        defaults.set(preferences.heightCentimetres ?? 0, forKey: Keys.heightCentimetres)
+        defaults.set(preferences.fitnessLevel?.rawValue, forKey: Keys.fitnessLevel)
+        defaults.set(preferences.hasCompletedOnboarding, forKey: Keys.hasCompletedOnboarding)
     }
 
     private enum Keys {
@@ -35,5 +50,9 @@ struct UserDefaultsPreferencesStore: PreferencesStore, @unchecked Sendable {
         static let weeklyGoal = "preferences.weeklyGoal"
         static let units = "preferences.units"
         static let appearance = "preferences.appearance"
+        static let gender = "preferences.gender"
+        static let heightCentimetres = "preferences.heightCentimetres"
+        static let fitnessLevel = "preferences.fitnessLevel"
+        static let hasCompletedOnboarding = "preferences.hasCompletedOnboarding"
     }
 }
