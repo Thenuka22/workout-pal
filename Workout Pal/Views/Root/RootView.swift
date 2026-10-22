@@ -29,7 +29,7 @@ struct RootView: View {
                 if model.needsOnboarding {
                     OnboardingView(model: container.makeOnboardingViewModel())
                 } else if usesSidebar {
-                    RegularRootView(selection: $navigation.selection)
+                    RegularRootView(selection: $navigation.selection, displayName: model.displayName)
                 } else {
                     CompactRootView(selection: $navigation.selection)
                 }
