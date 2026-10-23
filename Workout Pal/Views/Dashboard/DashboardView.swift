@@ -49,10 +49,7 @@ struct DashboardView: View {
             WorkoutSessionView(model: container.makeWorkoutSessionViewModel(session: session))
         }
         .navigationDestination(for: TrainRoute.self) { route in
-            switch route {
-            case .routine(let id):
-                RoutineDetailView(model: container.makeRoutineDetailViewModel(routineID: id), embedded: false)
-            }
+            TrainRouteView(route: route)
         }
         .confirmationDialog("Discard this workout?", isPresented: $isConfirmingDiscard, titleVisibility: .visible) {
             Button("Discard workout", role: .destructive) {

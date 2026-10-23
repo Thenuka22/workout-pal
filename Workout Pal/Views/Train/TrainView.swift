@@ -31,10 +31,7 @@ struct TrainView: View {
             RoutineEditorView(model: container.makeRoutineEditorViewModel(routine: nil))
         }
         .navigationDestination(for: TrainRoute.self) { route in
-            switch route {
-            case .routine(let id):
-                RoutineDetailView(model: container.makeRoutineDetailViewModel(routineID: id), embedded: false)
-            }
+            TrainRouteView(route: route)
         }
         .navigationDestination(isPresented: $isShowingLibrary) {
             ExerciseLibraryView(model: container.makeExerciseLibraryViewModel())
@@ -71,6 +68,17 @@ struct TrainView: View {
                     subtitle: "Browse exercises from wger and add them to a routine.",
                     symbolName: "books.vertical.fill"
                 )
+            }
+            .buttonStyle(.plain)
+            .plainRow()
+            NavigationLink(value: TrainRoute.repCounter) {
+                LinkRow(
+                    title: "Camera rep counter",
+                    subtitle: "Count squats and jumping jacks with on-device pose detection",
+                    symbolName: "camera.viewfinder",
+                    isHighlighted: true
+                )
+                .card()
             }
             .buttonStyle(.plain)
             .plainRow()

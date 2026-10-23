@@ -67,4 +67,8 @@ final class AppContainer {
     func makePermissionsViewModel() -> PermissionsViewModel {
         PermissionsViewModel(permissions: permissions)
     }
+
+    func makeRepCounterViewModel(exercise: CameraExercise? = nil) -> RepCounterViewModel {
+        RepCounterViewModel(camera: VisionPoseCamera(), permissions: permissions, exercise: exercise)
+    }
 }
