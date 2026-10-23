@@ -6,8 +6,19 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXContainerItemProxy section */
+		8A626D763084C89600A3619D /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 8A626D583084C89300A3619D /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 8A626D5F3084C89300A3619D;
+			remoteInfo = "Workout Pal";
+		};
+/* End PBXContainerItemProxy section */
+
 /* Begin PBXFileReference section */
 		8A626D603084C89300A3619D /* Workout Pal.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Workout Pal.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		8A626D703084C89600A3619D /* Workout PalTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Workout PalTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -16,10 +27,22 @@
 			path = "Workout Pal";
 			sourceTree = "<group>";
 		};
+		8A626D713084C89600A3619D /* Workout PalTests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = "Workout PalTests";
+			sourceTree = "<group>";
+		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
 		8A626D5D3084C89300A3619D /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		8A626D733084C89600A3619D /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -33,6 +56,7 @@
 			isa = PBXGroup;
 			children = (
 				8A626D623084C89300A3619D /* Workout Pal */,
+				8A626D713084C89600A3619D /* Workout PalTests */,
 				8A626D613084C89300A3619D /* Products */,
 			);
 			sourceTree = "<group>";
@@ -41,6 +65,7 @@
 			isa = PBXGroup;
 			children = (
 				8A626D603084C89300A3619D /* Workout Pal.app */,
+				8A626D703084C89600A3619D /* Workout PalTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -70,6 +95,29 @@
 			productReference = 8A626D603084C89300A3619D /* Workout Pal.app */;
 			productType = "com.apple.product-type.application";
 		};
+		8A626D753084C89600A3619D /* Workout PalTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 8A626D783084C89600A3619D /* Build configuration list for PBXNativeTarget "Workout PalTests" */;
+			buildPhases = (
+				8A626D723084C89600A3619D /* Sources */,
+				8A626D733084C89600A3619D /* Frameworks */,
+				8A626D743084C89600A3619D /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				8A626D773084C89600A3619D /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				8A626D713084C89600A3619D /* Workout PalTests */,
+			);
+			name = "Workout PalTests";
+			packageProductDependencies = (
+			);
+			productName = "Workout PalTests";
+			productReference = 8A626D703084C89600A3619D /* Workout PalTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -82,6 +130,10 @@
 				TargetAttributes = {
 					8A626D5F3084C89300A3619D = {
 						CreatedOnToolsVersion = 26.0;
+					};
+					8A626D753084C89600A3619D = {
+						CreatedOnToolsVersion = 26.0;
+						TestTargetID = 8A626D5F3084C89300A3619D;
 					};
 				};
 			};
@@ -100,12 +152,20 @@
 			projectRoot = "";
 			targets = (
 				8A626D5F3084C89300A3619D /* Workout Pal */,
+				8A626D753084C89600A3619D /* Workout PalTests */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
 		8A626D5E3084C89300A3619D /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		8A626D743084C89600A3619D /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -122,7 +182,22 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		8A626D723084C89600A3619D /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		8A626D773084C89600A3619D /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 8A626D5F3084C89300A3619D /* Workout Pal */;
+			targetProxy = 8A626D763084C89600A3619D /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		8A626D693084C89500A3619D /* Debug */ = {
@@ -306,6 +381,48 @@
 			};
 			name = Release;
 		};
+		8A626D793084C89600A3619D /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.itkannangara.Workout-PalTests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = nonisolated;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Workout Pal.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Workout Pal";
+			};
+			name = Debug;
+		};
+		8A626D7A3084C89600A3619D /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.itkannangara.Workout-PalTests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = nonisolated;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Workout Pal.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Workout Pal";
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -323,6 +440,15 @@
 			buildConfigurations = (
 				8A626D6C3084C89500A3619D /* Debug */,
 				8A626D6D3084C89500A3619D /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		8A626D783084C89600A3619D /* Build configuration list for PBXNativeTarget "Workout PalTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				8A626D793084C89600A3619D /* Debug */,
+				8A626D7A3084C89600A3619D /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

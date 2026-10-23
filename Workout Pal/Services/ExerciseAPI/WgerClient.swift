@@ -31,6 +31,10 @@ struct WgerClient: Sendable {
         guard (200..<300).contains(http.statusCode) else {
             throw WgerClientError.badResponse(http.statusCode)
         }
+        return try Self.decodePage(from: data)
+    }
+
+    static func decodePage(from data: Data) throws -> ExercisePageDTO {
         let decoder = JSONDecoder()
         decoder.keyDecodingStrategy = .convertFromSnakeCase
         return try decoder.decode(ExercisePageDTO.self, from: data)
