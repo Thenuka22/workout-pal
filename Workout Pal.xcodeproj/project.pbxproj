@@ -21,9 +21,22 @@
 		8A626D703084C89600A3619D /* Workout PalTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Workout PalTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		8A626D7B3084C89600A3619D /* Exceptions for "Workout Pal" folder in "Workout Pal" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				"Workout Pal.entitlements",
+			);
+			target = 8A626D5F3084C89300A3619D /* Workout Pal */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		8A626D623084C89300A3619D /* Workout Pal */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				8A626D7B3084C89600A3619D /* Exceptions for "Workout Pal" folder in "Workout Pal" target */,
+			);
 			path = "Workout Pal";
 			sourceTree = "<group>";
 		};
@@ -324,10 +337,16 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = "Workout Pal/Workout Pal.entitlements";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSCameraUsageDescription = "Workout Pal uses the camera to count your squats and jumping jacks. Video is analysed on this device and never saved or uploaded.";
+				INFOPLIST_KEY_NSFaceIDUsageDescription = "Workout Pal uses Face ID to unlock your workout history.";
+				INFOPLIST_KEY_NSHealthShareUsageDescription = "Workout Pal shows your steps, walking and running distance and workouts from Apple Health.";
+				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "Workout Pal saves the workouts you finish to Apple Health.";
+				INFOPLIST_KEY_NSMotionUsageDescription = "Workout Pal reads your steps, distance and motion type to track walks and runs.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -355,10 +374,16 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = "Workout Pal/Workout Pal.entitlements";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSCameraUsageDescription = "Workout Pal uses the camera to count your squats and jumping jacks. Video is analysed on this device and never saved or uploaded.";
+				INFOPLIST_KEY_NSFaceIDUsageDescription = "Workout Pal uses Face ID to unlock your workout history.";
+				INFOPLIST_KEY_NSHealthShareUsageDescription = "Workout Pal shows your steps, walking and running distance and workouts from Apple Health.";
+				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "Workout Pal saves the workouts you finish to Apple Health.";
+				INFOPLIST_KEY_NSMotionUsageDescription = "Workout Pal reads your steps, distance and motion type to track walks and runs.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;

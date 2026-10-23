@@ -10,6 +10,7 @@ final class AppContainer {
     private let catalog: any ExerciseCatalogRepository
     private let catalogSync: any ExerciseCatalogSyncing
     private let settings: AppSettings
+    private let permissions: any PermissionsProviding
 
     init(inMemory: Bool = false) {
         let stack = CoreDataStack(inMemory: inMemory)
@@ -20,6 +21,7 @@ final class AppContainer {
         sessions = CoreDataWorkoutSessionRepository(stack: stack)
         catalogSync = ExerciseCatalogSync(client: WgerClient(), catalog: catalog)
         settings = AppSettings(store: UserDefaultsPreferencesStore())
+        permissions = SystemPermissions()
     }
 
     func makeRootViewModel() -> RootViewModel {
@@ -60,5 +62,9 @@ final class AppContainer {
 
     func makeProfileViewModel() -> ProfileViewModel {
         ProfileViewModel(settings: settings)
+    }
+
+    func makePermissionsViewModel() -> PermissionsViewModel {
+        PermissionsViewModel(permissions: permissions)
     }
 }

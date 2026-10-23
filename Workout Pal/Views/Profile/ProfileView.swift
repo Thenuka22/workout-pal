@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct ProfileView: View {
+    @Environment(AppContainer.self) private var container
     @State private var model: ProfileViewModel
     @State private var isEditingHeight = false
 
@@ -17,6 +18,7 @@ struct ProfileView: View {
                     goalCard
                     planCard
                     preferencesCard
+                    privacyCard
                     aboutCard
                 }
                 .padding(.horizontal, AppSpacing.medium)
@@ -27,6 +29,12 @@ struct ProfileView: View {
         .toolbar(.hidden, for: .navigationBar)
         .sheet(isPresented: $isEditingHeight) {
             heightSheet
+        }
+        .navigationDestination(for: ProfileRoute.self) { route in
+            switch route {
+            case .permissions:
+                PermissionsView(model: container.makePermissionsViewModel())
+            }
         }
     }
 
@@ -140,6 +148,18 @@ struct ProfileView: View {
         .card()
     }
 
+    private var privacyCard: some View {
+        NavigationLink(value: ProfileRoute.permissions) {
+            LinkRow(
+                title: "Privacy & permissions",
+                subtitle: "Camera, motion, Apple Health and notifications",
+                symbolName: "hand.raised.fill"
+            )
+            .card()
+        }
+        .buttonStyle(.plain)
+    }
+
     private var aboutCard: some View {
         VStack(alignment: .leading, spacing: AppSpacing.small) {
             Text("About")
@@ -200,7 +220,9 @@ struct ProfileView: View {
 }
 
 #Preview {
-    NavigationStack {
-        ProfileView(model: AppContainer(inMemory: true).makeProfileViewModel())
+    let container = AppContainer(inMemory: true)
+    return NavigationStack {
+        ProfileView(model: container.makeProfileViewModel())
     }
+    .environment(container)
 }
