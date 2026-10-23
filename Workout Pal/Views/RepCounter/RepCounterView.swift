@@ -165,6 +165,7 @@ struct RepCounterView: View {
 
     private func controls(for exercise: CameraExercise) -> some View {
         VStack(alignment: .leading, spacing: AppSpacing.medium) {
+            countCard(for: exercise)
             VStack(alignment: .leading, spacing: AppSpacing.small) {
                 Text(model.trackingStatus.title)
                     .eyebrow()
@@ -175,6 +176,48 @@ struct RepCounterView: View {
             }
             .card()
             setupCard(for: exercise)
+        }
+    }
+
+    private func countCard(for exercise: CameraExercise) -> some View {
+        VStack(alignment: .leading, spacing: AppSpacing.medium) {
+            Text(exercise.title)
+                .eyebrow()
+            HStack(alignment: .firstTextBaseline, spacing: AppSpacing.small) {
+                Text("\(model.detectedReps)")
+                    .font(.system(size: 56, weight: .bold, design: .rounded).monospacedDigit())
+                    .foregroundStyle(AppColors.textPrimary)
+                    .contentTransition(.numericText())
+                Text("reps")
+                    .font(.headline)
+                    .foregroundStyle(AppColors.textSecondary)
+            }
+            .accessibilityElement(children: .combine)
+            if model.isCounting {
+                Text(model.countingHint)
+                    .font(.subheadline)
+                    .foregroundStyle(AppColors.textSecondary)
+                Button {
+                    model.stopCounting()
+                } label: {
+                    Label("Stop counting", systemImage: "stop.fill")
+                }
+                .buttonStyle(.secondaryAction)
+            } else {
+                Button {
+                    model.startCounting()
+                } label: {
+                    Label("Start counting", systemImage: "play.fill")
+                }
+                .buttonStyle(.primaryAction)
+                .disabled(!model.canStartCounting)
+            }
+        }
+        .card()
+        .onChange(of: model.detectedReps) { _, reps in
+            if reps > 0 {
+                AccessibilityNotification.Announcement("\(reps)").post()
+            }
         }
     }
 

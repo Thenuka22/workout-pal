@@ -21,10 +21,14 @@ final class RepCounterViewModel {
     private(set) var cameraState: CameraState = .idle
     private(set) var latestFrame: PoseFrame?
     private(set) var trackingStatus: TrackingStatus = .searching
+    private(set) var isCounting = false
+    private(set) var detectedReps = 0
+    private(set) var countingHint = ""
 
     private let camera: any PoseDetecting
     private let permissions: any PermissionsProviding
     @ObservationIgnored private var streamTask: Task<Void, Never>?
+    @ObservationIgnored private var counter: RepCounter?
 
     init(camera: any PoseDetecting, permissions: any PermissionsProviding, exercise: CameraExercise? = nil) {
         self.camera = camera
@@ -39,6 +43,10 @@ final class RepCounterViewModel {
 
     var isCameraActive: Bool {
         cameraState == .starting || cameraState == .running
+    }
+
+    var canStartCounting: Bool {
+        cameraState == .running && !isCounting
     }
 
     func select(_ exercise: CameraExercise) {
@@ -74,7 +82,24 @@ final class RepCounterViewModel {
         }
     }
 
+    func startCounting() {
+        guard let exercise, canStartCounting else {
+            return
+        }
+        let counter = RepCounter(exercise: exercise)
+        self.counter = counter
+        detectedReps = 0
+        countingHint = counter.hint
+        isCounting = true
+    }
+
+    func stopCounting() {
+        isCounting = false
+        counter = nil
+    }
+
     func stopCamera() {
+        stopCounting()
         streamTask?.cancel()
         streamTask = nil
         camera.stop()
@@ -110,6 +135,14 @@ final class RepCounterViewModel {
             return
         }
         latestFrame = frame
-        trackingStatus = exercise.trackingStatus(for: frame)
+        guard isCounting, var counter else {
+            trackingStatus = exercise.trackingStatus(for: frame)
+            return
+        }
+        counter.process(frame)
+        self.counter = counter
+        trackingStatus = counter.status
+        detectedReps = counter.count
+        countingHint = counter.hint
     }
 }
