@@ -19,6 +19,13 @@ struct FormattingTests {
         #expect(Formatting.volume(kilograms: 0, units: .pounds) == "Bodyweight only")
     }
 
+    @Test func elapsedTimeUsesClockStyle() {
+        #expect(Formatting.elapsed(seconds: 0) == "00:00")
+        #expect(Formatting.elapsed(seconds: 75.9) == "01:15")
+        #expect(Formatting.elapsed(seconds: 3_725) == "1:02:05")
+        #expect(Formatting.elapsed(seconds: -5) == "00:00")
+    }
+
     @Test func unitSymbols() {
         #expect(UnitPreference.kilograms.symbol == "kg")
         #expect(UnitPreference.pounds.symbol == "lb")

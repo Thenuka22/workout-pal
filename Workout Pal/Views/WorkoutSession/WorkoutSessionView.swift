@@ -1,3 +1,4 @@
+import Foundation
 import SwiftUI
 
 struct WorkoutSessionView: View {
@@ -73,16 +74,18 @@ struct WorkoutSessionView: View {
     private var summaryCard: some View {
         VStack(alignment: .leading, spacing: AppSpacing.medium) {
             HStack(alignment: .firstTextBaseline) {
-                Text("Elapsed")
+                Text(model.isPaused ? "Paused" : "Elapsed")
                     .eyebrow()
                 Spacer()
                 Text(model.progressText)
                     .font(.subheadline)
                     .foregroundStyle(AppColors.textSecondary)
             }
-            Text(model.session.startedAt, style: .timer)
-                .font(.system(size: 40, weight: .bold, design: .rounded).monospacedDigit())
-                .foregroundStyle(AppColors.textPrimary)
+            TimelineView(.periodic(from: .now, by: 1)) { context in
+                Text(Formatting.elapsed(seconds: model.elapsedSeconds(at: context.date)))
+                    .font(.system(size: 40, weight: .bold, design: .rounded).monospacedDigit())
+                    .foregroundStyle(model.isPaused ? AppColors.textSecondary : AppColors.textPrimary)
+            }
             ProgressView(
                 value: Double(model.session.completedSetCount),
                 total: Double(max(model.session.totalSetCount, 1))
@@ -172,12 +175,24 @@ struct WorkoutSessionView: View {
                     model.skipRest()
                 }
             }
-            Button {
-                isConfirmingFinish = true
-            } label: {
-                Label("Finish workout", systemImage: "flag.checkered")
+            HStack(spacing: AppSpacing.small) {
+                Button {
+                    if model.isPaused {
+                        model.resume()
+                    } else {
+                        model.pause()
+                    }
+                } label: {
+                    Label(model.isPaused ? "Resume" : "Pause", systemImage: model.isPaused ? "play.fill" : "pause.fill")
+                }
+                .buttonStyle(.secondaryAction)
+                Button {
+                    isConfirmingFinish = true
+                } label: {
+                    Label("Finish", systemImage: "flag.checkered")
+                }
+                .buttonStyle(.primaryAction)
             }
-            .buttonStyle(.primaryAction)
         }
         .padding(.horizontal, AppSpacing.medium)
         .padding(.vertical, AppSpacing.small)

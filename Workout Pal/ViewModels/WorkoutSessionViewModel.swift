@@ -13,18 +13,29 @@ final class WorkoutSessionViewModel {
 
     private let repository: any WorkoutSessionRepository
     private let settings: AppSettings
+    private let now: @MainActor () -> Date
     @ObservationIgnored private var saveTask: Task<Void, Never>?
     @ObservationIgnored private var restTask: Task<Void, Never>?
 
-    init(session: WorkoutSession, repository: any WorkoutSessionRepository, settings: AppSettings) {
+    init(
+        session: WorkoutSession,
+        repository: any WorkoutSessionRepository,
+        settings: AppSettings,
+        now: @escaping @MainActor () -> Date = { .now }
+    ) {
         self.session = session
         self.repository = repository
         self.settings = settings
+        self.now = now
         selectedExerciseID = session.exercises.first?.id
     }
 
     var units: UnitPreference {
         settings.preferences.units
+    }
+
+    var isPaused: Bool {
+        session.isPaused
     }
 
     var selectedExercise: SessionExercise? {
@@ -65,7 +76,28 @@ final class WorkoutSessionViewModel {
         }
     }
 
+    func elapsedSeconds(at date: Date) -> Double {
+        session.activeSeconds(at: date)
+    }
+
     func start() {
+        persist()
+    }
+
+    func pause() {
+        guard !isPaused else {
+            return
+        }
+        skipRest()
+        session.pauses = SessionTiming.pausing(session.pauses, at: now())
+        persist()
+    }
+
+    func resume() {
+        guard isPaused else {
+            return
+        }
+        session.pauses = SessionTiming.resuming(session.pauses, at: now())
         persist()
     }
 
@@ -108,8 +140,12 @@ final class WorkoutSessionViewModel {
             return
         }
         let completed = !session.exercises[index].sets[setIndex].isCompleted
+        let date = now()
+        if completed && isPaused {
+            session.pauses = SessionTiming.resuming(session.pauses, at: date)
+        }
         session.exercises[index].sets[setIndex].isCompleted = completed
-        session.exercises[index].sets[setIndex].completedAt = completed ? .now : nil
+        session.exercises[index].sets[setIndex].completedAt = completed ? date : nil
         if completed {
             startRest(seconds: session.exercises[index].restSeconds)
         }
@@ -125,10 +161,11 @@ final class WorkoutSessionViewModel {
 
     func finish() {
         skipRest()
-        let now = Date.now
+        let end = now()
+        session.pauses = SessionTiming.resuming(session.pauses, at: end)
         session.status = .completed
-        session.endedAt = now
-        session.activeSeconds = max(0, now.timeIntervalSince(session.startedAt))
+        session.endedAt = end
+        session.activeSeconds = session.activeSeconds(at: end)
         let snapshot = session
         let previous = saveTask
         saveTask = Task {
@@ -149,7 +186,7 @@ final class WorkoutSessionViewModel {
             restEndsAt = nil
             return
         }
-        let start = Date.now
+        let start = now()
         restStartedAt = start
         restEndsAt = start.addingTimeInterval(TimeInterval(seconds))
         restTask = Task {
