@@ -13,6 +13,20 @@ enum EntityMapping {
     static func load(isBodyweight: Bool, kilograms: Double) -> Load {
         isBodyweight ? .bodyweight : .kilograms(kilograms)
     }
+
+    static func data(from pauses: [PauseInterval]) -> Data? {
+        guard !pauses.isEmpty else {
+            return nil
+        }
+        return try? JSONEncoder().encode(pauses)
+    }
+
+    static func pauses(from data: Data?) -> [PauseInterval] {
+        guard let data else {
+            return []
+        }
+        return (try? JSONDecoder().decode([PauseInterval].self, from: data)) ?? []
+    }
 }
 
 extension ExerciseEntity {
@@ -130,7 +144,9 @@ extension WorkoutSessionEntity {
             activeSeconds: activeSeconds,
             status: SessionStatus(rawValue: status) ?? .completed,
             notes: notes,
-            exercises: items
+            exercises: items,
+            pauses: EntityMapping.pauses(from: pausesData),
+            healthExport: HealthExportStatus(rawValue: healthExportStatus) ?? .notExported
         )
     }
 
@@ -144,6 +160,8 @@ extension WorkoutSessionEntity {
         activeSeconds = session.activeSeconds
         status = session.status.rawValue
         notes = session.notes
+        pausesData = EntityMapping.data(from: session.pauses)
+        healthExportStatus = session.healthExport.rawValue
         if let existing = exercises as? Set<SessionExerciseEntity> {
             for entity in existing {
                 context.delete(entity)
@@ -206,5 +224,38 @@ extension WorkoutSetEntity {
         isCompleted = set.isCompleted
         completedAt = set.completedAt
         source = set.source.rawValue
+    }
+}
+
+extension ActivitySessionEntity {
+    func toActivity() -> ActivitySession {
+        ActivitySession(
+            id: id,
+            ownerID: ownerID,
+            kind: ActivityKind(rawValue: kind) ?? .walk,
+            status: SessionStatus(rawValue: status) ?? .completed,
+            startedAt: startedAt,
+            endedAt: endedAt,
+            pauses: EntityMapping.pauses(from: pausesData),
+            steps: Int(steps),
+            distanceMeters: hasDistance ? distanceMeters : nil,
+            detectedMotion: detectedMotion.flatMap { DetectedMotion(rawValue: $0) },
+            healthExport: HealthExportStatus(rawValue: healthExportStatus) ?? .notExported
+        )
+    }
+
+    func apply(_ activity: ActivitySession) {
+        id = activity.id
+        ownerID = activity.ownerID
+        kind = activity.kind.rawValue
+        status = activity.status.rawValue
+        startedAt = activity.startedAt
+        endedAt = activity.endedAt
+        pausesData = EntityMapping.data(from: activity.pauses)
+        steps = Int64(activity.steps)
+        distanceMeters = activity.distanceMeters ?? 0
+        hasDistance = activity.distanceMeters != nil
+        detectedMotion = activity.detectedMotion?.rawValue
+        healthExportStatus = activity.healthExport.rawValue
     }
 }

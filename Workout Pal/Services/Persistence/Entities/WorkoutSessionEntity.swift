@@ -12,5 +12,7 @@ class WorkoutSessionEntity: NSManagedObject {
     @NSManaged var activeSeconds: Double
     @NSManaged var status: String
     @NSManaged var notes: String
+    @NSManaged var pausesData: Data?
+    @NSManaged var healthExportStatus: String
     @NSManaged var exercises: NSSet?
 }

@@ -2,10 +2,20 @@ import CoreData
 import Foundation
 
 actor CoreDataStack: PersistentStore {
+    nonisolated(unsafe) private static let model: NSManagedObjectModel = {
+        let bundle = Bundle(for: WorkoutSessionEntity.self)
+        guard let url = bundle.url(forResource: "WorkoutPal", withExtension: "momd"),
+              let model = NSManagedObjectModel(contentsOf: url)
+        else {
+            return NSManagedObjectModel()
+        }
+        return model
+    }()
+
     private let container: NSPersistentContainer
 
     init(inMemory: Bool = false) {
-        let container = NSPersistentContainer(name: "WorkoutPal")
+        let container = NSPersistentContainer(name: "WorkoutPal", managedObjectModel: Self.model)
         if inMemory {
             container.persistentStoreDescriptions.first?.url = URL(fileURLWithPath: "/dev/null")
         }

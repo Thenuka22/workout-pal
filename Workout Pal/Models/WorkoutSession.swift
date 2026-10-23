@@ -21,6 +21,16 @@ struct WorkoutSession: Identifiable, Hashable, Sendable {
     var status: SessionStatus
     var notes: String
     var exercises: [SessionExercise]
+    var pauses: [PauseInterval] = []
+    var healthExport: HealthExportStatus = .notExported
+
+    var isPaused: Bool {
+        SessionTiming.isPaused(pauses)
+    }
+
+    func activeSeconds(at now: Date) -> Double {
+        SessionTiming.activeSeconds(startedAt: startedAt, endedAt: endedAt, pauses: pauses, now: now)
+    }
 
     var totalSetCount: Int {
         exercises.reduce(0) { $0 + $1.sets.count }

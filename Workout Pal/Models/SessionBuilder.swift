@@ -29,7 +29,9 @@ enum SessionBuilder {
                         )
                     }
                 )
-            }
+            },
+            pauses: [],
+            healthExport: .notExported
         )
     }
 }

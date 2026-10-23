@@ -43,6 +43,16 @@ struct CoreDataWorkoutSessionRepository: WorkoutSessionRepository {
         }
     }
 
+    func updateHealthExport(id: UUID, status: HealthExportStatus) async throws {
+        try await stack.perform { context in
+            guard let entity = try Self.entity(id: id, in: context) else {
+                return
+            }
+            entity.healthExportStatus = status.rawValue
+            try context.save()
+        }
+    }
+
     func deleteSession(id: UUID) async throws {
         try await stack.perform { context in
             guard let entity = try Self.entity(id: id, in: context) else {
