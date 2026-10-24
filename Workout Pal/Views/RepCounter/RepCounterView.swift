@@ -3,13 +3,16 @@ import SwiftUI
 import UIKit
 
 struct RepCounterView: View {
+    @Environment(\.dismiss) private var dismiss
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.openURL) private var openURL
     @State private var model: RepCounterViewModel
+    private let onAccept: (Int) -> Void
 
-    init(model: RepCounterViewModel) {
+    init(model: RepCounterViewModel, onAccept: @escaping (Int) -> Void = { _ in }) {
         _model = State(initialValue: model)
+        self.onAccept = onAccept
     }
 
     var body: some View {
@@ -31,6 +34,17 @@ struct RepCounterView: View {
                         model.changeExercise()
                     }
                 }
+            }
+        }
+        .alert("Could not save reps", isPresented: $model.isShowingError) {
+            Button("OK") {}
+        } message: {
+            Text(model.errorMessage ?? "")
+        }
+        .onChange(of: model.acceptedReps) { _, reps in
+            if let reps {
+                onAccept(reps)
+                dismiss()
             }
         }
         .onDisappear {
@@ -67,7 +81,6 @@ struct RepCounterView: View {
         }
     }
 
-    @ViewBuilder
     private func counter(for exercise: CameraExercise) -> some View {
         Group {
             if horizontalSizeClass == .regular {
@@ -142,7 +155,7 @@ struct RepCounterView: View {
     private var trackingPill: some View {
         HStack(spacing: AppSpacing.xSmall) {
             Circle()
-                .fill(pillColor)
+                .fill(AppColors.onAccent)
                 .frame(width: 8, height: 8)
             Text("Vision · \(model.trackingStatus.title)")
                 .font(.caption.weight(.bold))
@@ -151,7 +164,8 @@ struct RepCounterView: View {
         .foregroundStyle(AppColors.onAccent)
         .padding(.horizontal, AppSpacing.small)
         .padding(.vertical, AppSpacing.xSmall)
-        .background(pillColor.opacity(0.9), in: Capsule())
+        .background(pillColor, in: Capsule())
+        .accessibilityElement(children: .ignore)
         .accessibilityLabel("Tracking status: \(model.trackingStatus.title)")
     }
 
@@ -165,7 +179,12 @@ struct RepCounterView: View {
 
     private func controls(for exercise: CameraExercise) -> some View {
         VStack(alignment: .leading, spacing: AppSpacing.medium) {
-            countCard(for: exercise)
+            if model.isReviewing {
+                reviewCard(for: exercise)
+            } else {
+                countCard(for: exercise)
+            }
+            savedSetsCard
             VStack(alignment: .leading, spacing: AppSpacing.small) {
                 Text(model.trackingStatus.title)
                     .eyebrow()
@@ -183,16 +202,7 @@ struct RepCounterView: View {
         VStack(alignment: .leading, spacing: AppSpacing.medium) {
             Text(exercise.title)
                 .eyebrow()
-            HStack(alignment: .firstTextBaseline, spacing: AppSpacing.small) {
-                Text("\(model.detectedReps)")
-                    .font(.system(size: 56, weight: .bold, design: .rounded).monospacedDigit())
-                    .foregroundStyle(AppColors.textPrimary)
-                    .contentTransition(.numericText())
-                Text("reps")
-                    .font(.headline)
-                    .foregroundStyle(AppColors.textSecondary)
-            }
-            .accessibilityElement(children: .combine)
+            repCount(model.detectedReps)
             if model.isCounting {
                 Text(model.countingHint)
                     .font(.subheadline)
@@ -200,7 +210,7 @@ struct RepCounterView: View {
                 Button {
                     model.stopCounting()
                 } label: {
-                    Label("Stop counting", systemImage: "stop.fill")
+                    Label("Stop and review", systemImage: "stop.fill")
                 }
                 .buttonStyle(.secondaryAction)
             } else {
@@ -215,9 +225,76 @@ struct RepCounterView: View {
         }
         .card()
         .onChange(of: model.detectedReps) { _, reps in
-            if reps > 0 {
+            if reps > 0 && model.isCounting {
                 AccessibilityNotification.Announcement("\(reps)").post()
             }
+        }
+    }
+
+    private func reviewCard(for exercise: CameraExercise) -> some View {
+        VStack(alignment: .leading, spacing: AppSpacing.medium) {
+            Text("Check your count")
+                .eyebrow()
+            Text("The camera counted \(model.detectedReps). Change the number if it missed a rep or added one.")
+                .font(.subheadline)
+                .foregroundStyle(AppColors.textSecondary)
+                .fixedSize(horizontal: false, vertical: true)
+            HStack {
+                repCount(model.reviewedReps)
+                Spacer()
+                Stepper("Reps", value: $model.reviewedReps, in: 0...500)
+                    .labelsHidden()
+            }
+            Button(model.acceptTitle) {
+                model.acceptReps()
+            }
+            .buttonStyle(.primaryAction)
+            .disabled(model.reviewedReps == 0)
+            Button("Discard", role: .destructive) {
+                model.discardReview()
+            }
+            .buttonStyle(.secondaryAction)
+        }
+        .card()
+    }
+
+    private func repCount(_ reps: Int) -> some View {
+        HStack(alignment: .firstTextBaseline, spacing: AppSpacing.small) {
+            Text("\(reps)")
+                .font(.system(size: 56, weight: .bold, design: .rounded).monospacedDigit())
+                .foregroundStyle(AppColors.textPrimary)
+                .contentTransition(.numericText())
+            Text(reps == 1 ? "rep" : "reps")
+                .font(.headline)
+                .foregroundStyle(AppColors.textSecondary)
+        }
+        .accessibilityElement(children: .combine)
+    }
+
+    @ViewBuilder
+    private var savedSetsCard: some View {
+        if !model.savedSets.isEmpty {
+            VStack(alignment: .leading, spacing: AppSpacing.small) {
+                Text("Saved to your history")
+                    .eyebrow()
+                ForEach(Array(model.savedSets.enumerated()), id: \.element.id) { index, set in
+                    HStack {
+                        Text("Set \(index + 1)")
+                            .foregroundStyle(AppColors.textSecondary)
+                        Spacer()
+                        Text("\(set.reps) reps")
+                            .foregroundStyle(AppColors.textPrimary)
+                        Image(systemName: "checkmark.circle.fill")
+                            .foregroundStyle(AppColors.accent)
+                            .accessibilityHidden(true)
+                    }
+                    .font(.subheadline)
+                }
+                Text("Start counting again to add another set.")
+                    .font(.footnote)
+                    .foregroundStyle(AppColors.textSecondary)
+            }
+            .card()
         }
     }
 

@@ -152,6 +152,38 @@ final class WorkoutSessionViewModel {
         persist()
     }
 
+    func cameraExercise(for exercise: SessionExercise) -> CameraExercise? {
+        CameraExercise.matching(exerciseName: exercise.exerciseName)
+    }
+
+    func addCameraSet(exerciseID: UUID, reps: Int) {
+        guard reps > 0, let index = exerciseIndex(exerciseID) else {
+            return
+        }
+        let date = now()
+        if isPaused {
+            session.pauses = SessionTiming.resuming(session.pauses, at: date)
+        }
+        let sets = session.exercises[index].sets
+        if let setIndex = sets.firstIndex(where: { !$0.isCompleted }) {
+            session.exercises[index].sets[setIndex].reps = reps
+            session.exercises[index].sets[setIndex].isCompleted = true
+            session.exercises[index].sets[setIndex].completedAt = date
+            session.exercises[index].sets[setIndex].source = .camera
+        } else {
+            session.exercises[index].sets.append(WorkoutSet(
+                id: UUID(),
+                reps: reps,
+                load: sets.last?.load ?? .bodyweight,
+                isCompleted: true,
+                completedAt: date,
+                source: .camera
+            ))
+        }
+        startRest(seconds: session.exercises[index].restSeconds)
+        persist()
+    }
+
     func skipRest() {
         restTask?.cancel()
         restTask = nil

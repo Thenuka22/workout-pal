@@ -68,7 +68,16 @@ final class AppContainer {
         PermissionsViewModel(permissions: permissions)
     }
 
-    func makeRepCounterViewModel(exercise: CameraExercise? = nil) -> RepCounterViewModel {
-        RepCounterViewModel(camera: VisionPoseCamera(), permissions: permissions, exercise: exercise)
+    func makeRepCounterViewModel(
+        exercise: CameraExercise? = nil,
+        mode: RepCounterMode = .standalone
+    ) -> RepCounterViewModel {
+        RepCounterViewModel(
+            camera: VisionPoseCamera(),
+            permissions: permissions,
+            sessions: sessions,
+            exercise: exercise,
+            mode: mode
+        )
     }
 }

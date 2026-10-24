@@ -17,6 +17,12 @@ struct SetRow: View {
                     .textCase(.uppercase)
                     .kerning(0.6)
                     .foregroundStyle(set.isCompleted ? AppColors.accent : AppColors.textSecondary)
+                if set.source == .camera {
+                    Image(systemName: "camera.viewfinder")
+                        .font(.caption)
+                        .foregroundStyle(AppColors.accent)
+                        .accessibilityLabel("Counted with the camera")
+                }
                 Spacer()
                 if set.isCompleted {
                     Text("\(set.reps) reps · \(Formatting.load(set.load, units: units))")

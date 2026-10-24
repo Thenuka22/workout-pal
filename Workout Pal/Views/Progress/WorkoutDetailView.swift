@@ -76,6 +76,11 @@ struct WorkoutDetailView: View {
                     HStack {
                         Text("Set \(setIndex + 1)")
                             .foregroundStyle(AppColors.textSecondary)
+                        if set.source == .camera {
+                            Image(systemName: "camera.viewfinder")
+                                .foregroundStyle(AppColors.accent)
+                                .accessibilityLabel("Counted with the camera")
+                        }
                         Spacer()
                         Text("\(set.reps) reps · \(Formatting.load(set.load, units: units))")
                             .foregroundStyle(AppColors.textPrimary)

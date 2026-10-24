@@ -2,10 +2,19 @@ import Foundation
 import SwiftUI
 
 struct WorkoutSessionView: View {
+    private struct CameraTarget: Identifiable {
+        let exerciseID: UUID
+        let exercise: CameraExercise
+
+        var id: UUID { exerciseID }
+    }
+
     @Environment(\.dismiss) private var dismiss
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+    @Environment(AppContainer.self) private var container
     @State private var model: WorkoutSessionViewModel
     @State private var isConfirmingFinish = false
+    @State private var cameraTarget: CameraTarget?
 
     init(model: WorkoutSessionViewModel) {
         _model = State(initialValue: model)
@@ -60,6 +69,22 @@ struct WorkoutSessionView: View {
             Button("OK") {}
         } message: {
             Text(model.errorMessage ?? "")
+        }
+        .sheet(item: $cameraTarget) { target in
+            NavigationStack {
+                RepCounterView(
+                    model: container.makeRepCounterViewModel(exercise: target.exercise, mode: .workoutSet)
+                ) { reps in
+                    model.addCameraSet(exerciseID: target.exerciseID, reps: reps)
+                }
+                .toolbar {
+                    ToolbarItem(placement: .cancellationAction) {
+                        Button("Cancel") {
+                            cameraTarget = nil
+                        }
+                    }
+                }
+            }
         }
         .onChange(of: model.isFinished) { _, isFinished in
             if isFinished {
@@ -158,12 +183,22 @@ struct WorkoutSessionView: View {
                     )
                 }
             }
-            Button {
-                model.addSet(to: exercise.id)
-            } label: {
-                Label("Add set", systemImage: "plus")
+            HStack(spacing: AppSpacing.small) {
+                Button {
+                    model.addSet(to: exercise.id)
+                } label: {
+                    Label("Add set", systemImage: "plus")
+                }
+                .buttonStyle(.secondaryAction)
+                if let cameraExercise = model.cameraExercise(for: exercise) {
+                    Button {
+                        cameraTarget = CameraTarget(exerciseID: exercise.id, exercise: cameraExercise)
+                    } label: {
+                        Label("Count reps", systemImage: "camera.viewfinder")
+                    }
+                    .buttonStyle(.secondaryAction)
+                }
             }
-            .buttonStyle(.secondaryAction)
         }
         .card()
     }

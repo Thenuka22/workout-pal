@@ -11,10 +11,16 @@ enum CameraState: Equatable {
     case failed(String)
 }
 
+enum RepCounterMode: Equatable {
+    case standalone
+    case workoutSet
+}
+
 @MainActor
 @Observable
 final class RepCounterViewModel {
     let exercises = CameraExercise.allCases
+    let mode: RepCounterMode
     let canChangeExercise: Bool
 
     private(set) var exercise: CameraExercise?
@@ -24,17 +30,35 @@ final class RepCounterViewModel {
     private(set) var isCounting = false
     private(set) var detectedReps = 0
     private(set) var countingHint = ""
+    private(set) var isReviewing = false
+    private(set) var savedSession: WorkoutSession?
+    private(set) var acceptedReps: Int?
+    private(set) var errorMessage: String?
+    var reviewedReps = 0
 
     private let camera: any PoseDetecting
     private let permissions: any PermissionsProviding
+    private let sessions: any WorkoutSessionRepository
+    private let now: @MainActor () -> Date
     @ObservationIgnored private var streamTask: Task<Void, Never>?
     @ObservationIgnored private var counter: RepCounter?
+    @ObservationIgnored private var countingStartedAt: Date?
 
-    init(camera: any PoseDetecting, permissions: any PermissionsProviding, exercise: CameraExercise? = nil) {
+    init(
+        camera: any PoseDetecting,
+        permissions: any PermissionsProviding,
+        sessions: any WorkoutSessionRepository,
+        exercise: CameraExercise? = nil,
+        mode: RepCounterMode = .standalone,
+        now: @escaping @MainActor () -> Date = { .now }
+    ) {
         self.camera = camera
         self.permissions = permissions
+        self.sessions = sessions
         self.exercise = exercise
-        canChangeExercise = exercise == nil
+        self.mode = mode
+        self.now = now
+        canChangeExercise = exercise == nil && mode == .standalone
     }
 
     var captureSession: AVCaptureSession {
@@ -46,7 +70,24 @@ final class RepCounterViewModel {
     }
 
     var canStartCounting: Bool {
-        cameraState == .running && !isCounting
+        cameraState == .running && !isCounting && !isReviewing
+    }
+
+    var savedSets: [WorkoutSet] {
+        savedSession?.exercises.first?.sets ?? []
+    }
+
+    var acceptTitle: String {
+        reviewedReps == 1 ? "Save 1 rep" : "Save \(reviewedReps) reps"
+    }
+
+    var isShowingError: Bool {
+        get { errorMessage != nil }
+        set {
+            if !newValue {
+                errorMessage = nil
+            }
+        }
     }
 
     func select(_ exercise: CameraExercise) {
@@ -58,6 +99,8 @@ final class RepCounterViewModel {
             return
         }
         stopCamera()
+        isReviewing = false
+        savedSession = nil
         exercise = nil
     }
 
@@ -82,22 +125,6 @@ final class RepCounterViewModel {
         }
     }
 
-    func startCounting() {
-        guard let exercise, canStartCounting else {
-            return
-        }
-        let counter = RepCounter(exercise: exercise)
-        self.counter = counter
-        detectedReps = 0
-        countingHint = counter.hint
-        isCounting = true
-    }
-
-    func stopCounting() {
-        isCounting = false
-        counter = nil
-    }
-
     func stopCamera() {
         stopCounting()
         streamTask?.cancel()
@@ -115,6 +142,82 @@ final class RepCounterViewModel {
             startCamera()
         } else {
             stopCamera()
+        }
+    }
+
+    func startCounting() {
+        guard let exercise, canStartCounting else {
+            return
+        }
+        let counter = RepCounter(exercise: exercise)
+        self.counter = counter
+        detectedReps = 0
+        countingHint = counter.hint
+        countingStartedAt = now()
+        isCounting = true
+    }
+
+    func stopCounting() {
+        guard isCounting else {
+            return
+        }
+        isCounting = false
+        counter = nil
+        reviewedReps = detectedReps
+        isReviewing = true
+    }
+
+    func discardReview() {
+        isReviewing = false
+        detectedReps = 0
+    }
+
+    func acceptReps() {
+        guard isReviewing, reviewedReps > 0 else {
+            return
+        }
+        isReviewing = false
+        switch mode {
+        case .workoutSet:
+            acceptedReps = reviewedReps
+        case .standalone:
+            saveSet(reps: reviewedReps)
+        }
+        detectedReps = 0
+    }
+
+    private func saveSet(reps: Int) {
+        guard let exercise else {
+            return
+        }
+        let end = now()
+        let start = countingStartedAt ?? end
+        let set = WorkoutSet(id: UUID(), reps: reps, load: .bodyweight, isCompleted: true, completedAt: end, source: .camera)
+        var session = savedSession ?? WorkoutSession(
+            id: UUID(),
+            ownerID: LocalProfile.ownerID,
+            routineID: nil,
+            routineName: "\(exercise.title) · camera",
+            startedAt: start,
+            endedAt: end,
+            activeSeconds: 0,
+            status: .completed,
+            notes: "",
+            exercises: [
+                SessionExercise(id: UUID(), exerciseID: exercise.exerciseID, exerciseName: exercise.title, restSeconds: 0, sets: []),
+            ]
+        )
+        session.exercises[0].sets.append(set)
+        session.endedAt = end
+        session.activeSeconds += max(0, end.timeIntervalSince(start))
+        savedSession = session
+        let snapshot = session
+        Task {
+            do {
+                try await self.sessions.save(snapshot)
+            } catch {
+                self.errorMessage = error.localizedDescription
+            }
         }
     }
 

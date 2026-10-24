@@ -111,4 +111,26 @@ struct WorkoutSessionViewModelTests {
         #expect(await eventually { model.errorMessage != nil })
         #expect(!model.isFinished)
     }
+
+    @Test func cameraRepsFillTheNextOpenSet() {
+        let model = makeModel()
+        let exerciseID = model.session.exercises[0].id
+        model.addCameraSet(exerciseID: exerciseID, reps: 15)
+        let first = model.session.exercises[0].sets[0]
+        #expect(first.reps == 15)
+        #expect(first.isCompleted)
+        #expect(first.source == .camera)
+        model.addCameraSet(exerciseID: exerciseID, reps: 12)
+        model.addCameraSet(exerciseID: exerciseID, reps: 9)
+        let sets = model.session.exercises[0].sets
+        #expect(sets.count == 3)
+        #expect(sets.map(\.reps) == [15, 12, 9])
+        #expect(sets[2].load == .kilograms(30))
+    }
+
+    @Test func onlySupportedExercisesOfferCameraCounting() {
+        let model = makeModel()
+        #expect(model.cameraExercise(for: SampleData.exercise(name: "Bodyweight squat")) == .squat)
+        #expect(model.cameraExercise(for: SampleData.exercise(name: "Bench press")) == nil)
+    }
 }
