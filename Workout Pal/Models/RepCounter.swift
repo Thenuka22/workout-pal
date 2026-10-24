@@ -21,7 +21,7 @@ struct RepCounter: Sendable {
     private(set) var count = 0
     private(set) var phase: RepPhase = .waitingForStart
     private(set) var status: TrackingStatus = .searching
-    private var smoothedSignal: Double?
+    private var smoothedSignals: SIMD2<Double>?
     private var lostFrames = 0
     private var phaseChangedAt: TimeInterval = 0
 
@@ -72,13 +72,13 @@ struct RepCounter: Sendable {
         lostFrames += 1
         if lostFrames >= Self.lostFrameLimit {
             phase = .waitingForStart
-            smoothedSignal = nil
+            smoothedSignals = nil
         }
     }
 
-    private mutating func smoothed(_ value: Double) -> Double {
-        let next = smoothedSignal.map { $0 + Self.smoothing * (value - $0) } ?? value
-        smoothedSignal = next
+    private mutating func smoothed(_ value: SIMD2<Double>) -> SIMD2<Double> {
+        let next = smoothedSignals.map { $0 + Self.smoothing * (value - $0) } ?? value
+        smoothedSignals = next
         return next
     }
 
@@ -88,14 +88,53 @@ struct RepCounter: Sendable {
             guard let angle = Self.kneeAngle(in: frame) else {
                 return nil
             }
-            let knee = smoothed(angle)
+            let knee = smoothed(SIMD2(angle, 0)).x
             if knee >= SquatThresholds.standing {
                 return .rest
             }
             return knee <= SquatThresholds.bottom ? .active : .between
         case .jumpingJack:
+            guard let signals = Self.jumpingJackSignals(in: frame) else {
+                return nil
+            }
+            let values = smoothed(signals)
+            let arms = values.x
+            let feet = values.y
+            if arms >= JumpingJackThresholds.armsUp && feet >= JumpingJackThresholds.feetApart {
+                return .active
+            }
+            if arms <= JumpingJackThresholds.armsDown && feet <= JumpingJackThresholds.feetTogether {
+                return .rest
+            }
+            return .between
+        }
+    }
+
+    static func jumpingJackSignals(in frame: PoseFrame) -> SIMD2<Double>? {
+        guard let leftShoulder = frame.position(.leftShoulder),
+              let rightShoulder = frame.position(.rightShoulder),
+              let leftWrist = frame.position(.leftWrist),
+              let rightWrist = frame.position(.rightWrist),
+              let leftHip = frame.position(.leftHip),
+              let rightHip = frame.position(.rightHip),
+              let leftAnkle = frame.position(.leftAnkle),
+              let rightAnkle = frame.position(.rightAnkle)
+        else {
             return nil
         }
+        let shoulders = PoseGeometry.midpoint(leftShoulder, rightShoulder)
+        let hips = PoseGeometry.midpoint(leftHip, rightHip)
+        let torso = PoseGeometry.distance(shoulders, hips)
+        let shoulderWidth = PoseGeometry.distance(leftShoulder, rightShoulder)
+        guard torso > 0, shoulderWidth > 0 else {
+            return nil
+        }
+        let up = (shoulders - hips) / torso
+        let leftHeight = ((leftWrist - shoulders) * up).sum()
+        let rightHeight = ((rightWrist - shoulders) * up).sum()
+        let arms = (leftHeight + rightHeight) / 2 / torso
+        let feet = PoseGeometry.distance(leftAnkle, rightAnkle) / shoulderWidth
+        return SIMD2(arms, feet)
     }
 
     static func kneeAngle(in frame: PoseFrame) -> Double? {
@@ -122,4 +161,11 @@ struct RepCounter: Sendable {
 enum SquatThresholds {
     static let standing = 160.0
     static let bottom = 115.0
+}
+
+enum JumpingJackThresholds {
+    static let armsUp = 0.2
+    static let armsDown = -0.4
+    static let feetApart = 1.3
+    static let feetTogether = 1.0
 }

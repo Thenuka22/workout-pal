@@ -18,6 +18,21 @@ struct RepCounterTests {
             add({ PoseFixtures.squat(kneeAngle: angle, time: $0) }, count: count)
         }
 
+        mutating func jack(open: Bool, count: Int = 6) {
+            add({ PoseFixtures.jumpingJack(open: open, time: $0) }, count: count)
+        }
+
+        mutating func armsOnly(count: Int = 6) {
+            add({ time in
+                var frame = PoseFixtures.jumpingJack(open: true, time: time)
+                let closed = PoseFixtures.jumpingJack(open: false, time: time)
+                for joint in [BodyJoint.leftAnkle, .rightAnkle, .leftKnee, .rightKnee] {
+                    frame.joints[joint] = closed.joints[joint]
+                }
+                return frame
+            }, count: count)
+        }
+
         mutating func empty(count: Int) {
             add({ time in
                 var frame = PoseFixtures.empty
@@ -104,5 +119,50 @@ struct RepCounterTests {
         let counter = run(.squat, script)
         #expect(counter.status == .searching)
         #expect(counter.phase == .waitingForStart)
+    }
+
+    @Test func countsFullJumpingJacks() {
+        var script = Script()
+        script.jack(open: false)
+        for _ in 0..<4 {
+            script.jack(open: true)
+            script.jack(open: false)
+        }
+        #expect(run(.jumpingJack, script).count == 4)
+    }
+
+    @Test func raisingArmsWithoutJumpingDoesNotCount() {
+        var script = Script()
+        script.jack(open: false)
+        script.armsOnly()
+        script.jack(open: false)
+        #expect(run(.jumpingJack, script).count == 0)
+    }
+
+    @Test func jumpingJackNeedsToReturnToTheStart() {
+        var script = Script()
+        script.jack(open: false)
+        script.jack(open: true)
+        let counter = run(.jumpingJack, script)
+        #expect(counter.count == 0)
+        #expect(counter.phase == .active)
+    }
+
+    @Test func handsOutOfViewStopJumpingJackCounting() {
+        var script = Script()
+        script.jack(open: false)
+        script.add({ PoseFixtures.removing([.leftWrist, .rightWrist], from: PoseFixtures.jumpingJack(open: true, time: $0)) })
+        script.jack(open: false)
+        let counter = run(.jumpingJack, script)
+        #expect(counter.count == 0)
+    }
+
+    @Test func openPoseSignalsAreWellApartFromClosed() throws {
+        let open = try #require(RepCounter.jumpingJackSignals(in: PoseFixtures.jumpingJack(open: true)))
+        let closed = try #require(RepCounter.jumpingJackSignals(in: PoseFixtures.jumpingJack(open: false)))
+        #expect(open.x > JumpingJackThresholds.armsUp)
+        #expect(open.y > JumpingJackThresholds.feetApart)
+        #expect(closed.x < JumpingJackThresholds.armsDown)
+        #expect(closed.y < JumpingJackThresholds.feetTogether)
     }
 }
