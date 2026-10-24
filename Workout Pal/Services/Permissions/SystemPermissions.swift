@@ -84,6 +84,7 @@ final class SystemPermissions: PermissionsProviding {
                 continuation.resume()
             }
         }
+        withExtendedLifetime(pedometer) {}
     }
 
     private func healthStatus() async -> PermissionStatus {

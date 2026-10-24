@@ -10,6 +10,8 @@ struct TrainRouteView: View {
             RoutineDetailView(model: container.makeRoutineDetailViewModel(routineID: id), embedded: false)
         case .repCounter:
             RepCounterView(model: container.makeRepCounterViewModel())
+        case .activityTracker:
+            ActivityTrackerView(model: container.makeActivityTrackerViewModel())
         }
     }
 }

@@ -49,6 +49,21 @@ enum Formatting {
         }
     }
 
+    static let metersPerMile = 1_609.344
+
+    static func distance(meters: Double, units: UnitPreference) -> String {
+        switch units {
+        case .kilograms:
+            return "\((meters / 1_000).formatted(.number.precision(.fractionLength(2)))) km"
+        case .pounds:
+            return "\((meters / metersPerMile).formatted(.number.precision(.fractionLength(2)))) mi"
+        }
+    }
+
+    static func steps(_ count: Int) -> String {
+        count.formatted(.number)
+    }
+
     static func number(_ value: Double) -> String {
         value.formatted(.number.precision(.fractionLength(0...1)))
     }

@@ -11,6 +11,7 @@ final class AppContainer {
     private let catalogSync: any ExerciseCatalogSyncing
     private let settings: AppSettings
     private let permissions: any PermissionsProviding
+    private let motion: any MotionTracking
 
     init(inMemory: Bool = false) {
         let stack = CoreDataStack(inMemory: inMemory)
@@ -22,6 +23,7 @@ final class AppContainer {
         catalogSync = ExerciseCatalogSync(client: WgerClient(), catalog: catalog)
         settings = AppSettings(store: UserDefaultsPreferencesStore())
         permissions = SystemPermissions()
+        motion = CoreMotionService()
     }
 
     func makeRootViewModel() -> RootViewModel {
@@ -66,6 +68,10 @@ final class AppContainer {
 
     func makePermissionsViewModel() -> PermissionsViewModel {
         PermissionsViewModel(permissions: permissions)
+    }
+
+    func makeActivityTrackerViewModel() -> ActivityTrackerViewModel {
+        ActivityTrackerViewModel(motion: motion, permissions: permissions, settings: settings)
     }
 
     func makeRepCounterViewModel(

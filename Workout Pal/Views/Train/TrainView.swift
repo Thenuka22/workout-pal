@@ -71,6 +71,17 @@ struct TrainView: View {
             }
             .buttonStyle(.plain)
             .plainRow()
+            NavigationLink(value: TrainRoute.activityTracker) {
+                LinkRow(
+                    title: "Walk & run",
+                    subtitle: "Track steps, estimated distance and active time",
+                    symbolName: "figure.walk",
+                    isHighlighted: true
+                )
+                .card()
+            }
+            .buttonStyle(.plain)
+            .plainRow()
             NavigationLink(value: TrainRoute.repCounter) {
                 LinkRow(
                     title: "Camera rep counter",
