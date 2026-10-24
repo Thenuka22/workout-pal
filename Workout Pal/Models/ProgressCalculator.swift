@@ -23,7 +23,7 @@ struct ExerciseOption: Identifiable, Hashable, Sendable {
 
 struct HistoryGroup: Identifiable, Hashable, Sendable {
     let weekStart: Date
-    let sessions: [WorkoutSession]
+    let entries: [HistoryEntry]
 
     var id: Date { weekStart }
 }
@@ -31,6 +31,7 @@ struct HistoryGroup: Identifiable, Hashable, Sendable {
 enum ProgressCalculator {
     static func weekBuckets(
         sessions: [WorkoutSession],
+        activities: [ActivitySession] = [],
         weeks: Int,
         now: Date = .now,
         calendar: Calendar = .current
@@ -52,15 +53,22 @@ enum ProgressCalculator {
                 buckets[index].activeMinutes += Int((session.activeSeconds / 60).rounded())
             }
         }
+        for activity in activities where activity.status == .completed {
+            if let index = buckets.firstIndex(where: {
+                calendar.isDate($0.weekStart, equalTo: activity.startedAt, toGranularity: .weekOfYear)
+            }) {
+                buckets[index].activeMinutes += Int((activity.activeSeconds / 60).rounded())
+            }
+        }
         return buckets
     }
 
-    static func groupByWeek(sessions: [WorkoutSession], calendar: Calendar = .current) -> [HistoryGroup] {
-        let grouped = Dictionary(grouping: sessions) { session in
-            calendar.dateInterval(of: .weekOfYear, for: session.startedAt)?.start ?? session.startedAt
+    static func groupByWeek(entries: [HistoryEntry], calendar: Calendar = .current) -> [HistoryGroup] {
+        let grouped = Dictionary(grouping: entries) { entry in
+            calendar.dateInterval(of: .weekOfYear, for: entry.startedAt)?.start ?? entry.startedAt
         }
         return grouped
-            .map { HistoryGroup(weekStart: $0.key, sessions: $0.value.sorted { $0.startedAt > $1.startedAt }) }
+            .map { HistoryGroup(weekStart: $0.key, entries: $0.value.sorted { $0.startedAt > $1.startedAt }) }
             .sorted { $0.weekStart > $1.weekStart }
     }
 

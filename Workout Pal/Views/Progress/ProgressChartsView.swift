@@ -25,7 +25,7 @@ struct ProgressChartsView: View {
 
     private var minutesCard: some View {
         VStack(alignment: .leading, spacing: AppSpacing.small) {
-            Text("Workout minutes")
+            Text("Active minutes")
                 .eyebrow()
             HStack(alignment: .firstTextBaseline, spacing: AppSpacing.small) {
                 Text("\(model.totalMinutes)")
@@ -106,6 +106,12 @@ struct ProgressChartsView: View {
                     dotColor: AppColors.infoPurple
                 )
             }
+            StatTile(
+                title: "Walks & runs",
+                value: model.weeklyStepsText,
+                caption: "recorded in Workout Pal this week",
+                dotColor: AppColors.accent
+            )
         }
     }
 

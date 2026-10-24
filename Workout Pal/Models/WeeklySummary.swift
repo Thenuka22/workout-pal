@@ -9,6 +9,7 @@ struct WeeklySummary: Hashable, Sendable {
     var goal: Int
     var trainedWeekdays: Set<Int>
     var volumeKilograms: Double
+    var steps: Int = 0
 
     var goalProgress: Double {
         guard goal > 0 else {
@@ -40,6 +41,7 @@ struct WeeklySummary: Hashable, Sendable {
 
     static func make(
         sessions: [WorkoutSession],
+        activities: [ActivitySession] = [],
         goal: Int,
         now: Date = .now,
         calendar: Calendar = .current
@@ -55,7 +57,8 @@ struct WeeklySummary: Hashable, Sendable {
             )
         }
         let thisWeek = sessions.filter { $0.status == .completed && week.contains($0.startedAt) }
-        let seconds = thisWeek.reduce(0.0) { $0 + $1.activeSeconds }
+        let walks = activities.filter { $0.status == .completed && week.contains($0.startedAt) }
+        let seconds = thisWeek.reduce(0.0) { $0 + $1.activeSeconds } + walks.reduce(0.0) { $0 + $1.activeSeconds }
         let sets = thisWeek.reduce(0) { $0 + $1.completedSetCount }
         let weekdays = Set(thisWeek.map { calendar.component(.weekday, from: $0.startedAt) })
         let volume = thisWeek.reduce(0.0) { $0 + $1.loadedVolumeKilograms }
@@ -65,7 +68,8 @@ struct WeeklySummary: Hashable, Sendable {
             completedSets: sets,
             goal: goal,
             trainedWeekdays: weekdays,
-            volumeKilograms: volume
+            volumeKilograms: volume,
+            steps: walks.reduce(0) { $0 + $1.steps }
         )
     }
 }

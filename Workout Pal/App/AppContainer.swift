@@ -7,6 +7,7 @@ final class AppContainer {
     private let stack: CoreDataStack
     private let routines: any RoutineRepository
     private let sessions: any WorkoutSessionRepository
+    private let activities: any ActivitySessionRepository
     private let catalog: any ExerciseCatalogRepository
     private let catalogSync: any ExerciseCatalogSyncing
     private let settings: AppSettings
@@ -20,6 +21,7 @@ final class AppContainer {
         self.catalog = catalog
         routines = CoreDataRoutineRepository(stack: stack)
         sessions = CoreDataWorkoutSessionRepository(stack: stack)
+        activities = CoreDataActivitySessionRepository(stack: stack)
         catalogSync = ExerciseCatalogSync(client: WgerClient(), catalog: catalog)
         settings = AppSettings(store: UserDefaultsPreferencesStore())
         permissions = SystemPermissions()
@@ -31,7 +33,7 @@ final class AppContainer {
     }
 
     func makeDashboardViewModel() -> DashboardViewModel {
-        DashboardViewModel(sessions: sessions, routines: routines, settings: settings)
+        DashboardViewModel(sessions: sessions, activities: activities, routines: routines, settings: settings)
     }
 
     func makeExerciseLibraryViewModel() -> ExerciseLibraryViewModel {
@@ -55,7 +57,7 @@ final class AppContainer {
     }
 
     func makeProgressViewModel() -> ProgressHomeViewModel {
-        ProgressHomeViewModel(repository: sessions, settings: settings)
+        ProgressHomeViewModel(repository: sessions, activityRepository: activities, settings: settings)
     }
 
     func makeOnboardingViewModel() -> OnboardingViewModel {
@@ -71,7 +73,7 @@ final class AppContainer {
     }
 
     func makeActivityTrackerViewModel() -> ActivityTrackerViewModel {
-        ActivityTrackerViewModel(motion: motion, permissions: permissions, settings: settings)
+        ActivityTrackerViewModel(motion: motion, permissions: permissions, activities: activities, settings: settings)
     }
 
     func makeRepCounterViewModel(

@@ -7,12 +7,14 @@ struct ActivityTrackerViewModelTests {
     private let clock = TestClock(SampleData.now)
     private let motion = FakeMotion()
     private let permissions = FakePermissions()
+    private let repository = InMemoryActivitySessionRepository()
 
     private func makeModel() -> ActivityTrackerViewModel {
         let clock = clock
         return ActivityTrackerViewModel(
             motion: motion,
             permissions: permissions,
+            activities: repository,
             settings: AppSettings(store: InMemoryPreferencesStore()),
             now: { clock.now }
         )
@@ -110,5 +112,66 @@ struct ActivityTrackerViewModelTests {
         model.discard()
         #expect(model.activity == nil)
         #expect(model.steps == 0)
+    }
+
+    @Test func startingSavesAnUnfinishedSession() async {
+        let model = makeModel()
+        #expect(await started(model))
+        let id = model.activity?.id ?? UUID()
+        let saved = await eventuallyValue { await repository.stored(id: id) }
+        #expect(saved?.status == .active)
+    }
+
+    @Test func finishedSessionIsSavedAsCompleted() async {
+        motion.measure = { _, _ in PedometerReading(steps: 800, distanceMeters: 600) }
+        let model = makeModel()
+        #expect(await started(model))
+        clock.advance(by: 600)
+        model.finish()
+        #expect(await eventually { model.finishedActivity != nil })
+        let id = model.finishedActivity?.id ?? UUID()
+        let saved = await repository.stored(id: id)
+        #expect(saved?.status == .completed)
+        #expect(saved?.steps == 800)
+        #expect(saved?.distanceMeters == 600)
+    }
+
+    @Test func unfinishedSessionIsRestoredAfterRelaunch() async {
+        var paused = ActivitySession.start(kind: .run, ownerID: LocalProfile.ownerID, now: clock.now.addingTimeInterval(-900))
+        paused.pauses = [PauseInterval(start: clock.now.addingTimeInterval(-300), end: nil)]
+        paused.steps = 1_200
+        try? await repository.save(paused)
+        let model = makeModel()
+        await model.load()
+        #expect(model.activity?.id == paused.id)
+        #expect(model.kind == .run)
+        #expect(model.isPaused)
+        #expect(model.steps == 1_200)
+        #expect(model.elapsedSeconds(at: clock.now) == 600)
+    }
+
+    @Test func restoredRunningSessionResumesLiveUpdates() async {
+        let running = ActivitySession.start(kind: .walk, ownerID: LocalProfile.ownerID, now: clock.now.addingTimeInterval(-120))
+        try? await repository.save(running)
+        let model = makeModel()
+        await model.load()
+        #expect(motion.readingStarts.last == running.startedAt)
+        motion.send(PedometerReading(steps: 150, distanceMeters: nil))
+        #expect(await eventually { model.steps == 150 })
+    }
+
+    @Test func discardingDeletesTheSavedSession() async {
+        let model = makeModel()
+        #expect(await started(model))
+        let id = model.activity?.id ?? UUID()
+        _ = await eventuallyValue { await repository.stored(id: id) }
+        model.discard()
+        #expect(await eventually { model.activity == nil })
+        var stored: ActivitySession? = ActivitySession.start(kind: .walk, ownerID: "", now: .now)
+        for _ in 0..<50 where stored != nil {
+            stored = await repository.stored(id: id)
+            try? await Task.sleep(for: .milliseconds(10))
+        }
+        #expect(stored == nil)
     }
 }

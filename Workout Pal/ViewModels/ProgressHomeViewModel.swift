@@ -28,17 +28,28 @@ struct ExerciseChartPoint: Identifiable, Hashable {
 @Observable
 final class ProgressHomeViewModel {
     private(set) var sessions: [WorkoutSession] = []
+    private(set) var activities: [ActivitySession] = []
     private(set) var isLoading = true
     private(set) var errorMessage: String?
     var range: ProgressRange = .twelveWeeks
     var selectedExerciseID: Int?
 
     private let repository: any WorkoutSessionRepository
+    private let activityRepository: any ActivitySessionRepository
     private let settings: AppSettings
 
-    init(repository: any WorkoutSessionRepository, settings: AppSettings) {
+    init(
+        repository: any WorkoutSessionRepository,
+        activityRepository: any ActivitySessionRepository,
+        settings: AppSettings
+    ) {
         self.repository = repository
+        self.activityRepository = activityRepository
         self.settings = settings
+    }
+
+    var hasHistory: Bool {
+        !sessions.isEmpty || !activities.isEmpty
     }
 
     var units: UnitPreference {
@@ -46,7 +57,7 @@ final class ProgressHomeViewModel {
     }
 
     var weeklySummary: WeeklySummary {
-        WeeklySummary.make(sessions: sessions, goal: settings.preferences.weeklyGoal)
+        WeeklySummary.make(sessions: sessions, activities: activities, goal: settings.preferences.weeklyGoal)
     }
 
     var weeklyVolumeText: String {
@@ -54,12 +65,16 @@ final class ProgressHomeViewModel {
         return "\(Formatting.number(value)) \(units.symbol)"
     }
 
+    var weeklyStepsText: String {
+        "\(Formatting.steps(weeklySummary.steps)) steps"
+    }
+
     var historyGroups: [HistoryGroup] {
-        ProgressCalculator.groupByWeek(sessions: sessions)
+        ProgressCalculator.groupByWeek(entries: HistoryEntry.merge(workouts: sessions, activities: activities))
     }
 
     var weekBuckets: [WeekBucket] {
-        ProgressCalculator.weekBuckets(sessions: sessions, weeks: range.rawValue)
+        ProgressCalculator.weekBuckets(sessions: sessions, activities: activities, weeks: range.rawValue)
     }
 
     var currentWeekStart: Date? {
@@ -75,11 +90,11 @@ final class ProgressHomeViewModel {
     }
 
     var subtitle: String {
-        let count = sessions.count
+        let count = sessions.count + activities.count
         switch count {
         case 0: return "Small steps are adding up."
-        case 1: return "1 workout logged so far."
-        default: return "\(count) workouts logged so far."
+        case 1: return "1 session logged so far."
+        default: return "\(count) sessions logged so far."
         }
     }
 
@@ -151,6 +166,7 @@ final class ProgressHomeViewModel {
     func load() async {
         do {
             sessions = try await repository.completedSessions(ownerID: LocalProfile.ownerID)
+            activities = try await activityRepository.completedActivities(ownerID: LocalProfile.ownerID)
             errorMessage = nil
         } catch {
             errorMessage = error.localizedDescription

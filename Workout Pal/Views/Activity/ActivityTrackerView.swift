@@ -73,6 +73,14 @@ struct ActivityTrackerView: View {
         } message: {
             Text(model.errorMessage ?? "")
         }
+        .overlay {
+            if model.isLoading {
+                ProgressView()
+            }
+        }
+        .task {
+            await model.load()
+        }
         .onChange(of: scenePhase) { _, phase in
             model.scenePhaseChanged(isActive: phase == .active)
         }
@@ -133,12 +141,17 @@ struct ActivityTrackerView: View {
     @ViewBuilder
     private var controls: some View {
         if model.finishedActivity != nil {
-            Button {
-                model.startAnother()
-            } label: {
-                Label("Start another", systemImage: "arrow.counterclockwise")
+            VStack(alignment: .leading, spacing: AppSpacing.small) {
+                Label("Saved to your history", systemImage: "checkmark.circle.fill")
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(AppColors.accent)
+                Button {
+                    model.startAnother()
+                } label: {
+                    Label("Start another", systemImage: "arrow.counterclockwise")
+                }
+                .buttonStyle(.primaryAction)
             }
-            .buttonStyle(.primaryAction)
         } else if model.activity == nil {
             VStack(alignment: .leading, spacing: AppSpacing.medium) {
                 Text("Session type")

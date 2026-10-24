@@ -24,6 +24,11 @@ struct MovementCard: View {
                     Text("of \(summary.minutesTarget) min target · \(summary.completedSets) sets done")
                         .font(.caption)
                         .foregroundStyle(AppColors.textSecondary)
+                    if summary.steps > 0 {
+                        Text("\(Formatting.steps(summary.steps)) steps on recorded walks and runs")
+                            .font(.caption)
+                            .foregroundStyle(AppColors.textSecondary)
+                    }
                 }
             }
         }

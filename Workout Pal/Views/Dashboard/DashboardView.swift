@@ -70,8 +70,10 @@ struct DashboardView: View {
     private var singleColumn: some View {
         VStack(spacing: AppSpacing.medium) {
             resumeCard
+            activityResumeCard
             WeeklyProgressCard(summary: model.summary, statusText: model.weekStatusText, showsWeekdays: false)
             todayPlanCard
+            QuickActionsRow()
             MovementCard(summary: model.summary)
             RecentWorkoutCard(session: model.recentSession)
         }
@@ -81,14 +83,33 @@ struct DashboardView: View {
         HStack(alignment: .top, spacing: AppSpacing.medium) {
             VStack(spacing: AppSpacing.medium) {
                 resumeCard
+                activityResumeCard
                 WeeklyProgressCard(summary: model.summary, statusText: model.weekStatusText, showsWeekdays: true)
                 todayPlanCard
+                QuickActionsRow()
             }
             VStack(spacing: AppSpacing.medium) {
                 MovementCard(summary: model.summary)
                 RecentWorkoutCard(session: model.recentSession)
             }
             .frame(width: 320)
+        }
+    }
+
+    @ViewBuilder
+    private var activityResumeCard: some View {
+        if let activity = model.activeActivity {
+            NavigationLink(value: TrainRoute.activityTracker) {
+                LinkRow(
+                    title: "\(activity.kind.title) in progress",
+                    subtitle: "Started \(Formatting.dateTime(activity.startedAt))",
+                    symbolName: activity.kind.symbolName,
+                    value: activity.isPaused ? "Paused" : "Open",
+                    isHighlighted: true
+                )
+                .card()
+            }
+            .buttonStyle(.plain)
         }
     }
 

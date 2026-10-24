@@ -34,10 +34,23 @@ struct ProgressCalculatorTests {
     @Test func historyGroupsAreNewestFirst() {
         let older = SampleData.session(startedAt: SampleData.daysAgo(10))
         let newer = SampleData.session(startedAt: SampleData.now)
-        let newest = SampleData.session(startedAt: SampleData.now.addingTimeInterval(60))
-        let groups = ProgressCalculator.groupByWeek(sessions: [older, newer, newest], calendar: SampleData.calendar)
+        let walk = SampleData.activity(startedAt: SampleData.now.addingTimeInterval(60))
+        let entries = HistoryEntry.merge(workouts: [older, newer], activities: [walk])
+        let groups = ProgressCalculator.groupByWeek(entries: entries, calendar: SampleData.calendar)
         #expect(groups.count == 2)
-        #expect(groups.first?.sessions.map(\.id) == [newest.id, newer.id])
+        #expect(groups.first?.entries.map(\.id) == [walk.id, newer.id])
+    }
+
+    @Test func walksAddMinutesButNotWorkouts() {
+        let buckets = ProgressCalculator.weekBuckets(
+            sessions: [SampleData.session(minutes: 30)],
+            activities: [SampleData.activity(minutes: 20)],
+            weeks: 1,
+            now: SampleData.now,
+            calendar: SampleData.calendar
+        )
+        #expect(buckets.first?.workouts == 1)
+        #expect(buckets.first?.activeMinutes == 50)
     }
 
     @Test func exerciseProgressTracksBestLoadAndReps() {

@@ -7,17 +7,25 @@ final class DashboardViewModel {
     private(set) var summary = WeeklySummary.empty
     private(set) var recentSession: WorkoutSession?
     private(set) var activeSession: WorkoutSession?
+    private(set) var activeActivity: ActivitySession?
     private(set) var suggestedRoutine: Routine?
     private(set) var isLoading = true
     private(set) var errorMessage: String?
     var resumingSession: WorkoutSession?
 
     private let sessions: any WorkoutSessionRepository
+    private let activities: any ActivitySessionRepository
     private let routines: any RoutineRepository
     private let settings: AppSettings
 
-    init(sessions: any WorkoutSessionRepository, routines: any RoutineRepository, settings: AppSettings) {
+    init(
+        sessions: any WorkoutSessionRepository,
+        activities: any ActivitySessionRepository,
+        routines: any RoutineRepository,
+        settings: AppSettings
+    ) {
         self.sessions = sessions
+        self.activities = activities
         self.routines = routines
         self.settings = settings
     }
@@ -60,9 +68,11 @@ final class DashboardViewModel {
     func load() async {
         do {
             let completed = try await sessions.completedSessions(ownerID: LocalProfile.ownerID)
+            let walks = try await activities.completedActivities(ownerID: LocalProfile.ownerID)
             activeSession = try await sessions.activeSession(ownerID: LocalProfile.ownerID)
+            activeActivity = try await activities.activeActivity(ownerID: LocalProfile.ownerID)
             let allRoutines = try await routines.routines(ownerID: LocalProfile.ownerID)
-            summary = WeeklySummary.make(sessions: completed, goal: settings.preferences.weeklyGoal)
+            summary = WeeklySummary.make(sessions: completed, activities: walks, goal: settings.preferences.weeklyGoal)
             recentSession = completed.first
             suggestedRoutine = RoutinePlanner.nextRoutine(from: allRoutines, sessions: completed)
             errorMessage = nil

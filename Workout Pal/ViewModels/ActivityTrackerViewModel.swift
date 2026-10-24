@@ -12,6 +12,7 @@ final class ActivityTrackerViewModel {
     private(set) var capabilities: MotionCapabilities
     private(set) var motionAccess: PermissionStatus = .notDetermined
     private(set) var detectedMotion: DetectedMotion?
+    private(set) var isLoading = true
     private(set) var isStarting = false
     private(set) var isFinishing = false
     private(set) var errorMessage: String?
@@ -20,20 +21,24 @@ final class ActivityTrackerViewModel {
 
     private let motion: any MotionTracking
     private let permissions: any PermissionsProviding
+    private let activities: any ActivitySessionRepository
     private let settings: AppSettings
     private let now: @MainActor () -> Date
     @ObservationIgnored private var readingsTask: Task<Void, Never>?
     @ObservationIgnored private var motionTask: Task<Void, Never>?
+    @ObservationIgnored private var saveTask: Task<Void, Never>?
     @ObservationIgnored private var motionCounts: [DetectedMotion: Int] = [:]
 
     init(
         motion: any MotionTracking,
         permissions: any PermissionsProviding,
+        activities: any ActivitySessionRepository,
         settings: AppSettings,
         now: @escaping @MainActor () -> Date = { .now }
     ) {
         self.motion = motion
         self.permissions = permissions
+        self.activities = activities
         self.settings = settings
         self.now = now
         capabilities = motion.capabilities()
@@ -98,6 +103,21 @@ final class ActivityTrackerViewModel {
         activity?.activeSeconds(at: date) ?? 0
     }
 
+    func load() async {
+        defer { isLoading = false }
+        guard activity == nil, finishedActivity == nil else {
+            return
+        }
+        do {
+            guard let active = try await activities.activeActivity(ownerID: LocalProfile.ownerID) else {
+                return
+            }
+            restore(active)
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+    }
+
     func start() {
         guard isAvailable, activity == nil, !isStarting else {
             return
@@ -112,6 +132,7 @@ final class ActivityTrackerViewModel {
             }
             let activity = ActivitySession.start(kind: self.kind, ownerID: LocalProfile.ownerID, now: self.now())
             self.begin(activity)
+            self.persist(activity)
         }
     }
 
@@ -121,9 +142,11 @@ final class ActivityTrackerViewModel {
         }
         stopUpdates()
         activity.pauses = SessionTiming.pausing(activity.pauses, at: now())
+        activity.steps = steps
         self.activity = activity
         banked = banked.adding(segment)
         segment = .zero
+        persist(activity)
         Task {
             await self.reconcileClosedSegments()
         }
@@ -137,6 +160,7 @@ final class ActivityTrackerViewModel {
         activity.pauses = SessionTiming.resuming(activity.pauses, at: date)
         self.activity = activity
         segment = .zero
+        persist(activity)
         startUpdates(from: date)
     }
 
@@ -149,24 +173,43 @@ final class ActivityTrackerViewModel {
         activity.pauses = SessionTiming.resuming(activity.pauses, at: end)
         activity.endedAt = end
         activity.status = .completed
-        activity.detectedMotion = MotionSummary.dominantMotion(motionCounts)
+        activity.detectedMotion = MotionSummary.dominantMotion(motionCounts) ?? activity.detectedMotion
         let estimate = banked.adding(segment)
         let ending = activity
         isFinishing = true
         Task {
             let measured = await self.measuredTotal(for: ending, until: end) ?? estimate
             var finished = ending
-            finished.steps = measured.steps
+            finished.steps = max(measured.steps, 0)
             finished.distanceMeters = self.capabilities.canMeasureDistance ? measured.distanceMeters ?? 0 : nil
+            await self.previousSave()
+            do {
+                try await self.activities.save(finished)
+            } catch {
+                self.errorMessage = error.localizedDescription
+            }
             self.complete(finished)
         }
     }
 
     func discard() {
+        guard let activity else {
+            return
+        }
         stopUpdates()
-        activity = nil
+        self.activity = nil
         banked = .zero
         segment = .zero
+        let id = activity.id
+        let previous = saveTask
+        saveTask = Task {
+            await previous?.value
+            do {
+                try await self.activities.deleteActivity(id: id)
+            } catch {
+                self.errorMessage = error.localizedDescription
+            }
+        }
     }
 
     func startAnother() {
@@ -188,6 +231,23 @@ final class ActivityTrackerViewModel {
         }
     }
 
+    private func restore(_ active: ActivitySession) {
+        kind = active.kind
+        activity = active
+        detectedMotion = active.detectedMotion
+        banked = PedometerReading(steps: active.steps, distanceMeters: nil)
+        segment = .zero
+        motionCounts = [:]
+        let date = now()
+        if !active.isPaused, let current = active.activeIntervals(at: date).last {
+            banked = .zero
+            startUpdates(from: current.start)
+        }
+        Task {
+            await self.reconcileClosedSegments()
+        }
+    }
+
     private func begin(_ activity: ActivitySession) {
         self.activity = activity
         finishedActivity = nil
@@ -204,6 +264,22 @@ final class ActivityTrackerViewModel {
         banked = .zero
         segment = .zero
         isFinishing = false
+    }
+
+    private func persist(_ activity: ActivitySession) {
+        let previous = saveTask
+        saveTask = Task {
+            await previous?.value
+            do {
+                try await self.activities.save(activity)
+            } catch {
+                self.errorMessage = error.localizedDescription
+            }
+        }
+    }
+
+    private func previousSave() async {
+        await saveTask?.value
     }
 
     private func startUpdates(from date: Date) {
@@ -223,9 +299,9 @@ final class ActivityTrackerViewModel {
         guard capabilities.canDetectActivity else {
             return
         }
-        let activities = motion.activities()
+        let detections = motion.activities()
         motionTask = Task {
-            for await detected in activities {
+            for await detected in detections {
                 self.record(detected)
             }
         }
@@ -244,11 +320,29 @@ final class ActivityTrackerViewModel {
     }
 
     private func reconcileClosedSegments() async {
-        guard let activity, activity.isPaused else {
+        guard let activity else {
             return
         }
-        if let measured = await measuredTotal(for: activity, until: now()), measured.steps >= banked.steps {
-            banked = measured
+        var closed = activity.activeIntervals(at: now())
+        if !activity.isPaused && !closed.isEmpty {
+            closed.removeLast()
+        }
+        var total = PedometerReading.zero
+        for interval in closed {
+            guard let reading = try? await motion.reading(from: interval.start, to: interval.end) else {
+                return
+            }
+            total = total.adding(reading)
+        }
+        guard self.activity?.id == activity.id else {
+            return
+        }
+        if activity.isPaused {
+            if total.steps >= banked.steps {
+                banked = total
+            }
+        } else {
+            banked = total
         }
     }
 

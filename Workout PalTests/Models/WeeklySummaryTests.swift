@@ -43,6 +43,21 @@ struct WeeklySummaryTests {
         #expect(result.remainingWorkouts == 0)
     }
 
+    @Test func walksCountTowardsMinutesAndSteps() {
+        let walk = SampleData.activity(startedAt: monday, minutes: 25, steps: 3_100)
+        let oldWalk = SampleData.activity(startedAt: previousSunday, minutes: 40, steps: 5_000)
+        let result = WeeklySummary.make(
+            sessions: [SampleData.session(startedAt: monday, minutes: 30)],
+            activities: [walk, oldWalk],
+            goal: 3,
+            now: SampleData.now,
+            calendar: SampleData.calendar
+        )
+        #expect(result.workoutCount == 1)
+        #expect(result.activeMinutes == 55)
+        #expect(result.steps == 3_100)
+    }
+
     @Test func emptyWeekStillReportsTheGoal() {
         let result = summary([], goal: 4)
         #expect(result.workoutCount == 0)

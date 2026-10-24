@@ -11,7 +11,7 @@ struct ProgressHomeView: View {
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @State private var model: ProgressHomeViewModel
     @State private var panel: Panel = .charts
-    @State private var selectedSession: WorkoutSession?
+    @State private var selectedEntry: HistoryEntry?
 
     init(model: ProgressHomeViewModel) {
         _model = State(initialValue: model)
@@ -29,8 +29,8 @@ struct ProgressHomeView: View {
         }
         .screenBackground()
         .toolbar(.hidden, for: .navigationBar)
-        .navigationDestination(for: WorkoutSession.self) { session in
-            WorkoutDetailView(session: session, units: model.units)
+        .navigationDestination(for: HistoryEntry.self) { entry in
+            HistoryEntryDetailView(entry: entry, units: model.units)
         }
         .overlay {
             if model.isLoading {
@@ -48,29 +48,29 @@ struct ProgressHomeView: View {
             ErrorStateView(title: "Could not load your history", message: message) {
                 model.retry()
             }
-        } else if model.sessions.isEmpty && !model.isLoading {
+        } else if !model.hasHistory && !model.isLoading {
             ContentUnavailableView(
-                "No completed workouts",
+                "Nothing logged yet",
                 systemImage: "chart.line.uptrend.xyaxis",
-                description: Text("Finish a workout to see your history and charts.")
+                description: Text("Finish a workout, walk or run to see your history and charts.")
             )
         } else if horizontalSizeClass == .regular {
             HStack(spacing: 0) {
-                WorkoutHistoryView(groups: model.historyGroups, units: model.units, selectedSession: $selectedSession)
+                WorkoutHistoryView(groups: model.historyGroups, units: model.units, selectedEntry: $selectedEntry)
                     .frame(width: 380)
                 Divider()
-                if let selectedSession {
+                if let selectedEntry {
                     VStack(spacing: 0) {
                         HStack {
                             Spacer()
                             Button("Show charts") {
-                                self.selectedSession = nil
+                                self.selectedEntry = nil
                             }
                             .font(.subheadline.weight(.semibold))
                         }
                         .padding(.horizontal, AppSpacing.medium)
                         .padding(.top, AppSpacing.small)
-                        WorkoutDetailView(session: selectedSession, units: model.units)
+                        HistoryEntryDetailView(entry: selectedEntry, units: model.units)
                     }
                 } else {
                     ProgressChartsView(model: model)
@@ -81,7 +81,7 @@ struct ProgressHomeView: View {
             case .charts:
                 ProgressChartsView(model: model)
             case .history:
-                WorkoutHistoryView(groups: model.historyGroups, units: model.units, selectedSession: nil)
+                WorkoutHistoryView(groups: model.historyGroups, units: model.units, selectedEntry: nil)
             }
         }
     }
