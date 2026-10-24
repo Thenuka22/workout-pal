@@ -14,6 +14,7 @@ final class AppContainer {
     private let permissions: any PermissionsProviding
     private let motion: any MotionTracking
     private let account: AccountSession
+    private let deviceAuth: any DeviceAuthenticating
 
     init(inMemory: Bool = false) {
         let stack = CoreDataStack(inMemory: inMemory)
@@ -28,6 +29,7 @@ final class AppContainer {
         self.settings = settings
         permissions = SystemPermissions()
         motion = CoreMotionService()
+        deviceAuth = LocalAuthenticator()
         account = AccountSession(
             auth: FirebaseAuthService(),
             records: CoreDataAccountDataRepository(stack: stack),
@@ -37,7 +39,7 @@ final class AppContainer {
     }
 
     func makeRootViewModel() -> RootViewModel {
-        RootViewModel(store: stack, settings: settings, account: account)
+        RootViewModel(store: stack, settings: settings, account: account, deviceAuth: deviceAuth)
     }
 
     func makeWelcomeViewModel() -> WelcomeViewModel {
@@ -73,11 +75,11 @@ final class AppContainer {
     }
 
     func makeOnboardingViewModel() -> OnboardingViewModel {
-        OnboardingViewModel(settings: settings)
+        OnboardingViewModel(settings: settings, deviceAuth: deviceAuth)
     }
 
     func makeProfileViewModel() -> ProfileViewModel {
-        ProfileViewModel(settings: settings, account: account)
+        ProfileViewModel(settings: settings, account: account, deviceAuth: deviceAuth)
     }
 
     func makePermissionsViewModel() -> PermissionsViewModel {

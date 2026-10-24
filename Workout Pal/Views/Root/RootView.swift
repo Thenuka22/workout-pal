@@ -4,6 +4,7 @@ import UIKit
 
 struct RootView: View {
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+    @Environment(\.scenePhase) private var scenePhase
     @Environment(AppContainer.self) private var container
     @State private var model: RootViewModel
     @State private var navigation = AppNavigation()
@@ -31,11 +32,26 @@ struct RootView: View {
             case .onboarding:
                 OnboardingView(model: container.makeOnboardingViewModel())
             case .main:
-                if usesSidebar {
-                    RegularRootView(selection: $navigation.selection, displayName: model.displayName)
-                } else {
-                    CompactRootView(selection: $navigation.selection)
+                Group {
+                    if usesSidebar {
+                        RegularRootView(selection: $navigation.selection, displayName: model.displayName)
+                    } else {
+                        CompactRootView(selection: $navigation.selection)
+                    }
                 }
+                .accessibilityHidden(model.showsLock)
+            }
+        }
+        .overlay {
+            if model.showsLock {
+                LockView(
+                    unlockTitle: model.unlockTitle,
+                    symbolName: model.unlockSymbolName,
+                    message: model.unlockMessage,
+                    isUnlocking: model.isUnlocking,
+                    onUnlock: { model.unlock() },
+                    onSignOut: { model.signOutFromLock() }
+                )
             }
         }
         .environment(navigation)
@@ -46,6 +62,16 @@ struct RootView: View {
         }
         .onOpenURL { url in
             model.handleOpenURL(url)
+        }
+        .onChange(of: scenePhase) { _, phase in
+            switch phase {
+            case .background:
+                model.sceneDidEnterBackground()
+            case .active:
+                model.sceneDidBecomeActive()
+            default:
+                break
+            }
         }
     }
 

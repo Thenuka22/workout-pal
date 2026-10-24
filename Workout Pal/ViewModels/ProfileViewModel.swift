@@ -9,13 +9,57 @@ final class ProfileViewModel {
     let heightRange = UserPreferences.heightRange
 
     private(set) var errorMessage: String?
+    private(set) var isAuthenticating = false
 
     private let settings: AppSettings
     private let account: AccountSession
+    private let deviceAuth: any DeviceAuthenticating
 
-    init(settings: AppSettings, account: AccountSession) {
+    init(settings: AppSettings, account: AccountSession, deviceAuth: any DeviceAuthenticating) {
         self.settings = settings
         self.account = account
+        self.deviceAuth = deviceAuth
+    }
+
+    var unlockKind: DeviceUnlockKind {
+        deviceAuth.unlockKind()
+    }
+
+    var requiresUnlock: Bool {
+        settings.preferences.requiresUnlock
+    }
+
+    var secureUnlockTitle: String {
+        "Lock with \(unlockKind.title)"
+    }
+
+    var secureUnlockDetail: String {
+        if unlockKind == .unavailable {
+            return "Set a device passcode in Settings to lock Workout Pal."
+        }
+        return "Ask for \(unlockKind.title) when you come back to Workout Pal. Your passcode works too."
+    }
+
+    func setRequiresUnlock(_ enabled: Bool) {
+        guard enabled else {
+            settings.update { $0.requiresUnlock = false }
+            return
+        }
+        guard !isAuthenticating else {
+            return
+        }
+        isAuthenticating = true
+        Task {
+            do {
+                try await self.deviceAuth.authenticate(reason: "Turn on secure unlock for Workout Pal")
+                self.settings.update { $0.requiresUnlock = true }
+            } catch DeviceAuthenticationError.cancelled {
+                self.errorMessage = nil
+            } catch {
+                self.errorMessage = error.localizedDescription
+            }
+            self.isAuthenticating = false
+        }
     }
 
     var accountSummary: String {

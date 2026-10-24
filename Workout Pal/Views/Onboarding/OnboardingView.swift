@@ -16,6 +16,8 @@ struct OnboardingView: View {
                 heightStep
             case .fitnessLevel:
                 fitnessLevelStep
+            case .secureUnlock:
+                secureUnlockStep
             }
         }
         .frame(maxWidth: 560)
@@ -86,7 +88,7 @@ struct OnboardingView: View {
             title: "What's your fitness level?",
             subtitle: "Choose the best fit right now. You can adjust this as you build your routine.",
             footnote: "We'll suggest a weekly goal at this level.",
-            continueTitle: "Build my plan",
+            continueTitle: model.offersSecureUnlock ? "Continue" : "Build my plan",
             canContinue: model.canContinue,
             canGoBack: model.canGoBack,
             onBack: { model.back() },
@@ -99,6 +101,35 @@ struct OnboardingView: View {
                     }
                 }
             }
+        }
+    }
+
+    private var secureUnlockStep: some View {
+        PersonaliseStepView(
+            stepNumber: model.personaliseStepNumber,
+            stepCount: model.personaliseStepCount,
+            title: "Keep your history private?",
+            subtitle: "Lock Workout Pal with \(model.unlockKind.title) whenever you leave the app. You can change this later in Profile.",
+            footnote: model.errorMessage,
+            continueTitle: model.enableUnlockTitle,
+            canContinue: model.canContinue,
+            canGoBack: model.canGoBack,
+            onBack: { model.back() },
+            onContinue: { model.next() }
+        ) {
+            VStack(spacing: AppSpacing.large) {
+                Image(systemName: model.unlockKind.symbolName)
+                    .font(.system(size: 56, weight: .semibold))
+                    .foregroundStyle(AppColors.onAccent)
+                    .frame(width: 120, height: 120)
+                    .background(AppColors.accent, in: Circle())
+                    .accessibilityHidden(true)
+                Button("Not now") {
+                    model.skipSecureUnlock()
+                }
+                .buttonStyle(.secondaryAction)
+            }
+            .frame(maxWidth: .infinity)
         }
     }
 }

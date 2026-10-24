@@ -19,6 +19,7 @@ struct ProfileView: View {
                     goalCard
                     planCard
                     preferencesCard
+                    securityCard
                     privacyCard
                     accountCard
                     aboutCard
@@ -40,7 +41,7 @@ struct ProfileView: View {
         } message: {
             Text("Your workouts stay on this device and come back when you sign in again.")
         }
-        .alert("Couldn't sign out", isPresented: $model.isShowingError) {
+        .alert("Something went wrong", isPresented: $model.isShowingError) {
             Button("OK") {}
         } message: {
             Text(model.errorMessage ?? "")
@@ -159,6 +160,24 @@ struct ProfileView: View {
                     }
                 }
             }
+        }
+        .card()
+    }
+
+    private var securityCard: some View {
+        VStack(alignment: .leading, spacing: AppSpacing.small) {
+            Text("Security")
+                .eyebrow()
+            Toggle(isOn: Binding(get: { model.requiresUnlock }, set: { model.setRequiresUnlock($0) })) {
+                Label(model.secureUnlockTitle, systemImage: model.unlockKind.symbolName)
+                    .font(.headline)
+                    .foregroundStyle(AppColors.textPrimary)
+            }
+            .tint(AppColors.accent)
+            .disabled(model.unlockKind == .unavailable || model.isAuthenticating)
+            Text(model.secureUnlockDetail)
+                .font(.footnote)
+                .foregroundStyle(AppColors.textSecondary)
         }
         .card()
     }

@@ -95,6 +95,7 @@ struct UserPreferences: Hashable, Sendable {
     var heightCentimetres: Int?
     var fitnessLevel: FitnessLevel?
     var hasCompletedOnboarding: Bool
+    var requiresUnlock = false
 
     static let standard = UserPreferences(
         displayName: "",

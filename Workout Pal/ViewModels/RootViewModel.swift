@@ -19,15 +19,26 @@ enum RootScreen: Equatable {
 @Observable
 final class RootViewModel {
     private(set) var storeState: StoreState = .loading
+    private(set) var isLocked = false
+    private(set) var isUnlocking = false
+    private(set) var unlockMessage: String?
 
     private let store: any PersistentStore
     private let settings: AppSettings
     private let account: AccountSession
+    private let deviceAuth: any DeviceAuthenticating
+    @ObservationIgnored private var returnedFromBackground = false
 
-    init(store: any PersistentStore, settings: AppSettings, account: AccountSession) {
+    init(
+        store: any PersistentStore,
+        settings: AppSettings,
+        account: AccountSession,
+        deviceAuth: any DeviceAuthenticating
+    ) {
         self.store = store
         self.settings = settings
         self.account = account
+        self.deviceAuth = deviceAuth
     }
 
     var screen: RootScreen {
@@ -42,6 +53,18 @@ final class RootViewModel {
             }
             return settings.preferences.hasCompletedOnboarding ? .main : .onboarding
         }
+    }
+
+    var showsLock: Bool {
+        isLocked && screen == .main
+    }
+
+    var unlockTitle: String {
+        "Unlock with \(deviceAuth.unlockKind().title)"
+    }
+
+    var unlockSymbolName: String {
+        deviceAuth.unlockKind().symbolName
     }
 
     var appearance: AppearancePreference {
@@ -60,7 +83,11 @@ final class RootViewModel {
         do {
             try await store.load()
             account.restore()
+            isLocked = settings.preferences.requiresUnlock
             storeState = .ready
+            if showsLock {
+                unlock()
+            }
         } catch {
             storeState = .failed(error.localizedDescription)
         }
@@ -74,5 +101,52 @@ final class RootViewModel {
 
     func handleOpenURL(_ url: URL) {
         _ = account.handle(url)
+    }
+
+    func sceneDidEnterBackground() {
+        returnedFromBackground = true
+        if account.isSignedIn && settings.preferences.requiresUnlock {
+            isLocked = true
+            unlockMessage = nil
+        }
+    }
+
+    func sceneDidBecomeActive() {
+        guard returnedFromBackground else {
+            return
+        }
+        returnedFromBackground = false
+        if showsLock {
+            unlock()
+        }
+    }
+
+    func unlock() {
+        guard isLocked, !isUnlocking else {
+            return
+        }
+        isUnlocking = true
+        Task {
+            do {
+                try await self.deviceAuth.authenticate(reason: "Unlock your workout history")
+                self.isLocked = false
+                self.unlockMessage = nil
+            } catch DeviceAuthenticationError.cancelled {
+                self.unlockMessage = nil
+            } catch {
+                self.unlockMessage = error.localizedDescription
+            }
+            self.isUnlocking = false
+        }
+    }
+
+    func signOutFromLock() {
+        do {
+            try account.signOut()
+            isLocked = false
+            unlockMessage = nil
+        } catch {
+            unlockMessage = error.localizedDescription
+        }
     }
 }
