@@ -7,13 +7,7 @@ struct PreferencesStoreTests {
         try #require(UserDefaults(suiteName: "WorkoutPalTests.\(UUID().uuidString)"))
     }
 
-    @Test func emptyStoreReturnsTheDefaults() throws {
-        let store = UserDefaultsPreferencesStore(defaults: try makeDefaults())
-        #expect(store.load() == .standard)
-    }
-
-    @Test func savedPreferencesComeBack() throws {
-        let store = UserDefaultsPreferencesStore(defaults: try makeDefaults())
+    private var sample: UserPreferences {
         var preferences = UserPreferences.standard
         preferences.displayName = "Induwara"
         preferences.weeklyGoal = 4
@@ -23,13 +17,49 @@ struct PreferencesStoreTests {
         preferences.heightCentimetres = 162
         preferences.fitnessLevel = .intermediate
         preferences.hasCompletedOnboarding = true
-        store.save(preferences)
-        #expect(store.load() == preferences)
+        return preferences
+    }
+
+    @Test func emptyStoreReturnsTheDefaults() throws {
+        let store = UserDefaultsPreferencesStore(defaults: try makeDefaults())
+        #expect(store.load(ownerID: LocalProfile.ownerID) == .standard)
+        #expect(!store.hasPreferences(ownerID: LocalProfile.ownerID))
+    }
+
+    @Test func savedPreferencesComeBack() throws {
+        let store = UserDefaultsPreferencesStore(defaults: try makeDefaults())
+        store.save(sample, ownerID: "google-uid")
+        #expect(store.load(ownerID: "google-uid") == sample)
+        #expect(store.hasPreferences(ownerID: "google-uid"))
+    }
+
+    @Test func eachAccountHasItsOwnPreferences() throws {
+        let store = UserDefaultsPreferencesStore(defaults: try makeDefaults())
+        store.save(sample, ownerID: "account-a")
+        #expect(store.load(ownerID: "account-b") == .standard)
+        #expect(store.load(ownerID: LocalProfile.ownerID) == .standard)
+    }
+
+    @Test func localProfileKeepsTheOriginalKeys() throws {
+        let defaults = try makeDefaults()
+        defaults.set("Kept", forKey: "preferences.displayName")
+        defaults.set(true, forKey: "preferences.hasCompletedOnboarding")
+        let store = UserDefaultsPreferencesStore(defaults: defaults)
+        #expect(store.load(ownerID: LocalProfile.ownerID).displayName == "Kept")
+        #expect(store.load(ownerID: LocalProfile.ownerID).hasCompletedOnboarding)
+    }
+
+    @Test func removingPreferencesResetsTheAccount() throws {
+        let store = UserDefaultsPreferencesStore(defaults: try makeDefaults())
+        store.save(sample, ownerID: "google-uid")
+        store.removePreferences(ownerID: "google-uid")
+        #expect(store.load(ownerID: "google-uid") == .standard)
+        #expect(!store.hasPreferences(ownerID: "google-uid"))
     }
 
     @Test func outOfRangeHeightIsIgnored() throws {
         let defaults = try makeDefaults()
         defaults.set(400, forKey: "preferences.heightCentimetres")
-        #expect(UserDefaultsPreferencesStore(defaults: defaults).load().heightCentimetres == nil)
+        #expect(UserDefaultsPreferencesStore(defaults: defaults).load(ownerID: LocalProfile.ownerID).heightCentimetres == nil)
     }
 }

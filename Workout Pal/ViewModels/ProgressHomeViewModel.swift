@@ -165,8 +165,8 @@ final class ProgressHomeViewModel {
 
     func load() async {
         do {
-            sessions = try await repository.completedSessions(ownerID: LocalProfile.ownerID)
-            activities = try await activityRepository.completedActivities(ownerID: LocalProfile.ownerID)
+            sessions = try await repository.completedSessions(ownerID: settings.ownerID)
+            activities = try await activityRepository.completedActivities(ownerID: settings.ownerID)
             errorMessage = nil
         } catch {
             errorMessage = error.localizedDescription

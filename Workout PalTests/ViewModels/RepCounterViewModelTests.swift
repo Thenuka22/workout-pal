@@ -13,6 +13,7 @@ struct RepCounterViewModelTests {
             camera: camera,
             permissions: permissions,
             sessions: sessions,
+            settings: AppSettings(store: InMemoryPreferencesStore()),
             exercise: .squat,
             mode: mode,
             now: { SampleData.now }

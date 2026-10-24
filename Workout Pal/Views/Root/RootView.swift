@@ -1,3 +1,4 @@
+import Foundation
 import SwiftUI
 import UIKit
 
@@ -18,17 +19,19 @@ struct RootView: View {
     var body: some View {
         @Bindable var navigation = navigation
         Group {
-            switch model.storeState {
+            switch model.screen {
             case .loading:
                 ProgressView("Opening your workout data")
             case .failed(let message):
                 ErrorStateView(title: "Storage unavailable", message: message) {
                     model.retryLoadingStore()
                 }
-            case .ready:
-                if model.needsOnboarding {
-                    OnboardingView(model: container.makeOnboardingViewModel())
-                } else if usesSidebar {
+            case .welcome:
+                WelcomeView(model: container.makeWelcomeViewModel())
+            case .onboarding:
+                OnboardingView(model: container.makeOnboardingViewModel())
+            case .main:
+                if usesSidebar {
                     RegularRootView(selection: $navigation.selection, displayName: model.displayName)
                 } else {
                     CompactRootView(selection: $navigation.selection)
@@ -40,6 +43,9 @@ struct RootView: View {
         .preferredColorScheme(colorScheme(for: model.appearance))
         .task {
             await model.loadStore()
+        }
+        .onOpenURL { url in
+            model.handleOpenURL(url)
         }
     }
 

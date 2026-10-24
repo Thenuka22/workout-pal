@@ -8,10 +8,39 @@ final class ProfileViewModel {
     let attributionURL = URL(string: "https://wger.de")
     let heightRange = UserPreferences.heightRange
 
-    private let settings: AppSettings
+    private(set) var errorMessage: String?
 
-    init(settings: AppSettings) {
+    private let settings: AppSettings
+    private let account: AccountSession
+
+    init(settings: AppSettings, account: AccountSession) {
         self.settings = settings
+        self.account = account
+    }
+
+    var accountSummary: String {
+        account.user?.summary ?? "Not signed in"
+    }
+
+    var signOutTitle: String {
+        account.user?.provider == .google ? "Sign out" : "Leave offline mode"
+    }
+
+    var isShowingError: Bool {
+        get { errorMessage != nil }
+        set {
+            if !newValue {
+                errorMessage = nil
+            }
+        }
+    }
+
+    func signOut() {
+        do {
+            try account.signOut()
+        } catch {
+            errorMessage = error.localizedDescription
+        }
     }
 
     var displayName: String {

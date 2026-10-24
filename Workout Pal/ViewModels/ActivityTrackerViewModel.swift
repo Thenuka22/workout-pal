@@ -109,7 +109,7 @@ final class ActivityTrackerViewModel {
             return
         }
         do {
-            guard let active = try await activities.activeActivity(ownerID: LocalProfile.ownerID) else {
+            guard let active = try await activities.activeActivity(ownerID: settings.ownerID) else {
                 return
             }
             restore(active)
@@ -130,7 +130,7 @@ final class ActivityTrackerViewModel {
             guard access == .granted else {
                 return
             }
-            let activity = ActivitySession.start(kind: self.kind, ownerID: LocalProfile.ownerID, now: self.now())
+            let activity = ActivitySession.start(kind: self.kind, ownerID: self.settings.ownerID, now: self.now())
             self.begin(activity)
             self.persist(activity)
         }

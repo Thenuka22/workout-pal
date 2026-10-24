@@ -13,6 +13,7 @@ final class AppContainer {
     private let settings: AppSettings
     private let permissions: any PermissionsProviding
     private let motion: any MotionTracking
+    private let account: AccountSession
 
     init(inMemory: Bool = false) {
         let stack = CoreDataStack(inMemory: inMemory)
@@ -23,13 +24,24 @@ final class AppContainer {
         sessions = CoreDataWorkoutSessionRepository(stack: stack)
         activities = CoreDataActivitySessionRepository(stack: stack)
         catalogSync = ExerciseCatalogSync(client: WgerClient(), catalog: catalog)
-        settings = AppSettings(store: UserDefaultsPreferencesStore())
+        let settings = AppSettings(store: UserDefaultsPreferencesStore())
+        self.settings = settings
         permissions = SystemPermissions()
         motion = CoreMotionService()
+        account = AccountSession(
+            auth: FirebaseAuthService(),
+            records: CoreDataAccountDataRepository(stack: stack),
+            settings: settings,
+            state: UserDefaultsAccountStateStore()
+        )
     }
 
     func makeRootViewModel() -> RootViewModel {
-        RootViewModel(store: stack, settings: settings)
+        RootViewModel(store: stack, settings: settings, account: account)
+    }
+
+    func makeWelcomeViewModel() -> WelcomeViewModel {
+        WelcomeViewModel(account: account)
     }
 
     func makeDashboardViewModel() -> DashboardViewModel {
@@ -41,7 +53,7 @@ final class AppContainer {
     }
 
     func makeTrainViewModel() -> TrainViewModel {
-        TrainViewModel(repository: routines)
+        TrainViewModel(repository: routines, settings: settings)
     }
 
     func makeRoutineDetailViewModel(routineID: UUID) -> RoutineDetailViewModel {
@@ -65,7 +77,7 @@ final class AppContainer {
     }
 
     func makeProfileViewModel() -> ProfileViewModel {
-        ProfileViewModel(settings: settings)
+        ProfileViewModel(settings: settings, account: account)
     }
 
     func makePermissionsViewModel() -> PermissionsViewModel {
@@ -84,6 +96,7 @@ final class AppContainer {
             camera: VisionPoseCamera(),
             permissions: permissions,
             sessions: sessions,
+            settings: settings,
             exercise: exercise,
             mode: mode
         )

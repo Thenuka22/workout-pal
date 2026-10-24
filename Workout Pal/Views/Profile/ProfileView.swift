@@ -4,6 +4,7 @@ struct ProfileView: View {
     @Environment(AppContainer.self) private var container
     @State private var model: ProfileViewModel
     @State private var isEditingHeight = false
+    @State private var isConfirmingSignOut = false
 
     init(model: ProfileViewModel) {
         _model = State(initialValue: model)
@@ -19,6 +20,7 @@ struct ProfileView: View {
                     planCard
                     preferencesCard
                     privacyCard
+                    accountCard
                     aboutCard
                 }
                 .padding(.horizontal, AppSpacing.medium)
@@ -29,6 +31,19 @@ struct ProfileView: View {
         .toolbar(.hidden, for: .navigationBar)
         .sheet(isPresented: $isEditingHeight) {
             heightSheet
+        }
+        .confirmationDialog(model.signOutTitle, isPresented: $isConfirmingSignOut, titleVisibility: .visible) {
+            Button(model.signOutTitle, role: .destructive) {
+                model.signOut()
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("Your workouts stay on this device and come back when you sign in again.")
+        }
+        .alert("Couldn't sign out", isPresented: $model.isShowingError) {
+            Button("OK") {}
+        } message: {
+            Text(model.errorMessage ?? "")
         }
         .navigationDestination(for: ProfileRoute.self) { route in
             switch route {
@@ -158,6 +173,21 @@ struct ProfileView: View {
             .card()
         }
         .buttonStyle(.plain)
+    }
+
+    private var accountCard: some View {
+        VStack(alignment: .leading, spacing: AppSpacing.small) {
+            Text("Account")
+                .eyebrow()
+            Text(model.accountSummary)
+                .font(.subheadline)
+                .foregroundStyle(AppColors.textPrimary)
+            Button(model.signOutTitle, role: .destructive) {
+                isConfirmingSignOut = true
+            }
+            .font(.subheadline.weight(.semibold))
+        }
+        .card()
     }
 
     private var aboutCard: some View {

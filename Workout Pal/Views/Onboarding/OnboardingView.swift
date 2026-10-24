@@ -10,8 +10,6 @@ struct OnboardingView: View {
     var body: some View {
         Group {
             switch model.step {
-            case .walkthrough:
-                walkthrough
             case .gender:
                 genderStep
             case .height:
@@ -26,35 +24,6 @@ struct OnboardingView: View {
         .animation(.easeInOut(duration: 0.25), value: model.step)
     }
 
-    private var walkthrough: some View {
-        VStack(spacing: 0) {
-            HStack {
-                Spacer()
-                Button("Skip") {
-                    model.skipWalkthrough()
-                }
-                .font(.subheadline.weight(.semibold))
-                .foregroundStyle(AppColors.textSecondary)
-            }
-            .padding(.horizontal, AppSpacing.medium)
-            .padding(.top, AppSpacing.small)
-            TabView(selection: $model.walkthroughIndex) {
-                ForEach(model.pages) { page in
-                    WalkthroughPageView(page: page, pageCount: model.pages.count)
-                        .tag(page.id)
-                }
-            }
-            .tabViewStyle(.page(indexDisplayMode: .never))
-            Button(model.isLastPage ? "Get started" : "Next") {
-                model.next()
-            }
-            .buttonStyle(.primaryAction)
-            .padding(.horizontal, AppSpacing.medium)
-            PageDots(count: model.pages.count, current: model.walkthroughIndex)
-                .padding(.vertical, AppSpacing.large)
-        }
-    }
-
     private var genderStep: some View {
         PersonaliseStepView(
             stepNumber: model.personaliseStepNumber,
@@ -64,6 +33,7 @@ struct OnboardingView: View {
             footnote: "Your gender is optional and private.",
             continueTitle: "Continue",
             canContinue: model.canContinue,
+            canGoBack: model.canGoBack,
             onBack: { model.back() },
             onContinue: { model.next() }
         ) {
@@ -85,6 +55,7 @@ struct OnboardingView: View {
             subtitle: "Used to personalise activity estimates.",
             continueTitle: "Continue",
             canContinue: model.canContinue,
+            canGoBack: model.canGoBack,
             onBack: { model.back() },
             onContinue: { model.next() }
         ) {
@@ -117,6 +88,7 @@ struct OnboardingView: View {
             footnote: "We'll suggest a weekly goal at this level.",
             continueTitle: "Build my plan",
             canContinue: model.canContinue,
+            canGoBack: model.canGoBack,
             onBack: { model.back() },
             onContinue: { model.next() }
         ) {

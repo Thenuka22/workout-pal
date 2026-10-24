@@ -10,9 +10,11 @@ final class TrainViewModel {
     var searchText = ""
 
     private let repository: any RoutineRepository
+    private let settings: AppSettings
 
-    init(repository: any RoutineRepository) {
+    init(repository: any RoutineRepository, settings: AppSettings) {
         self.repository = repository
+        self.settings = settings
     }
 
     var filteredRoutines: [Routine] {
@@ -25,7 +27,7 @@ final class TrainViewModel {
 
     func load() async {
         do {
-            routines = try await repository.routines(ownerID: LocalProfile.ownerID)
+            routines = try await repository.routines(ownerID: settings.ownerID)
             errorMessage = nil
         } catch {
             errorMessage = error.localizedDescription

@@ -64,11 +64,11 @@ final class RoutineDetailViewModel {
         }
         Task {
             do {
-                if let active = try await self.sessions.activeSession(ownerID: LocalProfile.ownerID) {
+                if let active = try await self.sessions.activeSession(ownerID: self.settings.ownerID) {
                     self.activeSession = active
                     self.isAskingAboutActiveSession = true
                 } else {
-                    self.startedSession = SessionBuilder.session(from: routine, ownerID: LocalProfile.ownerID)
+                    self.startedSession = SessionBuilder.session(from: routine, ownerID: self.settings.ownerID)
                 }
             } catch {
                 self.startErrorMessage = error.localizedDescription
@@ -88,7 +88,7 @@ final class RoutineDetailViewModel {
             do {
                 try await self.sessions.deleteSession(id: active.id)
                 self.activeSession = nil
-                self.startedSession = SessionBuilder.session(from: routine, ownerID: LocalProfile.ownerID)
+                self.startedSession = SessionBuilder.session(from: routine, ownerID: self.settings.ownerID)
             } catch {
                 self.startErrorMessage = error.localizedDescription
             }

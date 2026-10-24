@@ -107,4 +107,38 @@ struct CoreDataRepositoryTests {
         try await repository.deleteActivity(id: activity.id)
         #expect(try await repository.completedActivities(ownerID: SampleData.ownerID).isEmpty)
     }
+
+    @Test func signingInMovesLocalRecordsToTheAccount() async throws {
+        let stack = try await makeStack()
+        let routines = CoreDataRoutineRepository(stack: stack)
+        let sessions = CoreDataWorkoutSessionRepository(stack: stack)
+        let activities = CoreDataActivitySessionRepository(stack: stack)
+        try await routines.save(SampleData.routine(ownerID: LocalProfile.ownerID))
+        try await sessions.save(SampleData.session(ownerID: LocalProfile.ownerID))
+        try await activities.save(SampleData.activity(ownerID: LocalProfile.ownerID))
+        try await routines.save(SampleData.routine(name: "Other", ownerID: "someone-else"))
+
+        try await CoreDataAccountDataRepository(stack: stack).reassignRecords(from: LocalProfile.ownerID, to: "uid")
+
+        #expect(try await routines.routines(ownerID: "uid").count == 1)
+        #expect(try await routines.routines(ownerID: LocalProfile.ownerID).isEmpty)
+        #expect(try await sessions.completedSessions(ownerID: "uid").count == 1)
+        #expect(try await activities.completedActivities(ownerID: "uid").count == 1)
+        #expect(try await routines.routines(ownerID: "someone-else").count == 1)
+    }
+
+    @Test func deletingAnAccountsRecordsKeepsOtherAccounts() async throws {
+        let stack = try await makeStack()
+        let routines = CoreDataRoutineRepository(stack: stack)
+        let sessions = CoreDataWorkoutSessionRepository(stack: stack)
+        try await routines.save(SampleData.routine(ownerID: "uid"))
+        try await sessions.save(SampleData.session(ownerID: "uid"))
+        try await routines.save(SampleData.routine(name: "Keep", ownerID: "other"))
+
+        try await CoreDataAccountDataRepository(stack: stack).deleteRecords(ownerID: "uid")
+
+        #expect(try await routines.routines(ownerID: "uid").isEmpty)
+        #expect(try await sessions.completedSessions(ownerID: "uid").isEmpty)
+        #expect(try await routines.routines(ownerID: "other").map(\.name) == ["Keep"])
+    }
 }

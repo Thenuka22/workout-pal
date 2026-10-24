@@ -67,11 +67,11 @@ final class DashboardViewModel {
 
     func load() async {
         do {
-            let completed = try await sessions.completedSessions(ownerID: LocalProfile.ownerID)
-            let walks = try await activities.completedActivities(ownerID: LocalProfile.ownerID)
-            activeSession = try await sessions.activeSession(ownerID: LocalProfile.ownerID)
-            activeActivity = try await activities.activeActivity(ownerID: LocalProfile.ownerID)
-            let allRoutines = try await routines.routines(ownerID: LocalProfile.ownerID)
+            let completed = try await sessions.completedSessions(ownerID: settings.ownerID)
+            let walks = try await activities.completedActivities(ownerID: settings.ownerID)
+            activeSession = try await sessions.activeSession(ownerID: settings.ownerID)
+            activeActivity = try await activities.activeActivity(ownerID: settings.ownerID)
+            let allRoutines = try await routines.routines(ownerID: settings.ownerID)
             summary = WeeklySummary.make(sessions: completed, activities: walks, goal: settings.preferences.weeklyGoal)
             recentSession = completed.first
             suggestedRoutine = RoutinePlanner.nextRoutine(from: allRoutines, sessions: completed)

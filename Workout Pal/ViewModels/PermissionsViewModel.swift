@@ -25,7 +25,7 @@ struct PermissionRow: Identifiable, Hashable {
 final class PermissionsViewModel {
     let privacyNotes = [
         "Camera frames are analysed on this device and never saved or uploaded.",
-        "Your workouts are stored in Workout Pal on this device.",
+        "Your workouts are stored in Workout Pal on this device. Your Google account is only used to sign in.",
         "Apple Health does not tell apps whether reading is allowed. Choose what Workout Pal can read in the Health app.",
     ]
 

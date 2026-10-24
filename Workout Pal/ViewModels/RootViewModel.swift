@@ -7,6 +7,14 @@ enum StoreState {
     case failed(String)
 }
 
+enum RootScreen: Equatable {
+    case loading
+    case failed(String)
+    case welcome
+    case onboarding
+    case main
+}
+
 @MainActor
 @Observable
 final class RootViewModel {
@@ -14,18 +22,30 @@ final class RootViewModel {
 
     private let store: any PersistentStore
     private let settings: AppSettings
+    private let account: AccountSession
 
-    init(store: any PersistentStore, settings: AppSettings) {
+    init(store: any PersistentStore, settings: AppSettings, account: AccountSession) {
         self.store = store
         self.settings = settings
+        self.account = account
+    }
+
+    var screen: RootScreen {
+        switch storeState {
+        case .loading:
+            return .loading
+        case .failed(let message):
+            return .failed(message)
+        case .ready:
+            if !account.isSignedIn {
+                return .welcome
+            }
+            return settings.preferences.hasCompletedOnboarding ? .main : .onboarding
+        }
     }
 
     var appearance: AppearancePreference {
         settings.preferences.appearance
-    }
-
-    var needsOnboarding: Bool {
-        !settings.preferences.hasCompletedOnboarding
     }
 
     var displayName: String {
@@ -39,6 +59,7 @@ final class RootViewModel {
         storeState = .loading
         do {
             try await store.load()
+            account.restore()
             storeState = .ready
         } catch {
             storeState = .failed(error.localizedDescription)
@@ -49,5 +70,9 @@ final class RootViewModel {
         Task {
             await self.loadStore()
         }
+    }
+
+    func handleOpenURL(_ url: URL) {
+        _ = account.handle(url)
     }
 }

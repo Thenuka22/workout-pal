@@ -8,6 +8,7 @@ struct PersonaliseStepView<Content: View>: View {
     let footnote: String?
     let continueTitle: String
     let canContinue: Bool
+    let canGoBack: Bool
     let onBack: () -> Void
     let onContinue: () -> Void
     let content: Content
@@ -20,6 +21,7 @@ struct PersonaliseStepView<Content: View>: View {
         footnote: String? = nil,
         continueTitle: String,
         canContinue: Bool,
+        canGoBack: Bool = true,
         onBack: @escaping () -> Void,
         onContinue: @escaping () -> Void,
         @ViewBuilder content: () -> Content
@@ -31,6 +33,7 @@ struct PersonaliseStepView<Content: View>: View {
         self.footnote = footnote
         self.continueTitle = continueTitle
         self.canContinue = canContinue
+        self.canGoBack = canGoBack
         self.onBack = onBack
         self.onContinue = onContinue
         self.content = content()
@@ -42,8 +45,11 @@ struct PersonaliseStepView<Content: View>: View {
                 Button(action: onBack) {
                     Image(systemName: "chevron.left")
                         .font(.headline)
+                        .frame(minWidth: 44, minHeight: 44)
                 }
                 .accessibilityLabel("Back")
+                .opacity(canGoBack ? 1 : 0)
+                .disabled(!canGoBack)
                 Spacer()
                 Text("Personalise your plan")
                     .font(.subheadline.weight(.semibold))

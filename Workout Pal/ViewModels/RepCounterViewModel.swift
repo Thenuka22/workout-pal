@@ -39,6 +39,7 @@ final class RepCounterViewModel {
     private let camera: any PoseDetecting
     private let permissions: any PermissionsProviding
     private let sessions: any WorkoutSessionRepository
+    private let settings: AppSettings
     private let now: @MainActor () -> Date
     @ObservationIgnored private var streamTask: Task<Void, Never>?
     @ObservationIgnored private var counter: RepCounter?
@@ -48,6 +49,7 @@ final class RepCounterViewModel {
         camera: any PoseDetecting,
         permissions: any PermissionsProviding,
         sessions: any WorkoutSessionRepository,
+        settings: AppSettings,
         exercise: CameraExercise? = nil,
         mode: RepCounterMode = .standalone,
         now: @escaping @MainActor () -> Date = { .now }
@@ -55,6 +57,7 @@ final class RepCounterViewModel {
         self.camera = camera
         self.permissions = permissions
         self.sessions = sessions
+        self.settings = settings
         self.exercise = exercise
         self.mode = mode
         self.now = now
@@ -195,7 +198,7 @@ final class RepCounterViewModel {
         let set = WorkoutSet(id: UUID(), reps: reps, load: .bodyweight, isCompleted: true, completedAt: end, source: .camera)
         var session = savedSession ?? WorkoutSession(
             id: UUID(),
-            ownerID: LocalProfile.ownerID,
+            ownerID: settings.ownerID,
             routineID: nil,
             routineName: "\(exercise.title) · camera",
             startedAt: start,

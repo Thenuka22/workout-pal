@@ -23,7 +23,7 @@ final class RoutineEditorViewModel {
         } else {
             draft = Routine(
                 id: UUID(),
-                ownerID: LocalProfile.ownerID,
+                ownerID: settings.ownerID,
                 name: "",
                 notes: "",
                 exercises: [],
