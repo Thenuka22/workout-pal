@@ -15,6 +15,7 @@ final class AppContainer {
     private let motion: any MotionTracking
     private let account: AccountSession
     private let deviceAuth: any DeviceAuthenticating
+    private let health: any HealthService
 
     init(inMemory: Bool = false) {
         let stack = CoreDataStack(inMemory: inMemory)
@@ -30,6 +31,7 @@ final class AppContainer {
         permissions = SystemPermissions()
         motion = CoreMotionService()
         deviceAuth = LocalAuthenticator()
+        health = HealthKitService()
         account = AccountSession(
             auth: FirebaseAuthService(),
             records: CoreDataAccountDataRepository(stack: stack),
@@ -71,7 +73,13 @@ final class AppContainer {
     }
 
     func makeProgressViewModel() -> ProgressHomeViewModel {
-        ProgressHomeViewModel(repository: sessions, activityRepository: activities, settings: settings)
+        ProgressHomeViewModel(
+            repository: sessions,
+            activityRepository: activities,
+            health: health,
+            permissions: permissions,
+            settings: settings
+        )
     }
 
     func makeOnboardingViewModel() -> OnboardingViewModel {

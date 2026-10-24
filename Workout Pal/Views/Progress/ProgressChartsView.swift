@@ -12,6 +12,13 @@ struct ProgressChartsView: View {
                 minutesCard
                 workoutsCard
                 thisWeekTiles
+                HealthTodayCard(
+                    state: model.healthState,
+                    todayActiveMinutes: model.todayActiveMinutes,
+                    units: model.units,
+                    onConnect: { model.connectHealth() },
+                    onRefresh: { model.refreshHealth() }
+                )
                 exerciseCard
                 Text("Your activity stays on your device.")
                     .font(.footnote)
@@ -21,6 +28,9 @@ struct ProgressChartsView: View {
             .padding(AppSpacing.medium)
         }
         .screenBackground()
+        .task {
+            await model.loadHealth()
+        }
     }
 
     private var minutesCard: some View {

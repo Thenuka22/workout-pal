@@ -31,21 +31,43 @@ final class ProgressHomeViewModel {
     private(set) var activities: [ActivitySession] = []
     private(set) var isLoading = true
     private(set) var errorMessage: String?
+    private(set) var healthState: HealthCardState = .loading
     var range: ProgressRange = .twelveWeeks
     var selectedExerciseID: Int?
 
     private let repository: any WorkoutSessionRepository
     private let activityRepository: any ActivitySessionRepository
+    private let health: any HealthService
+    private let permissions: any PermissionsProviding
     private let settings: AppSettings
+    private let now: @MainActor () -> Date
 
     init(
         repository: any WorkoutSessionRepository,
         activityRepository: any ActivitySessionRepository,
-        settings: AppSettings
+        health: any HealthService,
+        permissions: any PermissionsProviding,
+        settings: AppSettings,
+        now: @escaping @MainActor () -> Date = { .now }
     ) {
         self.repository = repository
         self.activityRepository = activityRepository
+        self.health = health
+        self.permissions = permissions
         self.settings = settings
+        self.now = now
+    }
+
+    var todayActiveMinutes: Int {
+        let calendar = Calendar.current
+        let today = now()
+        let workoutSeconds = sessions
+            .filter { calendar.isDate($0.startedAt, inSameDayAs: today) }
+            .reduce(0.0) { $0 + $1.activeSeconds }
+        let activitySeconds = activities
+            .filter { calendar.isDate($0.startedAt, inSameDayAs: today) }
+            .reduce(0.0) { $0 + $1.activeSeconds }
+        return Int(((workoutSeconds + activitySeconds) / 60).rounded())
     }
 
     var hasHistory: Bool {
@@ -177,6 +199,36 @@ final class ProgressHomeViewModel {
     func retry() {
         Task {
             await self.load()
+        }
+    }
+
+    func loadHealth() async {
+        guard health.isAvailable else {
+            healthState = .unavailable
+            return
+        }
+        guard await permissions.status(of: .health) == .granted else {
+            healthState = .notConnected
+            return
+        }
+        do {
+            let summary = try await health.todaySummary(now: now())
+            healthState = .loaded(summary, updatedAt: now())
+        } catch {
+            healthState = .failed(error.localizedDescription)
+        }
+    }
+
+    func connectHealth() {
+        Task {
+            _ = await self.permissions.request(.health)
+            await self.loadHealth()
+        }
+    }
+
+    func refreshHealth() {
+        Task {
+            await self.loadHealth()
         }
     }
 }
