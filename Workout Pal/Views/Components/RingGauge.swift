@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct RingGauge<Content: View>: View {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     let progress: Double
     var lineWidth: CGFloat = 10
     let content: Content
@@ -19,7 +20,7 @@ struct RingGauge<Content: View>: View {
                 .trim(from: 0, to: min(max(progress, 0), 1))
                 .stroke(AppColors.accent, style: StrokeStyle(lineWidth: lineWidth, lineCap: .round))
                 .rotationEffect(.degrees(-90))
-                .animation(.easeOut(duration: 0.4), value: progress)
+                .animation(reduceMotion ? nil : .easeOut(duration: 0.4), value: progress)
             content
         }
         .padding(lineWidth / 2)

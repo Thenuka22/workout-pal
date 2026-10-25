@@ -298,7 +298,7 @@ struct ProfileView: View {
             VStack(spacing: AppSpacing.medium) {
                 HStack(alignment: .firstTextBaseline, spacing: AppSpacing.xSmall) {
                     Text("\(model.heightCentimetres)")
-                        .font(.system(size: 56, weight: .bold, design: .rounded))
+                        .metric(size: 56)
                         .foregroundStyle(AppColors.textPrimary)
                     Text("cm")
                         .font(.title3)

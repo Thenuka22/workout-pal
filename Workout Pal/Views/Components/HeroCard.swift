@@ -61,6 +61,7 @@ struct HeroCard: View {
         .overlay {
             shape.strokeBorder(AppColors.outline, lineWidth: 1)
         }
+        .accessibilityElement(children: .combine)
     }
 }
 

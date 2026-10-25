@@ -26,7 +26,24 @@ struct CardTitleModifier: ViewModifier {
     }
 }
 
+struct MetricModifier: ViewModifier {
+    @ScaledMetric private var size: CGFloat
+
+    init(size: CGFloat) {
+        _size = ScaledMetric(wrappedValue: size, relativeTo: .largeTitle)
+    }
+
+    func body(content: Content) -> some View {
+        content
+            .font(.system(size: size, weight: .bold, design: .rounded).monospacedDigit())
+    }
+}
+
 extension View {
+    func metric(size: CGFloat) -> some View {
+        modifier(MetricModifier(size: size))
+    }
+
     func eyebrow() -> some View {
         modifier(EyebrowModifier())
     }

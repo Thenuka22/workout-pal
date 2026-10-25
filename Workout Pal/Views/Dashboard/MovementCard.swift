@@ -16,7 +16,7 @@ struct MovementCard: View {
                 .frame(width: 76, height: 76)
                 VStack(alignment: .leading, spacing: AppSpacing.xSmall) {
                     Text("\(summary.activeMinutes)")
-                        .font(.system(size: 34, weight: .bold, design: .rounded))
+                        .metric(size: 34)
                         .foregroundStyle(AppColors.textPrimary)
                     Text("active minutes this week")
                         .font(.subheadline)

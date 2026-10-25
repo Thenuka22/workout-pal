@@ -33,6 +33,8 @@ struct SetRow: View {
                     Image(systemName: set.isCompleted ? "checkmark.circle.fill" : "circle")
                         .font(.title2)
                         .foregroundStyle(set.isCompleted ? AppColors.accent : AppColors.textSecondary)
+                        .frame(minWidth: 44, minHeight: 44)
+                        .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
                 .accessibilityLabel(set.isCompleted ? "Mark set as not done" : "Mark set as done")

@@ -103,7 +103,7 @@ struct ActivityTrackerView: View {
                     }
                     HStack(alignment: .firstTextBaseline, spacing: AppSpacing.small) {
                         Text(Formatting.steps(model.steps))
-                            .font(.system(size: 56, weight: .bold, design: .rounded).monospacedDigit())
+                            .metric(size: 56)
                             .foregroundStyle(AppColors.textPrimary)
                             .contentTransition(.numericText())
                         Text("steps")

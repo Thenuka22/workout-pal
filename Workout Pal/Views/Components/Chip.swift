@@ -17,6 +17,8 @@ struct Chip: View {
                     Capsule()
                         .strokeBorder(isSelected ? Color.clear : AppColors.outline, lineWidth: 1)
                 }
+                .padding(.vertical, AppSpacing.xSmall)
+                .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
         .accessibilityAddTraits(isSelected ? .isSelected : [])

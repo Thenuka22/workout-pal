@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct OnboardingView: View {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var model: OnboardingViewModel
 
     init(model: OnboardingViewModel) {
@@ -23,7 +24,7 @@ struct OnboardingView: View {
         .frame(maxWidth: 560)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .screenBackground()
-        .animation(.easeInOut(duration: 0.25), value: model.step)
+        .animation(reduceMotion ? nil : .easeInOut(duration: 0.25), value: model.step)
     }
 
     private var genderStep: some View {
@@ -64,7 +65,7 @@ struct OnboardingView: View {
             VStack(spacing: AppSpacing.medium) {
                 HStack(alignment: .firstTextBaseline, spacing: AppSpacing.xSmall) {
                     Text("\(model.heightCentimetres)")
-                        .font(.system(size: 64, weight: .bold, design: .rounded))
+                        .metric(size: 64)
                         .foregroundStyle(AppColors.textPrimary)
                     Text("cm")
                         .font(.title3)

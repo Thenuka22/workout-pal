@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct WelcomeView: View {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var model: WelcomeViewModel
 
     init(model: WelcomeViewModel) {
@@ -19,7 +20,7 @@ struct WelcomeView: View {
         .frame(maxWidth: 560)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .screenBackground()
-        .animation(.easeInOut(duration: 0.25), value: model.step)
+        .animation(reduceMotion ? nil : .easeInOut(duration: 0.25), value: model.step)
         .alert("Couldn't sign in", isPresented: $model.isShowingError) {
             Button("OK") {}
         } message: {

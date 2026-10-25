@@ -107,8 +107,10 @@ struct WorkoutSessionView: View {
                     .foregroundStyle(AppColors.textSecondary)
             }
             TimelineView(.periodic(from: .now, by: 1)) { context in
-                Text(Formatting.elapsed(seconds: model.elapsedSeconds(at: context.date)))
-                    .font(.system(size: 40, weight: .bold, design: .rounded).monospacedDigit())
+                let elapsed = Formatting.elapsed(seconds: model.elapsedSeconds(at: context.date))
+                Text(elapsed)
+                    .accessibilityLabel(model.isPaused ? "Paused at \(elapsed)" : "Elapsed time \(elapsed)")
+                    .metric(size: 40)
                     .foregroundStyle(model.isPaused ? AppColors.textSecondary : AppColors.textPrimary)
             }
             ProgressView(

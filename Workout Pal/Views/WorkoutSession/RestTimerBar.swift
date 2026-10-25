@@ -22,7 +22,7 @@ struct RestTimerBar: View {
             }
             HStack(alignment: .firstTextBaseline) {
                 Text(timerInterval: interval, countsDown: true)
-                    .font(.system(size: 28, weight: .bold, design: .rounded).monospacedDigit())
+                    .metric(size: 28)
                     .foregroundStyle(AppColors.textPrimary)
                 Spacer()
                 if let nextExerciseName {

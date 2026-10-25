@@ -44,7 +44,7 @@ struct ProgressChartsView: View {
                 .eyebrow()
             HStack(alignment: .firstTextBaseline, spacing: AppSpacing.small) {
                 Text("\(model.totalMinutes)")
-                    .font(.system(size: 34, weight: .bold, design: .rounded))
+                    .metric(size: 34)
                     .foregroundStyle(AppColors.textPrimary)
                 Text("min in the last \(model.range.rawValue) weeks")
                     .font(.subheadline)
@@ -63,6 +63,9 @@ struct ProgressChartsView: View {
             }
             .frame(height: chartHeight)
             .accessibilityLabel(model.minutesSummary)
+            Text(model.minutesSummary)
+                .font(.footnote)
+                .foregroundStyle(AppColors.textSecondary)
         }
         .card()
     }
@@ -73,7 +76,7 @@ struct ProgressChartsView: View {
                 .eyebrow()
             HStack(alignment: .firstTextBaseline, spacing: AppSpacing.small) {
                 Text("\(model.totalWorkouts)")
-                    .font(.system(size: 34, weight: .bold, design: .rounded))
+                    .metric(size: 34)
                     .foregroundStyle(AppColors.textPrimary)
                 Text("in the last \(model.range.rawValue) weeks")
                     .font(.subheadline)
@@ -92,6 +95,9 @@ struct ProgressChartsView: View {
             }
             .frame(height: chartHeight)
             .accessibilityLabel(model.workoutsSummary)
+            Text(model.workoutsSummary)
+                .font(.footnote)
+                .foregroundStyle(AppColors.textSecondary)
         }
         .card()
     }

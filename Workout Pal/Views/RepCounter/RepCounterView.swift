@@ -261,7 +261,7 @@ struct RepCounterView: View {
     private func repCount(_ reps: Int) -> some View {
         HStack(alignment: .firstTextBaseline, spacing: AppSpacing.small) {
             Text("\(reps)")
-                .font(.system(size: 56, weight: .bold, design: .rounded).monospacedDigit())
+                .metric(size: 56)
                 .foregroundStyle(AppColors.textPrimary)
                 .contentTransition(.numericText())
             Text(reps == 1 ? "rep" : "reps")

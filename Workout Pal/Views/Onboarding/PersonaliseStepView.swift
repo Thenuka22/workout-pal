@@ -63,7 +63,7 @@ struct PersonaliseStepView<Content: View>: View {
                 .tint(AppColors.accent)
             VStack(alignment: .leading, spacing: AppSpacing.small) {
                 Text(title)
-                    .font(.system(size: 28, weight: .bold))
+                    .font(.title.weight(.bold))
                     .foregroundStyle(AppColors.textPrimary)
                     .fixedSize(horizontal: false, vertical: true)
                 Text(subtitle)

@@ -15,7 +15,7 @@ struct WalkthroughPageView: View {
                     .font(.caption.weight(.bold).monospacedDigit())
                     .foregroundStyle(AppColors.accent)
                 Text(page.title)
-                    .font(.system(size: 30, weight: .bold))
+                    .font(.title.weight(.bold))
                     .foregroundStyle(AppColors.textPrimary)
                     .fixedSize(horizontal: false, vertical: true)
                 Text(page.subtitle)
@@ -48,6 +48,7 @@ struct WalkthroughPageView: View {
 }
 
 struct PageDots: View {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     let count: Int
     let current: Int
 
@@ -59,7 +60,7 @@ struct PageDots: View {
                     .frame(width: index == current ? 20 : 6, height: 6)
             }
         }
-        .animation(.easeInOut(duration: 0.2), value: current)
+        .animation(reduceMotion ? nil : .easeInOut(duration: 0.2), value: current)
         .accessibilityHidden(true)
     }
 }
