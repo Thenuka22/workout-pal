@@ -15,6 +15,7 @@ struct ActivityTrackerViewModelTests {
             motion: motion,
             permissions: permissions,
             activities: repository,
+            exporter: HealthExporter(health: FakeHealthService(), sessions: InMemoryWorkoutSessionRepository(), activities: repository),
             settings: AppSettings(store: InMemoryPreferencesStore()),
             now: { clock.now }
         )

@@ -19,6 +19,7 @@ struct ProfileView: View {
                     goalCard
                     planCard
                     preferencesCard
+                    healthCard
                     securityCard
                     privacyCard
                     accountCard
@@ -50,6 +51,8 @@ struct ProfileView: View {
             switch route {
             case .permissions:
                 PermissionsView(model: container.makePermissionsViewModel())
+            case .health:
+                HealthSettingsView(model: container.makeHealthSettingsViewModel())
             }
         }
     }
@@ -162,6 +165,19 @@ struct ProfileView: View {
             }
         }
         .card()
+    }
+
+    private var healthCard: some View {
+        NavigationLink(value: ProfileRoute.health) {
+            LinkRow(
+                title: "Apple Health",
+                subtitle: "Read activity and save finished workouts",
+                symbolName: "heart.fill",
+                isHighlighted: true
+            )
+            .card()
+        }
+        .buttonStyle(.plain)
     }
 
     private var securityCard: some View {

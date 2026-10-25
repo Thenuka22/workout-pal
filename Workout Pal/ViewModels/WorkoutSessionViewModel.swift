@@ -12,6 +12,7 @@ final class WorkoutSessionViewModel {
     var selectedExerciseID: UUID?
 
     private let repository: any WorkoutSessionRepository
+    private let exporter: HealthExporter
     private let settings: AppSettings
     private let now: @MainActor () -> Date
     @ObservationIgnored private var saveTask: Task<Void, Never>?
@@ -20,11 +21,13 @@ final class WorkoutSessionViewModel {
     init(
         session: WorkoutSession,
         repository: any WorkoutSessionRepository,
+        exporter: HealthExporter,
         settings: AppSettings,
         now: @escaping @MainActor () -> Date = { .now }
     ) {
         self.session = session
         self.repository = repository
+        self.exporter = exporter
         self.settings = settings
         self.now = now
         selectedExerciseID = session.exercises.first?.id
@@ -207,6 +210,10 @@ final class WorkoutSessionViewModel {
                 self.isFinished = true
             } catch {
                 self.errorMessage = error.localizedDescription
+                return
+            }
+            if self.settings.preferences.exportsToHealth {
+                _ = await self.exporter.export(.workout(snapshot))
             }
         }
     }

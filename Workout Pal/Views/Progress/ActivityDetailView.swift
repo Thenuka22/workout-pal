@@ -1,8 +1,15 @@
 import SwiftUI
 
-struct ActivityDetailView: View {
+struct ActivityDetailView<Footer: View>: View {
     let activity: ActivitySession
     let units: UnitPreference
+    let footer: Footer
+
+    init(activity: ActivitySession, units: UnitPreference, @ViewBuilder footer: () -> Footer) {
+        self.activity = activity
+        self.units = units
+        self.footer = footer()
+    }
 
     var body: some View {
         ScrollView {
@@ -16,6 +23,7 @@ struct ActivityDetailView: View {
                         .foregroundStyle(AppColors.textSecondary)
                 }
                 .card()
+                footer
             }
             .padding(AppSpacing.medium)
         }
@@ -23,5 +31,13 @@ struct ActivityDetailView: View {
         .navigationTitle(activity.kind.title)
         .navigationBarTitleDisplayMode(.inline)
         .toolbarBackground(AppColors.surface, for: .navigationBar)
+    }
+}
+
+extension ActivityDetailView where Footer == EmptyView {
+    init(activity: ActivitySession, units: UnitPreference) {
+        self.init(activity: activity, units: units) {
+            EmptyView()
+        }
     }
 }

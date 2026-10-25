@@ -16,22 +16,27 @@ final class AppContainer {
     private let account: AccountSession
     private let deviceAuth: any DeviceAuthenticating
     private let health: any HealthService
+    private let exporter: HealthExporter
 
     init(inMemory: Bool = false) {
         let stack = CoreDataStack(inMemory: inMemory)
         let catalog = CoreDataExerciseCatalogRepository(stack: stack)
         self.stack = stack
         self.catalog = catalog
+        let sessions = CoreDataWorkoutSessionRepository(stack: stack)
+        let activities = CoreDataActivitySessionRepository(stack: stack)
         routines = CoreDataRoutineRepository(stack: stack)
-        sessions = CoreDataWorkoutSessionRepository(stack: stack)
-        activities = CoreDataActivitySessionRepository(stack: stack)
+        self.sessions = sessions
+        self.activities = activities
         catalogSync = ExerciseCatalogSync(client: WgerClient(), catalog: catalog)
         let settings = AppSettings(store: UserDefaultsPreferencesStore())
         self.settings = settings
         permissions = SystemPermissions()
         motion = CoreMotionService()
         deviceAuth = LocalAuthenticator()
-        health = HealthKitService()
+        let health = HealthKitService()
+        self.health = health
+        exporter = HealthExporter(health: health, sessions: sessions, activities: activities)
         account = AccountSession(
             auth: FirebaseAuthService(),
             records: CoreDataAccountDataRepository(stack: stack),
@@ -69,7 +74,7 @@ final class AppContainer {
     }
 
     func makeWorkoutSessionViewModel(session: WorkoutSession) -> WorkoutSessionViewModel {
-        WorkoutSessionViewModel(session: session, repository: sessions, settings: settings)
+        WorkoutSessionViewModel(session: session, repository: sessions, exporter: exporter, settings: settings)
     }
 
     func makeProgressViewModel() -> ProgressHomeViewModel {
@@ -90,12 +95,32 @@ final class AppContainer {
         ProfileViewModel(settings: settings, account: account, deviceAuth: deviceAuth)
     }
 
+    func makeHistoryDetailViewModel(entry: HistoryEntry) -> HistoryDetailViewModel {
+        HistoryDetailViewModel(
+            entry: entry,
+            sessions: sessions,
+            activities: activities,
+            exporter: exporter,
+            settings: settings
+        )
+    }
+
+    func makeHealthSettingsViewModel() -> HealthSettingsViewModel {
+        HealthSettingsViewModel(settings: settings, permissions: permissions, health: health)
+    }
+
     func makePermissionsViewModel() -> PermissionsViewModel {
         PermissionsViewModel(permissions: permissions)
     }
 
     func makeActivityTrackerViewModel() -> ActivityTrackerViewModel {
-        ActivityTrackerViewModel(motion: motion, permissions: permissions, activities: activities, settings: settings)
+        ActivityTrackerViewModel(
+            motion: motion,
+            permissions: permissions,
+            activities: activities,
+            exporter: exporter,
+            settings: settings
+        )
     }
 
     func makeRepCounterViewModel(

@@ -6,6 +6,8 @@ import Testing
 struct WorkoutSessionViewModelTests {
     private let clock = TestClock(SampleData.now)
     private let repository = InMemoryWorkoutSessionRepository()
+    private let health = FakeHealthService()
+    private let store = InMemoryPreferencesStore()
 
     private func makeModel(rest: Int = 60) -> WorkoutSessionViewModel {
         var exercise = SampleData.exercise(sets: [
@@ -18,7 +20,8 @@ struct WorkoutSessionViewModelTests {
         return WorkoutSessionViewModel(
             session: session,
             repository: repository,
-            settings: AppSettings(store: InMemoryPreferencesStore()),
+            exporter: HealthExporter(health: health, sessions: repository, activities: InMemoryActivitySessionRepository()),
+            settings: AppSettings(store: store),
             now: { clock.now }
         )
     }
@@ -132,5 +135,27 @@ struct WorkoutSessionViewModelTests {
         let model = makeModel()
         #expect(model.cameraExercise(for: SampleData.exercise(name: "Bodyweight squat")) == .squat)
         #expect(model.cameraExercise(for: SampleData.exercise(name: "Bench press")) == nil)
+    }
+
+    @Test func finishedWorkoutIsSavedToHealthWhenEnabled() async {
+        var preferences = UserPreferences.standard
+        preferences.exportsToHealth = true
+        store.save(preferences, ownerID: LocalProfile.ownerID)
+        let model = makeModel()
+        clock.advance(by: 600)
+        model.finish()
+        #expect(await eventually { model.isFinished && health.saveAttempts == 1 })
+        let saved = await eventuallyValue { () async -> WorkoutSession? in
+            let stored = await repository.stored(id: model.session.id)
+            return stored?.healthExport == .exported ? stored : nil
+        }
+        #expect(saved != nil)
+    }
+
+    @Test func workoutsStayLocalWhenHealthExportIsOff() async {
+        let model = makeModel()
+        model.finish()
+        #expect(await eventually { model.isFinished })
+        #expect(health.saveAttempts == 0)
     }
 }

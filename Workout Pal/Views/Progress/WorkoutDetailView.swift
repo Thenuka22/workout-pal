@@ -1,8 +1,15 @@
 import SwiftUI
 
-struct WorkoutDetailView: View {
+struct WorkoutDetailView<Footer: View>: View {
     let session: WorkoutSession
     let units: UnitPreference
+    let footer: Footer
+
+    init(session: WorkoutSession, units: UnitPreference, @ViewBuilder footer: () -> Footer) {
+        self.session = session
+        self.units = units
+        self.footer = footer()
+    }
 
     var body: some View {
         ScrollView {
@@ -46,6 +53,7 @@ struct WorkoutDetailView: View {
                     }
                     .card()
                 }
+                footer
             }
             .padding(AppSpacing.medium)
         }
@@ -93,5 +101,13 @@ struct WorkoutDetailView: View {
             }
         }
         .card()
+    }
+}
+
+extension WorkoutDetailView where Footer == EmptyView {
+    init(session: WorkoutSession, units: UnitPreference) {
+        self.init(session: session, units: units) {
+            EmptyView()
+        }
     }
 }

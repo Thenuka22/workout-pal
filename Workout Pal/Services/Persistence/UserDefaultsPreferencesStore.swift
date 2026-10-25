@@ -33,6 +33,7 @@ struct UserDefaultsPreferencesStore: PreferencesStore, @unchecked Sendable {
         }
         preferences.hasCompletedOnboarding = defaults.bool(forKey: keys.hasCompletedOnboarding)
         preferences.requiresUnlock = defaults.bool(forKey: keys.requiresUnlock)
+        preferences.exportsToHealth = defaults.bool(forKey: keys.exportsToHealth)
         return preferences
     }
 
@@ -47,6 +48,7 @@ struct UserDefaultsPreferencesStore: PreferencesStore, @unchecked Sendable {
         defaults.set(preferences.fitnessLevel?.rawValue, forKey: keys.fitnessLevel)
         defaults.set(preferences.hasCompletedOnboarding, forKey: keys.hasCompletedOnboarding)
         defaults.set(preferences.requiresUnlock, forKey: keys.requiresUnlock)
+        defaults.set(preferences.exportsToHealth, forKey: keys.exportsToHealth)
     }
 
     func hasPreferences(ownerID: String) -> Bool {
@@ -75,11 +77,12 @@ struct UserDefaultsPreferencesStore: PreferencesStore, @unchecked Sendable {
         var fitnessLevel: String { prefix + "fitnessLevel" }
         var hasCompletedOnboarding: String { prefix + "hasCompletedOnboarding" }
         var requiresUnlock: String { prefix + "requiresUnlock" }
+        var exportsToHealth: String { prefix + "exportsToHealth" }
 
         var all: [String] {
             [
                 displayName, weeklyGoal, units, appearance, gender, heightCentimetres,
-                fitnessLevel, hasCompletedOnboarding, requiresUnlock,
+                fitnessLevel, hasCompletedOnboarding, requiresUnlock, exportsToHealth,
             ]
         }
     }

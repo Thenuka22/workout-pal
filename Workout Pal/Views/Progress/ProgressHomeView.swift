@@ -9,6 +9,7 @@ struct ProgressHomeView: View {
     }
 
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+    @Environment(AppContainer.self) private var container
     @State private var model: ProgressHomeViewModel
     @State private var panel: Panel = .charts
     @State private var selectedEntry: HistoryEntry?
@@ -30,7 +31,11 @@ struct ProgressHomeView: View {
         .screenBackground()
         .toolbar(.hidden, for: .navigationBar)
         .navigationDestination(for: HistoryEntry.self) { entry in
-            HistoryEntryDetailView(entry: entry, units: model.units)
+            HistoryEntryDetailView(
+                model: container.makeHistoryDetailViewModel(entry: entry),
+                onChange: { model.retry() },
+                onDeleted: { model.retry() }
+            )
         }
         .overlay {
             if model.isLoading {
@@ -70,7 +75,15 @@ struct ProgressHomeView: View {
                         }
                         .padding(.horizontal, AppSpacing.medium)
                         .padding(.top, AppSpacing.small)
-                        HistoryEntryDetailView(entry: selectedEntry, units: model.units)
+                        HistoryEntryDetailView(
+                            model: container.makeHistoryDetailViewModel(entry: selectedEntry),
+                            onChange: { model.retry() },
+                            onDeleted: {
+                                self.selectedEntry = nil
+                                model.retry()
+                            }
+                        )
+                        .id(selectedEntry.id)
                     }
                 } else {
                     ProgressChartsView(model: model)
@@ -88,7 +101,9 @@ struct ProgressHomeView: View {
 }
 
 #Preview {
-    NavigationStack {
-        ProgressHomeView(model: AppContainer(inMemory: true).makeProgressViewModel())
+    let container = AppContainer(inMemory: true)
+    return NavigationStack {
+        ProgressHomeView(model: container.makeProgressViewModel())
     }
+    .environment(container)
 }

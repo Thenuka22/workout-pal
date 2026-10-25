@@ -22,6 +22,7 @@ final class ActivityTrackerViewModel {
     private let motion: any MotionTracking
     private let permissions: any PermissionsProviding
     private let activities: any ActivitySessionRepository
+    private let exporter: HealthExporter
     private let settings: AppSettings
     private let now: @MainActor () -> Date
     @ObservationIgnored private var readingsTask: Task<Void, Never>?
@@ -33,12 +34,14 @@ final class ActivityTrackerViewModel {
         motion: any MotionTracking,
         permissions: any PermissionsProviding,
         activities: any ActivitySessionRepository,
+        exporter: HealthExporter,
         settings: AppSettings,
         now: @escaping @MainActor () -> Date = { .now }
     ) {
         self.motion = motion
         self.permissions = permissions
         self.activities = activities
+        self.exporter = exporter
         self.settings = settings
         self.now = now
         capabilities = motion.capabilities()
@@ -187,8 +190,14 @@ final class ActivityTrackerViewModel {
                 try await self.activities.save(finished)
             } catch {
                 self.errorMessage = error.localizedDescription
+                self.complete(finished)
+                return
             }
             self.complete(finished)
+            if self.settings.preferences.exportsToHealth {
+                let status = await self.exporter.export(.activity(finished))
+                self.finishedActivity?.healthExport = status
+            }
         }
     }
 

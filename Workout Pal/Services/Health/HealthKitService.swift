@@ -40,6 +40,83 @@ final class HealthKitService: HealthService, @unchecked Sendable {
         )
     }
 
+    func saveWorkout(_ workout: HealthWorkoutExport) async throws {
+        if try await hasSavedWorkout(id: workout.id) {
+            return
+        }
+        let configuration = HKWorkoutConfiguration()
+        configuration.activityType = switch workout.kind {
+        case .strength: .traditionalStrengthTraining
+        case .walk: .walking
+        case .run: .running
+        }
+        let builder = HKWorkoutBuilder(healthStore: store, configuration: configuration, device: .local())
+        try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
+            builder.beginCollection(withStart: workout.start) { @Sendable _, error in
+                Self.finish(continuation, error)
+            }
+        }
+        let events = workout.pauses.flatMap { pause in
+            [
+                HKWorkoutEvent(type: .pause, dateInterval: DateInterval(start: pause.start, duration: 0), metadata: nil),
+                HKWorkoutEvent(type: .resume, dateInterval: DateInterval(start: pause.end, duration: 0), metadata: nil),
+            ]
+        }
+        if !events.isEmpty {
+            try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
+                builder.addWorkoutEvents(events) { @Sendable _, error in
+                    Self.finish(continuation, error)
+                }
+            }
+        }
+        try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
+            builder.addMetadata([HKMetadataKeyExternalUUID: workout.id.uuidString]) { @Sendable _, error in
+                Self.finish(continuation, error)
+            }
+        }
+        try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
+            builder.endCollection(withEnd: workout.end) { @Sendable _, error in
+                Self.finish(continuation, error)
+            }
+        }
+        try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
+            builder.finishWorkout { @Sendable _, error in
+                Self.finish(continuation, error)
+            }
+        }
+    }
+
+    private func hasSavedWorkout(id: UUID) async throws -> Bool {
+        let predicate = HKQuery.predicateForObjects(
+            withMetadataKey: HKMetadataKeyExternalUUID,
+            allowedValues: [id.uuidString]
+        )
+        let store = store
+        return try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Bool, Error>) in
+            let query = HKSampleQuery(
+                sampleType: HKObjectType.workoutType(),
+                predicate: predicate,
+                limit: 1,
+                sortDescriptors: nil
+            ) { @Sendable _, samples, error in
+                if let error {
+                    continuation.resume(throwing: error)
+                } else {
+                    continuation.resume(returning: !(samples ?? []).isEmpty)
+                }
+            }
+            store.execute(query)
+        }
+    }
+
+    private static func finish(_ continuation: CheckedContinuation<Void, Error>, _ error: Error?) {
+        if let error {
+            continuation.resume(throwing: error)
+        } else {
+            continuation.resume()
+        }
+    }
+
     private func sum(_ measure: Measure, from start: Date, to end: Date) async throws -> Double? {
         let predicate = HKQuery.predicateForSamples(withStart: start, end: end, options: .strictStartDate)
         let store = store
