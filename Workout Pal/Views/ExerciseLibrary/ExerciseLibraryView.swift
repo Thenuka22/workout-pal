@@ -1,7 +1,9 @@
 import SwiftUI
 
 struct ExerciseLibraryView: View {
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @State private var model: ExerciseLibraryViewModel
+    @State private var selectedExercise: Exercise?
 
     init(model: ExerciseLibraryViewModel) {
         _model = State(initialValue: model)
@@ -38,45 +40,76 @@ struct ExerciseLibraryView: View {
                     .padding(AppSpacing.medium)
             }
             .screenBackground()
-        } else {
-            List {
-                if model.isRefreshing {
-                    HStack(spacing: AppSpacing.small) {
-                        ProgressView()
-                        Text(model.statusText)
-                            .font(.subheadline)
-                            .foregroundStyle(AppColors.textSecondary)
-                    }
-                    .plainRow()
-                }
-                if let message = model.errorMessage {
-                    Label(message, systemImage: "exclamationmark.triangle.fill")
-                        .font(.subheadline)
-                        .foregroundStyle(AppColors.warning)
-                        .plainRow()
-                }
-                if model.filteredExercises.isEmpty {
-                    ContentUnavailableView.search(text: model.searchText)
-                        .plainRow()
+        } else if horizontalSizeClass == .regular {
+            HStack(spacing: 0) {
+                exerciseList
+                    .frame(width: 380)
+                Divider()
+                if let selectedExercise {
+                    ExerciseDetailView(exercise: selectedExercise)
+                        .id(selectedExercise.id)
                 } else {
-                    ForEach(model.filteredExercises) { exercise in
+                    ContentUnavailableView(
+                        "Select an exercise",
+                        systemImage: "figure.strengthtraining.traditional",
+                        description: Text("Pick an exercise to see its instructions, muscles and equipment.")
+                    )
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .screenBackground()
+                }
+            }
+        } else {
+            exerciseList
+                .navigationDestination(for: Exercise.self) { exercise in
+                    ExerciseDetailView(exercise: exercise)
+                }
+        }
+    }
+
+    private var exerciseList: some View {
+        List {
+            if model.isRefreshing {
+                HStack(spacing: AppSpacing.small) {
+                    ProgressView()
+                    Text(model.statusText)
+                        .font(.subheadline)
+                        .foregroundStyle(AppColors.textSecondary)
+                }
+                .plainRow()
+            }
+            if let message = model.errorMessage {
+                Label(message, systemImage: "exclamationmark.triangle.fill")
+                    .font(.subheadline)
+                    .foregroundStyle(AppColors.warning)
+                    .plainRow()
+            }
+            if model.filteredExercises.isEmpty {
+                ContentUnavailableView.search(text: model.searchText)
+                    .plainRow()
+            } else {
+                ForEach(model.filteredExercises) { exercise in
+                    if horizontalSizeClass == .regular {
+                        Button {
+                            selectedExercise = exercise
+                        } label: {
+                            ExerciseRow(exercise: exercise)
+                        }
+                        .cardRow(isSelected: exercise.id == selectedExercise?.id)
+                    } else {
                         NavigationLink(value: exercise) {
                             ExerciseRow(exercise: exercise)
                         }
                         .cardRow()
                     }
-                    Text(model.attributionText)
-                        .font(.footnote)
-                        .foregroundStyle(AppColors.textSecondary)
-                        .plainRow(top: AppSpacing.medium, bottom: AppSpacing.large)
                 }
+                Text(model.attributionText)
+                    .font(.footnote)
+                    .foregroundStyle(AppColors.textSecondary)
+                    .plainRow(top: AppSpacing.medium, bottom: AppSpacing.large)
             }
-            .listStyle(.plain)
-            .navigationDestination(for: Exercise.self) { exercise in
-                ExerciseDetailView(exercise: exercise)
-            }
-            .screenBackground()
         }
+        .listStyle(.plain)
+        .screenBackground()
     }
 
     private var emptyCard: some View {

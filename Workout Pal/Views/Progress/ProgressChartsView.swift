@@ -3,7 +3,12 @@ import Foundation
 import SwiftUI
 
 struct ProgressChartsView: View {
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @Bindable var model: ProgressHomeViewModel
+
+    private var chartHeight: CGFloat {
+        horizontalSizeClass == .regular ? 240 : 180
+    }
 
     var body: some View {
         ScrollView {
@@ -56,7 +61,7 @@ struct ProgressChartsView: View {
             .chartXAxis {
                 AxisMarks(values: .automatic(desiredCount: 4))
             }
-            .frame(height: 180)
+            .frame(height: chartHeight)
             .accessibilityLabel(model.minutesSummary)
         }
         .card()
@@ -85,7 +90,7 @@ struct ProgressChartsView: View {
             .chartXAxis {
                 AxisMarks(values: .automatic(desiredCount: 4))
             }
-            .frame(height: 180)
+            .frame(height: chartHeight)
             .accessibilityLabel(model.workoutsSummary)
         }
         .card()
@@ -157,7 +162,7 @@ struct ProgressChartsView: View {
                 .chartXAxis {
                     AxisMarks(values: .automatic(desiredCount: 4))
                 }
-                .frame(height: 180)
+                .frame(height: chartHeight)
                 .accessibilityLabel(model.exerciseSummary)
                 Text(model.exerciseSummary)
                     .font(.footnote)
