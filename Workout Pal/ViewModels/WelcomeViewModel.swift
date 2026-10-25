@@ -29,7 +29,8 @@ final class WelcomeViewModel {
             id: 1,
             symbolName: "fork.knife",
             title: "Fuel your training.",
-            subtitle: "Pair your workouts with good food, water and rest. Workout Pal keeps the training side on track."
+            subtitle: "Pair your workouts with good food, water and rest. Workout Pal keeps the training side on track.",
+            imageName: AppImages.salmonBowl
         ),
         WalkthroughPage(
             id: 2,

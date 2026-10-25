@@ -144,8 +144,9 @@ struct DashboardView: View {
                 HeroCard(
                     eyebrow: "Get started",
                     title: "Create your first routine",
-                    subtitle: "Pick exercises from the library and plan your sets.",
-                    symbolName: "plus.circle.fill"
+                    subtitle: "Pick a starter plan or choose exercises from the library.",
+                    symbolName: "plus.circle.fill",
+                    imageName: AppImages.hipStretchWide
                 )
             }
             .buttonStyle(.plain)

@@ -77,6 +77,16 @@ struct RepCounterView: View {
     private var chooser: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: AppSpacing.medium) {
+                VStack(alignment: .leading, spacing: AppSpacing.xSmall) {
+                    Text("Set up your phone")
+                        .eyebrow()
+                    Text("Prop it up 2 to 3 metres away so your whole body is in view.")
+                        .font(.headline)
+                        .foregroundStyle(AppColors.textPrimary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                .padding(AppSpacing.medium)
+                .photoCard(AppImages.controlledSquatWide, minHeight: 220)
                 Text("Pick an exercise. Workout Pal uses on-device pose detection to count your reps, and you check the count before it is saved.")
                     .font(.subheadline)
                     .foregroundStyle(AppColors.textSecondary)

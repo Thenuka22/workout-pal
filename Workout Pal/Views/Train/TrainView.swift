@@ -78,25 +78,23 @@ struct TrainView: View {
             }
             .buttonStyle(.plain)
             .plainRow()
-            NavigationLink(value: TrainRoute.activityTracker) {
-                LinkRow(
-                    title: "Walk & run",
-                    subtitle: "Track steps, estimated distance and active time",
-                    symbolName: "figure.walk",
-                    isHighlighted: true
-                )
-                .card()
-            }
-            .buttonStyle(.plain)
-            .plainRow()
-            NavigationLink(value: TrainRoute.repCounter) {
-                LinkRow(
-                    title: "Camera rep counter",
-                    subtitle: "Count squats and jumping jacks with on-device pose detection",
-                    symbolName: "camera.viewfinder",
-                    isHighlighted: true
-                )
-                .card()
+            HStack(spacing: AppSpacing.small) {
+                NavigationLink(value: TrainRoute.activityTracker) {
+                    PhotoTile(
+                        title: "Walk & run",
+                        subtitle: "Steps, estimated distance and time",
+                        symbolName: "figure.walk",
+                        imageName: AppImages.dawnJogWide
+                    )
+                }
+                NavigationLink(value: TrainRoute.repCounter) {
+                    PhotoTile(
+                        title: "Count reps",
+                        subtitle: "Squats and jumping jacks with the camera",
+                        symbolName: "camera.viewfinder",
+                        imageName: AppImages.controlledSquatWide
+                    )
+                }
             }
             .buttonStyle(.plain)
             .plainRow()
