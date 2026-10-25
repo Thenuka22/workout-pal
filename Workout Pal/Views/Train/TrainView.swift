@@ -8,6 +8,7 @@ struct TrainView: View {
     @State private var isCreating = false
     @State private var isShowingLibrary = false
     @State private var selectedRoutineID: UUID?
+    @State private var showsStarterPlans = false
 
     init(model: TrainViewModel) {
         _model = State(initialValue: model)
@@ -35,6 +36,11 @@ struct TrainView: View {
         }
         .navigationDestination(isPresented: $isShowingLibrary) {
             ExerciseLibraryView(model: container.makeExerciseLibraryViewModel())
+        }
+        .alert("Starter plans", isPresented: $model.isShowingStarterMessage) {
+            Button("OK") {}
+        } message: {
+            Text(model.starterMessage ?? "")
         }
         .task {
             await model.load()
@@ -93,10 +99,34 @@ struct TrainView: View {
             }
             .buttonStyle(.plain)
             .plainRow()
+            if !model.isLoading && model.routines.isEmpty {
+                Text("Starter plans")
+                    .cardTitle()
+                    .plainRow(top: AppSpacing.medium, bottom: AppSpacing.xSmall)
+                starterPlanRows
+            }
             Text("Your routines")
                 .cardTitle()
                 .plainRow(top: AppSpacing.medium, bottom: AppSpacing.xSmall)
             routineRows
+            if !model.routines.isEmpty {
+                Button {
+                    showsStarterPlans.toggle()
+                } label: {
+                    LinkRow(
+                        title: "Starter plans",
+                        subtitle: "Ready-made routines for each level",
+                        symbolName: "sparkles",
+                        value: showsStarterPlans ? "Hide" : nil
+                    )
+                    .card()
+                }
+                .buttonStyle(.plain)
+                .plainRow(top: AppSpacing.medium)
+                if showsStarterPlans {
+                    starterPlanRows
+                }
+            }
             if let message = model.errorMessage {
                 Label(message, systemImage: "exclamationmark.triangle.fill")
                     .foregroundStyle(AppColors.warning)
@@ -105,6 +135,27 @@ struct TrainView: View {
         }
         .listStyle(.plain)
         .screenBackground()
+    }
+
+    private var starterPlanRows: some View {
+        ForEach(model.starterLevels) { level in
+            Button {
+                model.addStarterRoutines(level: level)
+            } label: {
+                LinkRow(
+                    title: "\(level.title) plan",
+                    subtitle: model.starterSummary(for: level),
+                    symbolName: level.planSymbolName,
+                    value: level == model.suggestedLevel ? "For you" : nil,
+                    isHighlighted: level == model.suggestedLevel
+                )
+                .card()
+            }
+            .buttonStyle(.plain)
+            .disabled(model.isAddingStarter)
+            .accessibilityHint("Adds the \(level.title.lowercased()) routines to your list")
+            .plainRow()
+        }
     }
 
     @ViewBuilder

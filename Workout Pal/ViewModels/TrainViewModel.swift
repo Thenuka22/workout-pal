@@ -4,16 +4,22 @@ import Observation
 @MainActor
 @Observable
 final class TrainViewModel {
+    let starterLevels = FitnessLevel.allCases
+
     private(set) var routines: [Routine] = []
     private(set) var isLoading = true
     private(set) var errorMessage: String?
+    private(set) var starterMessage: String?
+    private(set) var isAddingStarter = false
     var searchText = ""
 
     private let repository: any RoutineRepository
+    private let catalog: any ExerciseCatalogRepository
     private let settings: AppSettings
 
-    init(repository: any RoutineRepository, settings: AppSettings) {
+    init(repository: any RoutineRepository, catalog: any ExerciseCatalogRepository, settings: AppSettings) {
         self.repository = repository
+        self.catalog = catalog
         self.settings = settings
     }
 
@@ -23,6 +29,23 @@ final class TrainViewModel {
             return routines
         }
         return routines.filter { $0.name.localizedCaseInsensitiveContains(query) }
+    }
+
+    var suggestedLevel: FitnessLevel? {
+        settings.preferences.fitnessLevel
+    }
+
+    var isShowingStarterMessage: Bool {
+        get { starterMessage != nil }
+        set {
+            if !newValue {
+                starterMessage = nil
+            }
+        }
+    }
+
+    func starterSummary(for level: FitnessLevel) -> String {
+        StarterRoutines.summary(for: level)
     }
 
     func load() async {
@@ -53,6 +76,38 @@ final class TrainViewModel {
                 self.errorMessage = error.localizedDescription
             }
             await self.load()
+        }
+    }
+
+    func addStarterRoutines(level: FitnessLevel) {
+        guard !isAddingStarter else {
+            return
+        }
+        isAddingStarter = true
+        Task {
+            do {
+                let exercises = try await self.catalog.exercises()
+                if exercises.isEmpty {
+                    self.starterMessage = "Download the exercise library first, then add a starter plan."
+                } else {
+                    let existing = Set(self.routines.map { $0.name.lowercased() })
+                    let starters = StarterRoutines
+                        .routines(for: level, catalog: exercises, ownerID: self.settings.ownerID)
+                        .filter { !existing.contains($0.name.lowercased()) }
+                    if starters.isEmpty {
+                        self.starterMessage = "These routines are already in your list."
+                    } else {
+                        for routine in starters {
+                            try await self.repository.save(routine)
+                        }
+                        self.starterMessage = "Added \(starters.map(\.name).joined(separator: ", ")). Adjust the loads to suit you."
+                    }
+                }
+                await self.load()
+            } catch {
+                self.errorMessage = error.localizedDescription
+            }
+            self.isAddingStarter = false
         }
     }
 }
