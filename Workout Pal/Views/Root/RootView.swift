@@ -56,7 +56,7 @@ struct RootView: View {
         }
         .environment(navigation)
         .tint(AppColors.accent)
-        .preferredColorScheme(colorScheme(for: model.appearance))
+        .appearance(model.appearance)
         .task {
             await model.loadStore()
         }
@@ -72,14 +72,6 @@ struct RootView: View {
             default:
                 break
             }
-        }
-    }
-
-    private func colorScheme(for appearance: AppearancePreference) -> ColorScheme? {
-        switch appearance {
-        case .system: nil
-        case .light: .light
-        case .dark: .dark
         }
     }
 }
