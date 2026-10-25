@@ -68,6 +68,28 @@ enum Formatting {
         value.formatted(.number.precision(.fractionLength(0...1)))
     }
 
+    static func time(hour: Int, minute: Int, calendar: Calendar = .current) -> String {
+        guard let date = calendar.date(bySettingHour: hour, minute: minute, second: 0, of: .now) else {
+            return String(format: "%02d:%02d", hour, minute)
+        }
+        return date.formatted(date: .omitted, time: .shortened)
+    }
+
+    static func weekdays(_ weekdays: Set<Int>, calendar: Calendar = .current) -> String {
+        let symbols = calendar.shortWeekdaySymbols
+        let first = calendar.firstWeekday
+        let ordered = (0..<7).map { ((first - 1 + $0) % 7) + 1 }.filter { weekdays.contains($0) }
+        return ordered.map { symbols[$0 - 1] }.joined(separator: ", ")
+    }
+
+    static func reminder(_ preferences: UserPreferences, calendar: Calendar = .current) -> String {
+        guard preferences.remindersEnabled, !preferences.reminderWeekdays.isEmpty else {
+            return "Off"
+        }
+        let days = weekdays(preferences.reminderWeekdays, calendar: calendar)
+        return "\(days) · \(time(hour: preferences.reminderHour, minute: preferences.reminderMinute, calendar: calendar))"
+    }
+
     static func dateTime(_ date: Date) -> String {
         date.formatted(date: .abbreviated, time: .shortened)
     }

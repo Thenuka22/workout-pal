@@ -20,6 +20,7 @@ struct ProfileView: View {
                     planCard
                     preferencesCard
                     healthCard
+                    remindersCard
                     securityCard
                     privacyCard
                     accountCard
@@ -53,6 +54,8 @@ struct ProfileView: View {
                 PermissionsView(model: container.makePermissionsViewModel())
             case .health:
                 HealthSettingsView(model: container.makeHealthSettingsViewModel())
+            case .reminders:
+                RemindersView(model: container.makeRemindersViewModel())
             }
         }
     }
@@ -174,6 +177,19 @@ struct ProfileView: View {
                 subtitle: "Read activity and save finished workouts",
                 symbolName: "heart.fill",
                 isHighlighted: true
+            )
+            .card()
+        }
+        .buttonStyle(.plain)
+    }
+
+    private var remindersCard: some View {
+        NavigationLink(value: ProfileRoute.reminders) {
+            LinkRow(
+                title: "Workout reminders",
+                subtitle: model.reminderSummary,
+                symbolName: "bell.fill",
+                isHighlighted: model.reminderSummary != "Off"
             )
             .card()
         }

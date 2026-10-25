@@ -8,6 +8,7 @@ struct WorkoutSessionViewModelTests {
     private let repository = InMemoryWorkoutSessionRepository()
     private let health = FakeHealthService()
     private let store = InMemoryPreferencesStore()
+    private let notifications = FakeNotifications()
 
     private func makeModel(rest: Int = 60) -> WorkoutSessionViewModel {
         var exercise = SampleData.exercise(sets: [
@@ -21,6 +22,7 @@ struct WorkoutSessionViewModelTests {
             session: session,
             repository: repository,
             exporter: HealthExporter(health: health, sessions: repository, activities: InMemoryActivitySessionRepository()),
+            notifications: notifications,
             settings: AppSettings(store: store),
             now: { clock.now }
         )
@@ -157,5 +159,39 @@ struct WorkoutSessionViewModelTests {
         model.finish()
         #expect(await eventually { model.isFinished })
         #expect(health.saveAttempts == 0)
+    }
+
+    @Test func restSchedulesAnAlertForWhenItEnds() async {
+        let model = makeModel(rest: 90)
+        let ids = firstSet(model)
+        model.toggleCompletion(exerciseID: ids.exercise, setID: ids.set)
+        let alerts = await eventuallyValue { () async -> [Date]? in
+            let alerts = await notifications.restAlerts
+            return alerts.isEmpty ? nil : alerts
+        }
+        #expect(alerts == [clock.now.addingTimeInterval(90)])
+    }
+
+    @Test func skippingRestCancelsTheAlert() async {
+        let model = makeModel()
+        let ids = firstSet(model)
+        model.toggleCompletion(exerciseID: ids.exercise, setID: ids.set)
+        model.skipRest()
+        let cancels = await eventuallyValue { () async -> Int? in
+            let count = await notifications.restCancelCount
+            return count > 0 ? count : nil
+        }
+        #expect(cancels == 1)
+    }
+
+    @Test func restAlertsCanBeTurnedOff() async {
+        var preferences = UserPreferences.standard
+        preferences.restAlertsEnabled = false
+        store.save(preferences, ownerID: LocalProfile.ownerID)
+        let model = makeModel()
+        let ids = firstSet(model)
+        model.toggleCompletion(exerciseID: ids.exercise, setID: ids.set)
+        try? await Task.sleep(for: .milliseconds(50))
+        #expect(await notifications.restAlerts.isEmpty)
     }
 }

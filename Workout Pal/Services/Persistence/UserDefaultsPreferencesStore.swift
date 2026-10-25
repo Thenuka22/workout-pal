@@ -34,6 +34,19 @@ struct UserDefaultsPreferencesStore: PreferencesStore, @unchecked Sendable {
         preferences.hasCompletedOnboarding = defaults.bool(forKey: keys.hasCompletedOnboarding)
         preferences.requiresUnlock = defaults.bool(forKey: keys.requiresUnlock)
         preferences.exportsToHealth = defaults.bool(forKey: keys.exportsToHealth)
+        preferences.remindersEnabled = defaults.bool(forKey: keys.remindersEnabled)
+        if let weekdays = defaults.array(forKey: keys.reminderWeekdays) as? [Int] {
+            preferences.reminderWeekdays = Set(weekdays.filter { (1...7).contains($0) })
+        }
+        if let hour = defaults.object(forKey: keys.reminderHour) as? Int, (0..<24).contains(hour) {
+            preferences.reminderHour = hour
+        }
+        if let minute = defaults.object(forKey: keys.reminderMinute) as? Int, (0..<60).contains(minute) {
+            preferences.reminderMinute = minute
+        }
+        if let restAlerts = defaults.object(forKey: keys.restAlertsEnabled) as? Bool {
+            preferences.restAlertsEnabled = restAlerts
+        }
         return preferences
     }
 
@@ -49,6 +62,11 @@ struct UserDefaultsPreferencesStore: PreferencesStore, @unchecked Sendable {
         defaults.set(preferences.hasCompletedOnboarding, forKey: keys.hasCompletedOnboarding)
         defaults.set(preferences.requiresUnlock, forKey: keys.requiresUnlock)
         defaults.set(preferences.exportsToHealth, forKey: keys.exportsToHealth)
+        defaults.set(preferences.remindersEnabled, forKey: keys.remindersEnabled)
+        defaults.set(preferences.reminderWeekdays.sorted(), forKey: keys.reminderWeekdays)
+        defaults.set(preferences.reminderHour, forKey: keys.reminderHour)
+        defaults.set(preferences.reminderMinute, forKey: keys.reminderMinute)
+        defaults.set(preferences.restAlertsEnabled, forKey: keys.restAlertsEnabled)
     }
 
     func hasPreferences(ownerID: String) -> Bool {
@@ -78,11 +96,17 @@ struct UserDefaultsPreferencesStore: PreferencesStore, @unchecked Sendable {
         var hasCompletedOnboarding: String { prefix + "hasCompletedOnboarding" }
         var requiresUnlock: String { prefix + "requiresUnlock" }
         var exportsToHealth: String { prefix + "exportsToHealth" }
+        var remindersEnabled: String { prefix + "remindersEnabled" }
+        var reminderWeekdays: String { prefix + "reminderWeekdays" }
+        var reminderHour: String { prefix + "reminderHour" }
+        var reminderMinute: String { prefix + "reminderMinute" }
+        var restAlertsEnabled: String { prefix + "restAlertsEnabled" }
 
         var all: [String] {
             [
                 displayName, weeklyGoal, units, appearance, gender, heightCentimetres,
                 fitnessLevel, hasCompletedOnboarding, requiresUnlock, exportsToHealth,
+                remindersEnabled, reminderWeekdays, reminderHour, reminderMinute, restAlertsEnabled,
             ]
         }
     }

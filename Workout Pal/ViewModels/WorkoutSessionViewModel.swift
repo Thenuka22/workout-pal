@@ -13,6 +13,7 @@ final class WorkoutSessionViewModel {
 
     private let repository: any WorkoutSessionRepository
     private let exporter: HealthExporter
+    private let notifications: any NotificationScheduling
     private let settings: AppSettings
     private let now: @MainActor () -> Date
     @ObservationIgnored private var saveTask: Task<Void, Never>?
@@ -22,12 +23,14 @@ final class WorkoutSessionViewModel {
         session: WorkoutSession,
         repository: any WorkoutSessionRepository,
         exporter: HealthExporter,
+        notifications: any NotificationScheduling,
         settings: AppSettings,
         now: @escaping @MainActor () -> Date = { .now }
     ) {
         self.session = session
         self.repository = repository
         self.exporter = exporter
+        self.notifications = notifications
         self.settings = settings
         self.now = now
         selectedExerciseID = session.exercises.first?.id
@@ -188,10 +191,16 @@ final class WorkoutSessionViewModel {
     }
 
     func skipRest() {
+        let hadRest = restEndsAt != nil
         restTask?.cancel()
         restTask = nil
         restStartedAt = nil
         restEndsAt = nil
+        if hadRest {
+            Task {
+                await self.notifications.cancelRestAlert()
+            }
+        }
     }
 
     func finish() {
@@ -226,8 +235,15 @@ final class WorkoutSessionViewModel {
             return
         }
         let start = now()
+        let end = start.addingTimeInterval(TimeInterval(seconds))
         restStartedAt = start
-        restEndsAt = start.addingTimeInterval(TimeInterval(seconds))
+        restEndsAt = end
+        if settings.preferences.restAlertsEnabled {
+            let next = nextExerciseName
+            Task {
+                await self.notifications.scheduleRestAlert(at: end, nextExercise: next)
+            }
+        }
         restTask = Task {
             try? await Task.sleep(for: .seconds(seconds))
             if !Task.isCancelled {

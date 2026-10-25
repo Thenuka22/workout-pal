@@ -62,6 +62,10 @@ final class ProfileViewModel {
         }
     }
 
+    var reminderSummary: String {
+        Formatting.reminder(settings.preferences)
+    }
+
     var accountSummary: String {
         account.user?.summary ?? "Not signed in"
     }

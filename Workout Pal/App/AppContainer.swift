@@ -17,6 +17,7 @@ final class AppContainer {
     private let deviceAuth: any DeviceAuthenticating
     private let health: any HealthService
     private let exporter: HealthExporter
+    private let notifications: any NotificationScheduling
 
     init(inMemory: Bool = false) {
         let stack = CoreDataStack(inMemory: inMemory)
@@ -37,11 +38,14 @@ final class AppContainer {
         let health = HealthKitService()
         self.health = health
         exporter = HealthExporter(health: health, sessions: sessions, activities: activities)
+        let notifications = LocalNotificationScheduler()
+        self.notifications = notifications
         account = AccountSession(
             auth: FirebaseAuthService(),
             records: CoreDataAccountDataRepository(stack: stack),
             settings: settings,
-            state: UserDefaultsAccountStateStore()
+            state: UserDefaultsAccountStateStore(),
+            notifications: notifications
         )
     }
 
@@ -74,7 +78,13 @@ final class AppContainer {
     }
 
     func makeWorkoutSessionViewModel(session: WorkoutSession) -> WorkoutSessionViewModel {
-        WorkoutSessionViewModel(session: session, repository: sessions, exporter: exporter, settings: settings)
+        WorkoutSessionViewModel(
+            session: session,
+            repository: sessions,
+            exporter: exporter,
+            notifications: notifications,
+            settings: settings
+        )
     }
 
     func makeProgressViewModel() -> ProgressHomeViewModel {
@@ -103,6 +113,10 @@ final class AppContainer {
             exporter: exporter,
             settings: settings
         )
+    }
+
+    func makeRemindersViewModel() -> RemindersViewModel {
+        RemindersViewModel(settings: settings, permissions: permissions, notifications: notifications)
     }
 
     func makeHealthSettingsViewModel() -> HealthSettingsViewModel {

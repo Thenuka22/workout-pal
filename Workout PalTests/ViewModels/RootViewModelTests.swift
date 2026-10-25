@@ -17,7 +17,8 @@ struct RootViewModelTests {
             auth: auth,
             records: RecordingAccountDataRepository(),
             settings: settings,
-            state: state
+            state: state,
+            notifications: FakeNotifications()
         )
         return RootViewModel(store: ReadyStore(), settings: settings, account: account, deviceAuth: deviceAuth)
     }
@@ -25,7 +26,13 @@ struct RootViewModelTests {
     @Test func signedOutVisitorsSeeTheWelcomeScreen() async {
         state.usesOfflineProfile = false
         let settings = AppSettings(store: InMemoryPreferencesStore())
-        let account = AccountSession(auth: auth, records: RecordingAccountDataRepository(), settings: settings, state: state)
+        let account = AccountSession(
+            auth: auth,
+            records: RecordingAccountDataRepository(),
+            settings: settings,
+            state: state,
+            notifications: FakeNotifications()
+        )
         let model = RootViewModel(store: ReadyStore(), settings: settings, account: account, deviceAuth: deviceAuth)
         await model.loadStore()
         #expect(model.screen == .welcome)

@@ -11,7 +11,8 @@ struct WelcomeViewModelTests {
             auth: auth,
             records: RecordingAccountDataRepository(),
             settings: AppSettings(store: InMemoryPreferencesStore()),
-            state: state
+            state: state,
+            notifications: FakeNotifications()
         )
         return (WelcomeViewModel(account: session), session)
     }

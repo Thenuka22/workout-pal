@@ -97,6 +97,11 @@ struct UserPreferences: Hashable, Sendable {
     var hasCompletedOnboarding: Bool
     var requiresUnlock = false
     var exportsToHealth = false
+    var remindersEnabled = false
+    var reminderWeekdays: Set<Int> = [3, 5, 7]
+    var reminderHour = 18
+    var reminderMinute = 30
+    var restAlertsEnabled = true
 
     static let standard = UserPreferences(
         displayName: "",

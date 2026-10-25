@@ -8,10 +8,17 @@ struct AccountSessionTests {
     private let records = RecordingAccountDataRepository()
     private let state = FakeAccountStateStore()
     private let store = InMemoryPreferencesStore()
+    private let notifications = FakeNotifications()
 
     private func makeSession() -> (AccountSession, AppSettings) {
         let settings = AppSettings(store: store)
-        let session = AccountSession(auth: auth, records: records, settings: settings, state: state)
+        let session = AccountSession(
+            auth: auth,
+            records: records,
+            settings: settings,
+            state: state,
+            notifications: notifications
+        )
         return (session, settings)
     }
 
@@ -101,5 +108,31 @@ struct AccountSessionTests {
         try await session.deleteLocalData()
         #expect(await records.deleted == ["google-uid"])
         #expect(!settings.preferences.hasCompletedOnboarding)
+    }
+
+    @Test func signingInSchedulesThatAccountsReminders() async throws {
+        var mine = UserPreferences.standard
+        mine.hasCompletedOnboarding = true
+        mine.remindersEnabled = true
+        mine.reminderWeekdays = [2, 4]
+        mine.reminderHour = 7
+        store.save(mine, ownerID: "google-uid")
+        let (session, _) = makeSession()
+        try await session.signInWithGoogle()
+        let weekdays = await eventuallyValue { await notifications.reminderWeekdays }
+        #expect(weekdays == [2, 4])
+        #expect(await notifications.reminderHour == 7)
+    }
+
+    @Test func signingOutCancelsReminders() async throws {
+        let (session, _) = makeSession()
+        try await session.signInWithGoogle()
+        try session.signOut()
+        let cancels = await eventuallyValue { () async -> Int? in
+            let count = await notifications.reminderCancelCount
+            return count >= 2 ? count : nil
+        }
+        #expect(cancels != nil)
+        #expect(await notifications.reminderWeekdays == nil)
     }
 }
