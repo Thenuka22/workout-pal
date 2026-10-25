@@ -132,7 +132,8 @@ struct DashboardView: View {
                     eyebrow: "Today's plan",
                     title: routine.name,
                     subtitle: "\(routine.exercises.count) exercises · about \(routine.estimatedMinutes) min",
-                    symbolName: "dumbbell.fill"
+                    symbolName: "dumbbell.fill",
+                    imageName: AppImages.shoulderPressWide
                 )
             }
             .buttonStyle(.plain)

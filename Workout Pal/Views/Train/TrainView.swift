@@ -71,8 +71,9 @@ struct TrainView: View {
                 HeroCard(
                     eyebrow: "Explore",
                     title: "Exercise library",
-                    subtitle: "Browse exercises from wger and add them to a routine.",
-                    symbolName: "books.vertical.fill"
+                    subtitle: "Browse exercises by body area and level, then add them to a routine.",
+                    symbolName: "books.vertical.fill",
+                    imageName: AppImages.focusedStrengthWide
                 )
             }
             .buttonStyle(.plain)

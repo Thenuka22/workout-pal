@@ -15,6 +15,8 @@ struct WorkoutSummaryView: View {
                         .font(.title.weight(.bold))
                         .foregroundStyle(AppColors.textPrimary)
                 }
+                .padding(AppSpacing.medium)
+                .photoCard(AppImages.friendsWide, minHeight: 200)
                 HStack(alignment: .top, spacing: AppSpacing.small) {
                     StatTile(
                         title: "Active time",

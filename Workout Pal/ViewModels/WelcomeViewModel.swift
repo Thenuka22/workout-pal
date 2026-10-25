@@ -6,6 +6,7 @@ struct WalkthroughPage: Identifiable, Hashable {
     let symbolName: String
     let title: String
     let subtitle: String
+    var imageName: String? = nil
 }
 
 enum WelcomeStep: Hashable {
@@ -21,19 +22,21 @@ final class WelcomeViewModel {
             id: 0,
             symbolName: "figure.strengthtraining.traditional",
             title: "Start your journey toward a more active life.",
-            subtitle: "Build a routine that fits your goals, your time and your everyday life."
+            subtitle: "Build a routine that fits your goals, your time and your everyday life.",
+            imageName: AppImages.strengthReady
         ),
         WalkthroughPage(
             id: 1,
-            symbolName: "camera.viewfinder",
-            title: "Count reps and steps for you.",
-            subtitle: "Track walks and runs, and let the camera count your squats and jumping jacks."
+            symbolName: "fork.knife",
+            title: "Fuel your training.",
+            subtitle: "Pair your workouts with good food, water and rest. Workout Pal keeps the training side on track."
         ),
         WalkthroughPage(
             id: 2,
             symbolName: "chart.line.uptrend.xyaxis",
             title: "See every set add up.",
-            subtitle: "Log workouts, rest on time and watch your progress week by week."
+            subtitle: "Log workouts, count reps with the camera, track walks and watch your progress week by week.",
+            imageName: AppImages.friends
         ),
     ]
 

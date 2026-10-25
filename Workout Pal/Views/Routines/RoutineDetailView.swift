@@ -142,16 +142,8 @@ struct RoutineDetailView: View {
                     .foregroundStyle(AppColors.textSecondary)
             }
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
         .padding(AppSpacing.medium)
-        .background(
-            LinearGradient(
-                colors: [AppColors.accentSoft, AppColors.surfaceElevated],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            ),
-            in: RoundedRectangle(cornerRadius: AppRadius.card, style: .continuous)
-        )
+        .photoCard(AppImages.shoulderPressWide, minHeight: 220)
         .overlay {
             RoundedRectangle(cornerRadius: AppRadius.card, style: .continuous)
                 .strokeBorder(AppColors.outline, lineWidth: 1)

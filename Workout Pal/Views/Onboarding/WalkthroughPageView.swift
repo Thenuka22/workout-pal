@@ -28,7 +28,24 @@ struct WalkthroughPageView: View {
         .padding(.bottom, AppSpacing.medium)
     }
 
+    @ViewBuilder
     private var illustration: some View {
+        if let imageName = page.imageName {
+            Color.clear
+                .frame(maxWidth: 340, minHeight: 180, maxHeight: 340)
+                .overlay {
+                    Image(imageName)
+                        .resizable()
+                        .scaledToFill()
+                }
+                .clipShape(RoundedRectangle(cornerRadius: AppRadius.card, style: .continuous))
+                .accessibilityHidden(true)
+        } else {
+            symbolIllustration
+        }
+    }
+
+    private var symbolIllustration: some View {
         ZStack {
             Circle()
                 .fill(AppColors.accentSoft)
