@@ -362,7 +362,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				GOOGLE_REVERSED_CLIENT_ID = "";
+				GOOGLE_REVERSED_CLIENT_ID = "com.googleusercontent.apps.517764836554-7qr4oajjj04p9blivnigofvflqrrl6vg";
 				INFOPLIST_FILE = "Workout Pal/Info.plist";
 				INFOPLIST_KEY_NSCameraUsageDescription = "Workout Pal uses the camera to count your squats and jumping jacks. Video is analysed on this device and never saved or uploaded.";
 				INFOPLIST_KEY_NSFaceIDUsageDescription = "Workout Pal uses Face ID to unlock your workout history.";
@@ -401,7 +401,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				GOOGLE_REVERSED_CLIENT_ID = "";
+				GOOGLE_REVERSED_CLIENT_ID = "com.googleusercontent.apps.517764836554-7qr4oajjj04p9blivnigofvflqrrl6vg";
 				INFOPLIST_FILE = "Workout Pal/Info.plist";
 				INFOPLIST_KEY_NSCameraUsageDescription = "Workout Pal uses the camera to count your squats and jumping jacks. Video is analysed on this device and never saved or uploaded.";
 				INFOPLIST_KEY_NSFaceIDUsageDescription = "Workout Pal uses Face ID to unlock your workout history.";
