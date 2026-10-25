@@ -64,6 +64,15 @@ enum Formatting {
         count.formatted(.number)
     }
 
+    static func record(_ record: PersonalRecord, units: UnitPreference) -> String {
+        switch record.kind {
+        case .heaviestLoad:
+            "\(load(.kilograms(record.value), units: units)) × \(record.reps)"
+        case .mostReps:
+            record.reps == 1 ? "1 rep" : "\(record.reps) reps"
+        }
+    }
+
     static func number(_ value: Double) -> String {
         value.formatted(.number.precision(.fractionLength(0...1)))
     }

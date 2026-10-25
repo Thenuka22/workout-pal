@@ -9,6 +9,7 @@ final class WorkoutSessionViewModel {
     private(set) var restEndsAt: Date?
     private(set) var errorMessage: String?
     private(set) var isFinished = false
+    var finishSummary: WorkoutFinishSummary?
     var selectedExerciseID: UUID?
 
     private let repository: any WorkoutSessionRepository
@@ -221,10 +222,19 @@ final class WorkoutSessionViewModel {
                 self.errorMessage = error.localizedDescription
                 return
             }
+            let history = (try? await self.repository.completedSessions(ownerID: snapshot.ownerID)) ?? []
+            self.finishSummary = WorkoutFinishSummary(
+                session: snapshot,
+                records: RecordBook.newRecords(in: snapshot, previous: history)
+            )
             if self.settings.preferences.exportsToHealth {
                 _ = await self.exporter.export(.workout(snapshot))
             }
         }
+    }
+
+    func closeSummary() {
+        finishSummary = nil
     }
 
     private func startRest(seconds: Int) {

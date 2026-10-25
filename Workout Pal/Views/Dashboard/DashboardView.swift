@@ -71,7 +71,7 @@ struct DashboardView: View {
         VStack(spacing: AppSpacing.medium) {
             resumeCard
             activityResumeCard
-            WeeklyProgressCard(summary: model.summary, statusText: model.weekStatusText, showsWeekdays: false)
+            WeeklyProgressCard(summary: model.summary, statusText: model.weekStatusText, showsWeekdays: false, streak: model.weekStreak)
             todayPlanCard
             QuickActionsRow()
             MovementCard(summary: model.summary)
@@ -84,7 +84,7 @@ struct DashboardView: View {
             VStack(spacing: AppSpacing.medium) {
                 resumeCard
                 activityResumeCard
-                WeeklyProgressCard(summary: model.summary, statusText: model.weekStatusText, showsWeekdays: true)
+                WeeklyProgressCard(summary: model.summary, statusText: model.weekStatusText, showsWeekdays: true, streak: model.weekStreak)
                 todayPlanCard
                 QuickActionsRow()
             }

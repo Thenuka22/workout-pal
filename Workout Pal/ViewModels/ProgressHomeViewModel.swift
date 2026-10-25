@@ -87,6 +87,22 @@ final class ProgressHomeViewModel {
         return "\(Formatting.number(value)) \(units.symbol)"
     }
 
+    var records: [PersonalRecord] {
+        Array(RecordBook.bests(sessions: sessions).prefix(5))
+    }
+
+    var weekStreak: Int {
+        StreakCalculator.weekStreak(sessions: sessions, goal: settings.preferences.weeklyGoal, now: now())
+    }
+
+    var streakText: String {
+        weekStreak == 1 ? "1 week" : "\(weekStreak) weeks"
+    }
+
+    func recordText(_ record: PersonalRecord) -> String {
+        Formatting.record(record, units: units)
+    }
+
     var weeklyStepsText: String {
         "\(Formatting.steps(weeklySummary.steps)) steps"
     }

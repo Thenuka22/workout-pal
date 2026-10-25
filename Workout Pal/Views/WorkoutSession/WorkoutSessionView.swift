@@ -86,9 +86,9 @@ struct WorkoutSessionView: View {
                 }
             }
         }
-        .onChange(of: model.isFinished) { _, isFinished in
-            if isFinished {
-                dismiss()
+        .sheet(item: $model.finishSummary, onDismiss: { dismiss() }) { summary in
+            WorkoutSummarySheet(summary: summary, units: model.units) {
+                model.closeSummary()
             }
         }
         .onAppear {

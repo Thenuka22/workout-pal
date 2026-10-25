@@ -194,4 +194,24 @@ struct WorkoutSessionViewModelTests {
         try? await Task.sleep(for: .milliseconds(50))
         #expect(await notifications.restAlerts.isEmpty)
     }
+
+    @Test func finishingShowsNewPersonalRecords() async throws {
+        let earlier = SampleData.session(
+            startedAt: SampleData.daysAgo(7),
+            exercises: [SampleData.exercise(sets: [SampleData.set(reps: 10, load: .kilograms(20))])]
+        )
+        try await repository.save(earlier)
+        let model = makeModel()
+        let exercise = model.session.exercises[0]
+        model.toggleCompletion(exerciseID: exercise.id, setID: exercise.sets[1].id)
+        clock.advance(by: 300)
+        model.finish()
+        #expect(await eventually { model.finishSummary != nil })
+        let records = model.finishSummary?.records ?? []
+        #expect(records.map(\.kind) == [.heaviestLoad])
+        #expect(records.first?.value == 30)
+        #expect(model.finishSummary?.completedSets == 1)
+        model.closeSummary()
+        #expect(model.finishSummary == nil)
+    }
 }

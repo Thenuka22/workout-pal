@@ -9,6 +9,7 @@ final class DashboardViewModel {
     private(set) var activeSession: WorkoutSession?
     private(set) var activeActivity: ActivitySession?
     private(set) var suggestedRoutine: Routine?
+    private(set) var weekStreak = 0
     private(set) var isLoading = true
     private(set) var errorMessage: String?
     var resumingSession: WorkoutSession?
@@ -73,6 +74,7 @@ final class DashboardViewModel {
             activeActivity = try await activities.activeActivity(ownerID: settings.ownerID)
             let allRoutines = try await routines.routines(ownerID: settings.ownerID)
             summary = WeeklySummary.make(sessions: completed, activities: walks, goal: settings.preferences.weeklyGoal)
+            weekStreak = StreakCalculator.weekStreak(sessions: completed, goal: settings.preferences.weeklyGoal)
             recentSession = completed.first
             suggestedRoutine = RoutinePlanner.nextRoutine(from: allRoutines, sessions: completed)
             errorMessage = nil

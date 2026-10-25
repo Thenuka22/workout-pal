@@ -4,11 +4,18 @@ struct WeeklyProgressCard: View {
     let summary: WeeklySummary
     let statusText: String
     var showsWeekdays = false
+    var streak = 0
 
     var body: some View {
         VStack(alignment: .leading, spacing: AppSpacing.medium) {
-            Text("This week")
-                .eyebrow()
+            HStack {
+                Text("This week")
+                    .eyebrow()
+                Spacer()
+                if streak >= 2 {
+                    TagPill(text: "\(streak)-week streak", symbolName: "flame.fill")
+                }
+            }
             VStack(alignment: .leading, spacing: AppSpacing.xSmall) {
                 Text("\(summary.workoutCount) of \(summary.goal) workouts")
                     .cardTitle()

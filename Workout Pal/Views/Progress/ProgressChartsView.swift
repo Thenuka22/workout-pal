@@ -25,6 +25,7 @@ struct ProgressChartsView: View {
                     onRefresh: { model.refreshHealth() }
                 )
                 exerciseCard
+                recordsCard
                 Text("Your activity stays on your device.")
                     .font(.footnote)
                     .foregroundStyle(AppColors.textSecondary)
@@ -127,12 +128,51 @@ struct ProgressChartsView: View {
                     dotColor: AppColors.infoPurple
                 )
             }
-            StatTile(
-                title: "Walks & runs",
-                value: model.weeklyStepsText,
-                caption: "recorded in Workout Pal this week",
-                dotColor: AppColors.accent
-            )
+            HStack(alignment: .top, spacing: AppSpacing.small) {
+                StatTile(
+                    title: "Walks & runs",
+                    value: model.weeklyStepsText,
+                    caption: "recorded this week",
+                    dotColor: AppColors.accent
+                )
+                StatTile(
+                    title: "Goal streak",
+                    value: model.streakText,
+                    caption: "weeks hitting your goal",
+                    dotColor: AppColors.warning
+                )
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var recordsCard: some View {
+        if !model.records.isEmpty {
+            VStack(alignment: .leading, spacing: AppSpacing.small) {
+                Text("Personal records")
+                    .eyebrow()
+                ForEach(model.records) { record in
+                    HStack(alignment: .firstTextBaseline) {
+                        Image(systemName: "trophy.fill")
+                            .foregroundStyle(AppColors.warning)
+                            .accessibilityHidden(true)
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(record.exerciseName)
+                                .font(.subheadline.weight(.semibold))
+                                .foregroundStyle(AppColors.textPrimary)
+                            Text("\(record.kind.title) · \(Formatting.date(record.date))")
+                                .font(.caption)
+                                .foregroundStyle(AppColors.textSecondary)
+                        }
+                        Spacer()
+                        Text(model.recordText(record))
+                            .font(.subheadline.weight(.semibold))
+                            .foregroundStyle(AppColors.textPrimary)
+                    }
+                    .accessibilityElement(children: .combine)
+                }
+            }
+            .card()
         }
     }
 
