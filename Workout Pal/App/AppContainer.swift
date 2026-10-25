@@ -102,7 +102,7 @@ final class AppContainer {
     }
 
     func makeProfileViewModel() -> ProfileViewModel {
-        ProfileViewModel(settings: settings, account: account, deviceAuth: deviceAuth)
+        ProfileViewModel(settings: settings, account: account, deviceAuth: deviceAuth, permissions: permissions)
     }
 
     func makeHistoryDetailViewModel(entry: HistoryEntry) -> HistoryDetailViewModel {

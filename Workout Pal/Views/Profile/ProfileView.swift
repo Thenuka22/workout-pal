@@ -5,6 +5,7 @@ struct ProfileView: View {
     @State private var model: ProfileViewModel
     @State private var isEditingHeight = false
     @State private var isConfirmingSignOut = false
+    @State private var isConfirmingDelete = false
 
     init(model: ProfileViewModel) {
         _model = State(initialValue: model)
@@ -17,18 +18,35 @@ struct ProfileView: View {
                 VStack(spacing: AppSpacing.medium) {
                     profileCard
                     goalCard
+                    section("Connected services") {
+                        ForEach(model.connectedServices) { service in
+                            NavigationLink(value: service.route) {
+                                LinkRow(
+                                    title: service.title,
+                                    subtitle: service.subtitle,
+                                    symbolName: service.symbolName,
+                                    value: service.value,
+                                    isHighlighted: service.isActive
+                                )
+                                .card()
+                            }
+                            .buttonStyle(.plain)
+                        }
+                    }
                     planCard
                     preferencesCard
-                    healthCard
-                    remindersCard
-                    securityCard
-                    privacyCard
+                    section("Security & privacy") {
+                        securityCard
+                        privacyCard
+                    }
                     accountCard
                     aboutCard
                 }
                 .padding(.horizontal, AppSpacing.medium)
             }
             .padding(.bottom, AppSpacing.large)
+            .frame(maxWidth: 720)
+            .frame(maxWidth: .infinity)
         }
         .screenBackground()
         .toolbar(.hidden, for: .navigationBar)
@@ -43,10 +61,21 @@ struct ProfileView: View {
         } message: {
             Text("Your workouts stay on this device and come back when you sign in again.")
         }
+        .confirmationDialog("Delete your workout data?", isPresented: $isConfirmingDelete, titleVisibility: .visible) {
+            Button("Delete workout data", role: .destructive) {
+                model.deleteWorkoutData()
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("This deletes the routines, workouts, walks and runs saved for this account on this device and resets your preferences. Copies saved to Apple Health stay in the Health app.")
+        }
         .alert("Something went wrong", isPresented: $model.isShowingError) {
             Button("OK") {}
         } message: {
             Text(model.errorMessage ?? "")
+        }
+        .task {
+            await model.load()
         }
         .navigationDestination(for: ProfileRoute.self) { route in
             switch route {
@@ -68,7 +97,7 @@ struct ProfileView: View {
                     .textContentType(.name)
                     .font(.headline)
                     .foregroundStyle(AppColors.textPrimary)
-                Text("Your training profile")
+                Text(model.profileSubtitle)
                     .font(.subheadline)
                     .foregroundStyle(AppColors.textSecondary)
             }
@@ -170,36 +199,17 @@ struct ProfileView: View {
         .card()
     }
 
-    private var healthCard: some View {
-        NavigationLink(value: ProfileRoute.health) {
-            LinkRow(
-                title: "Apple Health",
-                subtitle: "Read activity and save finished workouts",
-                symbolName: "heart.fill",
-                isHighlighted: true
-            )
-            .card()
+    private func section<Content: View>(_ title: String, @ViewBuilder content: () -> Content) -> some View {
+        VStack(alignment: .leading, spacing: AppSpacing.small) {
+            Text(title)
+                .cardTitle()
+                .padding(.top, AppSpacing.small)
+            content()
         }
-        .buttonStyle(.plain)
-    }
-
-    private var remindersCard: some View {
-        NavigationLink(value: ProfileRoute.reminders) {
-            LinkRow(
-                title: "Workout reminders",
-                subtitle: model.reminderSummary,
-                symbolName: "bell.fill",
-                isHighlighted: model.reminderSummary != "Off"
-            )
-            .card()
-        }
-        .buttonStyle(.plain)
     }
 
     private var securityCard: some View {
         VStack(alignment: .leading, spacing: AppSpacing.small) {
-            Text("Security")
-                .eyebrow()
             Toggle(isOn: Binding(get: { model.requiresUnlock }, set: { model.setRequiresUnlock($0) })) {
                 Label(model.secureUnlockTitle, systemImage: model.unlockKind.symbolName)
                     .font(.headline)
@@ -237,6 +247,24 @@ struct ProfileView: View {
                 isConfirmingSignOut = true
             }
             .font(.subheadline.weight(.semibold))
+            .frame(minHeight: 44)
+            Divider()
+                .overlay(AppColors.outline)
+            Button(role: .destructive) {
+                isConfirmingDelete = true
+            } label: {
+                if model.isDeletingData {
+                    ProgressView()
+                } else {
+                    Text("Delete my workout data")
+                }
+            }
+            .font(.subheadline.weight(.semibold))
+            .frame(minHeight: 44)
+            .disabled(model.isDeletingData)
+            Text("Your Google account is only used to sign in. Workouts are stored on this device.")
+                .font(.footnote)
+                .foregroundStyle(AppColors.textSecondary)
         }
         .card()
     }
