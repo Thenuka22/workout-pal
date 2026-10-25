@@ -16,8 +16,8 @@ struct WorkoutSessionViewModelTests {
             SampleData.set(reps: 8, load: .kilograms(30), isCompleted: false),
         ])
         exercise.restSeconds = rest
-        let session = SampleData.session(startedAt: clock.now, status: .active, exercises: [exercise])
         let clock = clock
+        let session = SampleData.session(startedAt: clock.now, status: .active, exercises: [exercise])
         return WorkoutSessionViewModel(
             session: session,
             repository: repository,

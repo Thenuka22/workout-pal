@@ -64,8 +64,12 @@ struct CoreMotionService: MotionTracking {
                 }
             }
         }
-        withExtendedLifetime(sensors) {}
+        Self.keepAlive(sensors)
         return result
+    }
+
+    private static func keepAlive(_ object: AnyObject) {
+        withExtendedLifetime(object) {}
     }
 
     private static func reading(from data: CMPedometerData) -> PedometerReading {

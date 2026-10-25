@@ -1,3 +1,4 @@
+import Accessibility
 import Foundation
 import SwiftUI
 import UIKit
@@ -48,10 +49,17 @@ struct RepCounterView: View {
             }
         }
         .onDisappear {
-            model.stopCamera()
+            model.disappear()
         }
         .onChange(of: scenePhase) { _, phase in
-            model.scenePhaseChanged(isActive: phase == .active)
+            switch phase {
+            case .background:
+                model.sceneDidEnterBackground()
+            case .active:
+                model.sceneDidBecomeActive()
+            default:
+                break
+            }
         }
     }
 
@@ -105,7 +113,7 @@ struct RepCounterView: View {
             }
         }
         .onAppear {
-            model.startCamera()
+            model.appear()
         }
     }
 

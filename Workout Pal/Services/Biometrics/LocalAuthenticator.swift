@@ -31,7 +31,11 @@ struct LocalAuthenticator: DeviceAuthenticating {
                 }
             }
         }
-        withExtendedLifetime(context) {}
+        Self.keepAlive(context)
+    }
+
+    private static func keepAlive(_ object: AnyObject) {
+        withExtendedLifetime(object) {}
     }
 
     private static func mapped(_ error: Error?) -> DeviceAuthenticationError {

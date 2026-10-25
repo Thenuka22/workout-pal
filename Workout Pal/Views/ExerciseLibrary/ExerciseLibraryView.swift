@@ -62,6 +62,9 @@ struct ExerciseLibraryView: View {
             exerciseList
                 .navigationDestination(for: Exercise.self) { exercise in
                     ExerciseDetailView(exercise: exercise)
+                        .navigationTitle(exercise.name)
+                        .navigationBarTitleDisplayMode(.inline)
+                        .toolbarBackground(AppColors.surface, for: .navigationBar)
                 }
         }
     }

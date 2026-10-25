@@ -113,7 +113,7 @@ struct RepCounterViewModelTests {
         #expect(await startCounting(model))
         camera.send(oneSquat())
         #expect(await eventually { model.detectedReps == 1 })
-        model.scenePhaseChanged(isActive: false)
+        model.sceneDidEnterBackground()
         #expect(model.isReviewing)
         #expect(model.reviewedReps == 1)
         #expect(camera.stopCount > 0)

@@ -67,9 +67,6 @@ struct ExerciseDetailView: View {
             .padding(AppSpacing.medium)
         }
         .screenBackground()
-        .navigationTitle(exercise.name)
-        .navigationBarTitleDisplayMode(.inline)
-        .toolbarBackground(AppColors.surface, for: .navigationBar)
     }
 
     @ViewBuilder

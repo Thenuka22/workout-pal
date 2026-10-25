@@ -44,6 +44,7 @@ final class RepCounterViewModel {
     @ObservationIgnored private var streamTask: Task<Void, Never>?
     @ObservationIgnored private var counter: RepCounter?
     @ObservationIgnored private var countingStartedAt: Date?
+    @ObservationIgnored private var isOnScreen = false
 
     init(
         camera: any PoseDetecting,
@@ -140,11 +141,23 @@ final class RepCounterViewModel {
         }
     }
 
-    func scenePhaseChanged(isActive: Bool) {
-        if isActive {
+    func appear() {
+        isOnScreen = true
+        startCamera()
+    }
+
+    func disappear() {
+        isOnScreen = false
+        stopCamera()
+    }
+
+    func sceneDidEnterBackground() {
+        stopCamera()
+    }
+
+    func sceneDidBecomeActive() {
+        if isOnScreen {
             startCamera()
-        } else {
-            stopCamera()
         }
     }
 

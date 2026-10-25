@@ -81,6 +81,9 @@ struct ActivityTrackerView: View {
         .task {
             await model.load()
         }
+        .onDisappear {
+            model.suspendUpdates()
+        }
         .onChange(of: scenePhase) { _, phase in
             model.scenePhaseChanged(isActive: phase == .active)
         }

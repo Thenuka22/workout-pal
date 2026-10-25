@@ -139,6 +139,9 @@
 			);
 			name = "Workout PalTests";
 			packageProductDependencies = (
+				8A626D843084C89600A3619D /* FirebaseAuth */,
+				8A626D853084C89600A3619D /* FirebaseCore */,
+				8A626D863084C89600A3619D /* GoogleSignIn */,
 			);
 			productName = "Workout PalTests";
 			productReference = 8A626D703084C89600A3619D /* Workout PalTests.xctest */;
@@ -532,6 +535,21 @@
 			productName = FirebaseCore;
 		};
 		8A626D803084C89600A3619D /* GoogleSignIn */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 8A626D7D3084C89600A3619D /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */;
+			productName = GoogleSignIn;
+		};
+		8A626D843084C89600A3619D /* FirebaseAuth */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 8A626D7C3084C89600A3619D /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseAuth;
+		};
+		8A626D853084C89600A3619D /* FirebaseCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 8A626D7C3084C89600A3619D /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseCore;
+		};
+		8A626D863084C89600A3619D /* GoogleSignIn */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 8A626D7D3084C89600A3619D /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */;
 			productName = GoogleSignIn;

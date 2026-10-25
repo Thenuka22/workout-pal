@@ -84,7 +84,7 @@ final class SystemPermissions: PermissionsProviding {
                 continuation.resume()
             }
         }
-        withExtendedLifetime(pedometer) {}
+        Self.keepAlive(pedometer)
     }
 
     private func healthStatus() async -> PermissionStatus {
@@ -135,6 +135,10 @@ final class SystemPermissions: PermissionsProviding {
         var error: NSError?
         let context = LAContext()
         return context.canEvaluatePolicy(.deviceOwnerAuthentication, error: &error) ? .granted : .unavailable
+    }
+
+    private static func keepAlive(_ object: AnyObject) {
+        withExtendedLifetime(object) {}
     }
 
     nonisolated private static func permissionStatus(_ status: UNAuthorizationStatus) -> PermissionStatus {

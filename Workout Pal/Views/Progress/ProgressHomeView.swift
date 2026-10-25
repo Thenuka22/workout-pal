@@ -77,6 +77,7 @@ struct ProgressHomeView: View {
                         .padding(.top, AppSpacing.small)
                         HistoryEntryDetailView(
                             model: container.makeHistoryDetailViewModel(entry: selectedEntry),
+                            isEmbedded: true,
                             onChange: { model.retry() },
                             onDeleted: {
                                 self.selectedEntry = nil

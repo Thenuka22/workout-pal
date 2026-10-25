@@ -108,7 +108,13 @@ final class ActivityTrackerViewModel {
 
     func load() async {
         defer { isLoading = false }
-        guard activity == nil, finishedActivity == nil else {
+        if let activity {
+            if !activity.isPaused, let current = activity.activeIntervals(at: now()).last {
+                startUpdates(from: current.start)
+            }
+            return
+        }
+        guard finishedActivity == nil else {
             return
         }
         do {
@@ -225,6 +231,10 @@ final class ActivityTrackerViewModel {
         finishedActivity = nil
     }
 
+    func suspendUpdates() {
+        stopUpdates()
+    }
+
     func scenePhaseChanged(isActive: Bool) {
         guard isActive, let activity, !activity.isPaused,
               let current = activity.activeIntervals(at: now()).last
@@ -332,8 +342,9 @@ final class ActivityTrackerViewModel {
         guard let activity else {
             return
         }
-        var closed = activity.activeIntervals(at: now())
-        if !activity.isPaused && !closed.isEmpty {
+        let date = now()
+        var closed = activity.activeIntervals(at: date)
+        if !activity.isPaused, let last = closed.last, last.end >= date {
             closed.removeLast()
         }
         var total = PedometerReading.zero
@@ -343,16 +354,10 @@ final class ActivityTrackerViewModel {
             }
             total = total.adding(reading)
         }
-        guard self.activity?.id == activity.id else {
+        guard self.activity?.id == activity.id, total.steps >= banked.steps else {
             return
         }
-        if activity.isPaused {
-            if total.steps >= banked.steps {
-                banked = total
-            }
-        } else {
-            banked = total
-        }
+        banked = total
     }
 
     private func measuredTotal(for activity: ActivitySession, until end: Date) async -> PedometerReading? {

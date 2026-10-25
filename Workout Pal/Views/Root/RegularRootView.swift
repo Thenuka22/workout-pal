@@ -11,7 +11,7 @@ struct RegularRootView: View {
     }
 
     var body: some View {
-        NavigationSplitView {
+        NavigationSplitView(columnVisibility: .constant(.all)) {
             List(selection: $selection) {
                 Section {
                     ForEach(AppDestination.allCases) { destination in
@@ -69,7 +69,9 @@ struct RegularRootView: View {
             NavigationStack {
                 DestinationView(destination: selection ?? .home)
             }
+            .id(selection ?? .home)
         }
+        .navigationSplitViewStyle(.balanced)
     }
 
     private func sidebarTitle(for destination: AppDestination) -> String {
