@@ -1,7 +1,11 @@
 import SwiftUI
 
 struct ExerciseDetailView: View {
-    let exercise: Exercise
+    let item: CatalogItem
+
+    private var exercise: Exercise {
+        item.exercise
+    }
 
     var body: some View {
         ScrollView {
@@ -27,9 +31,11 @@ struct ExerciseDetailView: View {
                     .clipShape(RoundedRectangle(cornerRadius: AppRadius.card, style: .continuous))
                 }
 
-                if !exercise.category.isEmpty {
-                    Text(exercise.category)
-                        .font(.subheadline.weight(.medium))
+                HStack(spacing: AppSpacing.small) {
+                    TagPill(text: item.area.title, symbolName: item.area.symbolName)
+                    DifficultyPill(difficulty: item.difficulty)
+                    Text("Estimated level")
+                        .font(.caption)
                         .foregroundStyle(AppColors.textSecondary)
                 }
 

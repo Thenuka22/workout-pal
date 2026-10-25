@@ -56,15 +56,13 @@ final class RoutineEditorViewModel {
     }
 
     func add(_ exercise: Exercise) {
-        let usesBodyweight = exercise.equipment.isEmpty
-            || exercise.equipment.contains { $0.lowercased().contains("bodyweight") || $0.lowercased().contains("none") }
         draft.exercises.append(RoutineExercise(
             id: UUID(),
             exerciseID: exercise.id,
             exerciseName: exercise.name,
             plannedSets: 3,
             plannedReps: 10,
-            plannedLoad: usesBodyweight ? .bodyweight : .kilograms(20),
+            plannedLoad: exercise.suggestedLoad,
             restSeconds: 60
         ))
     }

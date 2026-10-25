@@ -123,4 +123,26 @@ enum SampleData {
             healthExport: .notExported
         )
     }
+
+    static func catalogExercise(
+        id: Int,
+        name: String,
+        category: String = "Legs",
+        equipment: [String] = [],
+        muscles: [String] = []
+    ) -> Exercise {
+        Exercise(
+            id: id,
+            uuid: "",
+            name: name,
+            summary: "",
+            category: category,
+            primaryMuscles: muscles,
+            secondaryMuscles: [],
+            equipment: equipment,
+            imageURL: nil,
+            license: ContentLicense(name: "CC-BY-SA 4", url: nil, author: "wger.de"),
+            updatedAt: SampleData.now
+        )
+    }
 }

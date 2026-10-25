@@ -3,7 +3,7 @@ import SwiftUI
 struct ExerciseLibraryView: View {
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @State private var model: ExerciseLibraryViewModel
-    @State private var selectedExercise: Exercise?
+    @State private var selectedItem: CatalogItem?
 
     init(model: ExerciseLibraryViewModel) {
         _model = State(initialValue: model)
@@ -45,9 +45,9 @@ struct ExerciseLibraryView: View {
                 exerciseList
                     .frame(width: 380)
                 Divider()
-                if let selectedExercise {
-                    ExerciseDetailView(exercise: selectedExercise)
-                        .id(selectedExercise.id)
+                if let selectedItem {
+                    ExerciseDetailView(item: selectedItem)
+                        .id(selectedItem.id)
                 } else {
                     ContentUnavailableView(
                         "Select an exercise",
@@ -60,9 +60,9 @@ struct ExerciseLibraryView: View {
             }
         } else {
             exerciseList
-                .navigationDestination(for: Exercise.self) { exercise in
-                    ExerciseDetailView(exercise: exercise)
-                        .navigationTitle(exercise.name)
+                .navigationDestination(for: CatalogItem.self) { item in
+                    ExerciseDetailView(item: item)
+                        .navigationTitle(item.exercise.name)
                         .navigationBarTitleDisplayMode(.inline)
                         .toolbarBackground(AppColors.surface, for: .navigationBar)
                 }
@@ -70,7 +70,16 @@ struct ExerciseLibraryView: View {
     }
 
     private var exerciseList: some View {
-        List {
+        let sections = model.sections
+        return List {
+            CatalogFilterBar(scopes: model.scopeOptions, scope: $model.scope, difficulty: $model.difficulty)
+                .plainRow()
+            if let caption = model.scopeCaption {
+                Text(caption)
+                    .font(.footnote)
+                    .foregroundStyle(AppColors.textSecondary)
+                    .plainRow(top: 0)
+            }
             if model.isRefreshing {
                 HStack(spacing: AppSpacing.small) {
                     ProgressView()
@@ -86,23 +95,31 @@ struct ExerciseLibraryView: View {
                     .foregroundStyle(AppColors.warning)
                     .plainRow()
             }
-            if model.filteredExercises.isEmpty {
-                ContentUnavailableView.search(text: model.searchText)
-                    .plainRow()
+            if sections.isEmpty {
+                ContentUnavailableView(
+                    "No exercises match",
+                    systemImage: "magnifyingglass",
+                    description: Text("Try another body area, level or search.")
+                )
+                .plainRow()
             } else {
-                ForEach(model.filteredExercises) { exercise in
-                    if horizontalSizeClass == .regular {
-                        Button {
-                            selectedExercise = exercise
-                        } label: {
-                            ExerciseRow(exercise: exercise)
+                ForEach(sections) { section in
+                    CatalogSectionHeader(section: section)
+                        .plainRow(top: AppSpacing.medium, bottom: AppSpacing.xSmall)
+                    ForEach(section.items) { item in
+                        if horizontalSizeClass == .regular {
+                            Button {
+                                selectedItem = item
+                            } label: {
+                                ExerciseRow(item: item)
+                            }
+                            .cardRow(isSelected: item.id == selectedItem?.id)
+                        } else {
+                            NavigationLink(value: item) {
+                                ExerciseRow(item: item)
+                            }
+                            .cardRow()
                         }
-                        .cardRow(isSelected: exercise.id == selectedExercise?.id)
-                    } else {
-                        NavigationLink(value: exercise) {
-                            ExerciseRow(exercise: exercise)
-                        }
-                        .cardRow()
                     }
                 }
                 Text(model.attributionText)

@@ -76,23 +76,35 @@ struct ExercisePickerView: View {
             }
             .screenBackground()
         } else {
+            let sections = model.sections
             List {
-                if model.filteredExercises.isEmpty {
-                    ContentUnavailableView.search(text: model.searchText)
-                        .plainRow()
+                CatalogFilterBar(scopes: model.scopeOptions, scope: $model.scope, difficulty: $model.difficulty)
+                    .plainRow()
+                if sections.isEmpty {
+                    ContentUnavailableView(
+                        "No exercises match",
+                        systemImage: "magnifyingglass",
+                        description: Text("Try another body area, level or search.")
+                    )
+                    .plainRow()
                 } else {
-                    ForEach(model.filteredExercises) { exercise in
-                        Button {
-                            onPick(exercise)
-                            dismiss()
-                        } label: {
-                            HStack {
-                                ExerciseRow(exercise: exercise)
-                                Image(systemName: "plus.circle.fill")
-                                    .foregroundStyle(AppColors.accent)
+                    ForEach(sections) { section in
+                        CatalogSectionHeader(section: section)
+                            .plainRow(top: AppSpacing.medium, bottom: AppSpacing.xSmall)
+                        ForEach(section.items) { item in
+                            Button {
+                                onPick(item.exercise)
+                                dismiss()
+                            } label: {
+                                HStack {
+                                    ExerciseRow(item: item)
+                                    Image(systemName: "plus.circle.fill")
+                                        .foregroundStyle(AppColors.accent)
+                                        .accessibilityLabel("Add")
+                                }
                             }
+                            .cardRow()
                         }
-                        .cardRow()
                     }
                 }
             }

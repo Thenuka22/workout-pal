@@ -10,6 +10,7 @@ struct RefreshProgress: Hashable, Sendable {
 @Observable
 final class ExerciseLibraryViewModel {
     private(set) var exercises: [Exercise] = []
+    private(set) var items: [CatalogItem] = []
     private(set) var isLoading = true
     private(set) var isRefreshing = false
     private(set) var refreshProgress: RefreshProgress?
@@ -18,13 +19,18 @@ final class ExerciseLibraryViewModel {
     var searchText = ""
     var selectedMuscle: String?
     var selectedEquipment: String?
+    var scope: LibraryScope
+    var difficulty: ExerciseDifficulty?
 
     private let catalog: any ExerciseCatalogRepository
     private let sync: any ExerciseCatalogSyncing
+    private let settings: AppSettings
 
-    init(catalog: any ExerciseCatalogRepository, sync: any ExerciseCatalogSyncing) {
+    init(catalog: any ExerciseCatalogRepository, sync: any ExerciseCatalogSyncing, settings: AppSettings) {
         self.catalog = catalog
         self.sync = sync
+        self.settings = settings
+        scope = settings.preferences.fitnessLevel == nil ? .all : .forYou
     }
 
     var hasFilters: Bool {
@@ -39,22 +45,31 @@ final class ExerciseLibraryViewModel {
         Set(exercises.flatMap(\.equipment)).sorted()
     }
 
+    var scopeOptions: [LibraryScope] {
+        CatalogGrouping.scopes(for: items)
+    }
+
+    var sections: [ExerciseSection] {
+        CatalogGrouping.sections(
+            items: items,
+            scope: scope,
+            difficulty: difficulty,
+            query: searchText,
+            muscle: selectedMuscle,
+            equipment: selectedEquipment,
+            fitnessLevel: settings.preferences.fitnessLevel
+        )
+    }
+
     var filteredExercises: [Exercise] {
-        let query = searchText.trimmingCharacters(in: .whitespaces).lowercased()
-        return exercises.filter { exercise in
-            if let selectedMuscle, !exercise.primaryMuscles.contains(selectedMuscle) {
-                return false
-            }
-            if let selectedEquipment, !exercise.equipment.contains(selectedEquipment) {
-                return false
-            }
-            if query.isEmpty {
-                return true
-            }
-            return exercise.name.lowercased().contains(query)
-                || exercise.category.lowercased().contains(query)
-                || exercise.primaryMuscles.contains { $0.lowercased().contains(query) }
+        sections.flatMap(\.items).map(\.exercise)
+    }
+
+    var scopeCaption: String? {
+        guard scope == .forYou, difficulty == nil, let level = settings.preferences.fitnessLevel else {
+            return nil
         }
+        return "Picked for your \(level.title.lowercased()) level. Levels are estimated from the exercise and its equipment."
     }
 
     var statusText: String {
@@ -79,7 +94,7 @@ final class ExerciseLibraryViewModel {
 
     func load() async {
         do {
-            exercises = try await catalog.exercises()
+            show(try await catalog.exercises())
             lastRefresh = sync.lastRefresh()
             errorMessage = nil
             isLoading = false
@@ -98,6 +113,11 @@ final class ExerciseLibraryViewModel {
         }
     }
 
+    private func show(_ exercises: [Exercise]) {
+        self.exercises = exercises
+        items = CatalogGrouping.items(from: exercises)
+    }
+
     private func downloadCatalogue() async {
         guard !isRefreshing else {
             return
@@ -108,7 +128,7 @@ final class ExerciseLibraryViewModel {
             _ = try await sync.refresh { [weak self] done, total in
                 self?.refreshProgress = RefreshProgress(done: done, total: total)
             }
-            exercises = try await catalog.exercises()
+            show(try await catalog.exercises())
             lastRefresh = sync.lastRefresh()
             errorMessage = nil
         } catch {

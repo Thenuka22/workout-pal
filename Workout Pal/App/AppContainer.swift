@@ -62,7 +62,7 @@ final class AppContainer {
     }
 
     func makeExerciseLibraryViewModel() -> ExerciseLibraryViewModel {
-        ExerciseLibraryViewModel(catalog: catalog, sync: catalogSync)
+        ExerciseLibraryViewModel(catalog: catalog, sync: catalogSync, settings: settings)
     }
 
     func makeTrainViewModel() -> TrainViewModel {

@@ -14,6 +14,16 @@ struct Exercise: Identifiable, Hashable, Sendable {
     var updatedAt: Date
 }
 
+extension Exercise {
+    var suggestedLoad: Load {
+        let usesBodyweight = equipment.isEmpty || equipment.contains { item in
+            let name = item.lowercased()
+            return name.contains("bodyweight") || name.contains("none") || name.contains("gym mat")
+        }
+        return usesBodyweight ? .bodyweight : .kilograms(20)
+    }
+}
+
 struct ContentLicense: Hashable, Sendable {
     var name: String
     var url: URL?

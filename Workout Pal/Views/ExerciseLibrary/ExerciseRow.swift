@@ -1,25 +1,24 @@
 import SwiftUI
 
 struct ExerciseRow: View {
-    let exercise: Exercise
+    let item: CatalogItem
 
     var body: some View {
         VStack(alignment: .leading, spacing: AppSpacing.small) {
             HStack(alignment: .firstTextBaseline, spacing: AppSpacing.small) {
-                Text(exercise.name)
+                Text(item.exercise.name)
                     .font(.body.weight(.semibold))
                     .foregroundStyle(AppColors.textPrimary)
                 Spacer(minLength: 0)
-                if !exercise.category.isEmpty {
-                    TagPill(text: exercise.category)
-                }
+                DifficultyPill(difficulty: item.difficulty)
             }
-            if !exercise.primaryMuscles.isEmpty {
-                Text(exercise.primaryMuscles.joined(separator: ", "))
+            if !item.exercise.primaryMuscles.isEmpty {
+                Text(item.exercise.primaryMuscles.joined(separator: ", "))
                     .font(.caption)
                     .foregroundStyle(AppColors.textSecondary)
                     .lineLimit(1)
             }
         }
+        .accessibilityElement(children: .combine)
     }
 }
