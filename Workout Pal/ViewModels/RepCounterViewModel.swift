@@ -40,6 +40,7 @@ final class RepCounterViewModel {
     private let permissions: any PermissionsProviding
     private let sessions: any WorkoutSessionRepository
     private let settings: AppSettings
+    private let feedback: any WorkoutFeedback
     private let now: @MainActor () -> Date
     @ObservationIgnored private var streamTask: Task<Void, Never>?
     @ObservationIgnored private var counter: RepCounter?
@@ -51,6 +52,7 @@ final class RepCounterViewModel {
         permissions: any PermissionsProviding,
         sessions: any WorkoutSessionRepository,
         settings: AppSettings,
+        feedback: any WorkoutFeedback,
         exercise: CameraExercise? = nil,
         mode: RepCounterMode = .standalone,
         now: @escaping @MainActor () -> Date = { .now }
@@ -59,6 +61,7 @@ final class RepCounterViewModel {
         self.permissions = permissions
         self.sessions = sessions
         self.settings = settings
+        self.feedback = feedback
         self.exercise = exercise
         self.mode = mode
         self.now = now
@@ -81,6 +84,10 @@ final class RepCounterViewModel {
         savedSession?.exercises.first?.sets ?? []
     }
 
+    var isSpeaking: Bool {
+        settings.preferences.spokenRepCount
+    }
+
     var acceptTitle: String {
         reviewedReps == 1 ? "Save 1 rep" : "Save \(reviewedReps) reps"
     }
@@ -92,6 +99,10 @@ final class RepCounterViewModel {
                 errorMessage = nil
             }
         }
+    }
+
+    func toggleSpeech() {
+        settings.update { $0.spokenRepCount.toggle() }
     }
 
     func select(_ exercise: CameraExercise) {
@@ -261,6 +272,9 @@ final class RepCounterViewModel {
         counter.process(frame)
         self.counter = counter
         trackingStatus = counter.status
+        if counter.count > detectedReps {
+            feedback.repCounted(counter.count)
+        }
         detectedReps = counter.count
         countingHint = counter.hint
     }

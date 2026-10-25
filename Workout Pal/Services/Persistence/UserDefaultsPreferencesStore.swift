@@ -47,6 +47,12 @@ struct UserDefaultsPreferencesStore: PreferencesStore, @unchecked Sendable {
         if let restAlerts = defaults.object(forKey: keys.restAlertsEnabled) as? Bool {
             preferences.restAlertsEnabled = restAlerts
         }
+        if let spoken = defaults.object(forKey: keys.spokenRepCount) as? Bool {
+            preferences.spokenRepCount = spoken
+        }
+        if let haptics = defaults.object(forKey: keys.hapticsEnabled) as? Bool {
+            preferences.hapticsEnabled = haptics
+        }
         return preferences
     }
 
@@ -67,6 +73,8 @@ struct UserDefaultsPreferencesStore: PreferencesStore, @unchecked Sendable {
         defaults.set(preferences.reminderHour, forKey: keys.reminderHour)
         defaults.set(preferences.reminderMinute, forKey: keys.reminderMinute)
         defaults.set(preferences.restAlertsEnabled, forKey: keys.restAlertsEnabled)
+        defaults.set(preferences.spokenRepCount, forKey: keys.spokenRepCount)
+        defaults.set(preferences.hapticsEnabled, forKey: keys.hapticsEnabled)
     }
 
     func hasPreferences(ownerID: String) -> Bool {
@@ -101,12 +109,15 @@ struct UserDefaultsPreferencesStore: PreferencesStore, @unchecked Sendable {
         var reminderHour: String { prefix + "reminderHour" }
         var reminderMinute: String { prefix + "reminderMinute" }
         var restAlertsEnabled: String { prefix + "restAlertsEnabled" }
+        var spokenRepCount: String { prefix + "spokenRepCount" }
+        var hapticsEnabled: String { prefix + "hapticsEnabled" }
 
         var all: [String] {
             [
                 displayName, weeklyGoal, units, appearance, gender, heightCentimetres,
                 fitnessLevel, hasCompletedOnboarding, requiresUnlock, exportsToHealth,
                 remindersEnabled, reminderWeekdays, reminderHour, reminderMinute, restAlertsEnabled,
+                spokenRepCount, hapticsEnabled,
             ]
         }
     }

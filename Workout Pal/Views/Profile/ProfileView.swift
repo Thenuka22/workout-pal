@@ -195,6 +195,23 @@ struct ProfileView: View {
                     }
                 }
             }
+            Toggle(isOn: $model.hapticsEnabled) {
+                Text("Haptics")
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(AppColors.textPrimary)
+            }
+            .tint(AppColors.accent)
+            Toggle(isOn: $model.spokenRepCount) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Say reps out loud")
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(AppColors.textPrimary)
+                    Text("While the camera counts squats and jumping jacks")
+                        .font(.caption)
+                        .foregroundStyle(AppColors.textSecondary)
+                }
+            }
+            .tint(AppColors.accent)
         }
         .card()
     }

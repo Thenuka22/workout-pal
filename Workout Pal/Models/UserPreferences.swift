@@ -102,6 +102,8 @@ struct UserPreferences: Hashable, Sendable {
     var reminderHour = 18
     var reminderMinute = 30
     var restAlertsEnabled = true
+    var spokenRepCount = true
+    var hapticsEnabled = true
 
     static let standard = UserPreferences(
         displayName: "",

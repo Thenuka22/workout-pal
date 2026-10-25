@@ -15,6 +15,7 @@ final class WorkoutSessionViewModel {
     private let repository: any WorkoutSessionRepository
     private let exporter: HealthExporter
     private let notifications: any NotificationScheduling
+    private let feedback: any WorkoutFeedback
     private let settings: AppSettings
     private let now: @MainActor () -> Date
     @ObservationIgnored private var saveTask: Task<Void, Never>?
@@ -25,6 +26,7 @@ final class WorkoutSessionViewModel {
         repository: any WorkoutSessionRepository,
         exporter: HealthExporter,
         notifications: any NotificationScheduling,
+        feedback: any WorkoutFeedback,
         settings: AppSettings,
         now: @escaping @MainActor () -> Date = { .now }
     ) {
@@ -32,6 +34,7 @@ final class WorkoutSessionViewModel {
         self.repository = repository
         self.exporter = exporter
         self.notifications = notifications
+        self.feedback = feedback
         self.settings = settings
         self.now = now
         selectedExerciseID = session.exercises.first?.id
@@ -154,6 +157,7 @@ final class WorkoutSessionViewModel {
         session.exercises[index].sets[setIndex].isCompleted = completed
         session.exercises[index].sets[setIndex].completedAt = completed ? date : nil
         if completed {
+            feedback.setCompleted()
             startRest(seconds: session.exercises[index].restSeconds)
         }
         persist()
@@ -187,6 +191,7 @@ final class WorkoutSessionViewModel {
                 source: .camera
             ))
         }
+        feedback.setCompleted()
         startRest(seconds: session.exercises[index].restSeconds)
         persist()
     }
@@ -259,6 +264,7 @@ final class WorkoutSessionViewModel {
             if !Task.isCancelled {
                 self.restStartedAt = nil
                 self.restEndsAt = nil
+                self.feedback.restFinished()
             }
         }
     }

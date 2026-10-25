@@ -7,13 +7,16 @@ struct RepCounterViewModelTests {
     private let camera = FakePoseCamera()
     private let permissions = FakePermissions()
     private let sessions = InMemoryWorkoutSessionRepository()
+    private let feedback = FakeFeedback()
+    private let settings = AppSettings(store: InMemoryPreferencesStore())
 
     private func makeModel(mode: RepCounterMode = .standalone) -> RepCounterViewModel {
         RepCounterViewModel(
             camera: camera,
             permissions: permissions,
             sessions: sessions,
-            settings: AppSettings(store: InMemoryPreferencesStore()),
+            settings: settings,
+            feedback: feedback,
             exercise: .squat,
             mode: mode,
             now: { SampleData.now }
@@ -118,5 +121,21 @@ struct RepCounterViewModelTests {
         #expect(model.reviewedReps == 1)
         #expect(camera.stopCount > 0)
         #expect(model.cameraState == .idle)
+    }
+
+    @Test func eachCountedRepIsAnnounced() async {
+        let model = makeModel()
+        #expect(await startCounting(model))
+        camera.send(oneSquat() + oneSquat(startingAt: 2))
+        #expect(await eventually { model.detectedReps == 2 })
+        #expect(feedback.countedReps == [1, 2])
+    }
+
+    @Test func speechCanBeTurnedOff() {
+        let model = makeModel()
+        #expect(model.isSpeaking)
+        model.toggleSpeech()
+        #expect(!model.isSpeaking)
+        #expect(!settings.preferences.spokenRepCount)
     }
 }

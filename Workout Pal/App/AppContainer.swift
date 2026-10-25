@@ -18,6 +18,7 @@ final class AppContainer {
     private let health: any HealthService
     private let exporter: HealthExporter
     private let notifications: any NotificationScheduling
+    private let feedback: any WorkoutFeedback
 
     init(inMemory: Bool = false) {
         let stack = CoreDataStack(inMemory: inMemory)
@@ -33,6 +34,7 @@ final class AppContainer {
         let settings = AppSettings(store: UserDefaultsPreferencesStore())
         self.settings = settings
         permissions = SystemPermissions()
+        feedback = SpeechHapticsFeedback(settings: settings)
         motion = CoreMotionService()
         deviceAuth = LocalAuthenticator()
         let health = HealthKitService()
@@ -83,6 +85,7 @@ final class AppContainer {
             repository: sessions,
             exporter: exporter,
             notifications: notifications,
+            feedback: feedback,
             settings: settings
         )
     }
@@ -146,6 +149,7 @@ final class AppContainer {
             permissions: permissions,
             sessions: sessions,
             settings: settings,
+            feedback: feedback,
             exercise: exercise,
             mode: mode
         )

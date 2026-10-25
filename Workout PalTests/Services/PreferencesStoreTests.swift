@@ -62,4 +62,23 @@ struct PreferencesStoreTests {
         defaults.set(400, forKey: "preferences.heightCentimetres")
         #expect(UserDefaultsPreferencesStore(defaults: defaults).load(ownerID: LocalProfile.ownerID).heightCentimetres == nil)
     }
+
+    @Test func feedbackSettingsDefaultToOn() throws {
+        let store = UserDefaultsPreferencesStore(defaults: try makeDefaults())
+        let preferences = store.load(ownerID: LocalProfile.ownerID)
+        #expect(preferences.spokenRepCount)
+        #expect(preferences.hapticsEnabled)
+        #expect(preferences.restAlertsEnabled)
+    }
+
+    @Test func turnedOffFeedbackIsRemembered() throws {
+        let store = UserDefaultsPreferencesStore(defaults: try makeDefaults())
+        var preferences = UserPreferences.standard
+        preferences.spokenRepCount = false
+        preferences.hapticsEnabled = false
+        store.save(preferences, ownerID: "uid")
+        let loaded = store.load(ownerID: "uid")
+        #expect(!loaded.spokenRepCount)
+        #expect(!loaded.hapticsEnabled)
+    }
 }

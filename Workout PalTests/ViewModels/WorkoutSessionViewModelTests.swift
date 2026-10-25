@@ -9,6 +9,7 @@ struct WorkoutSessionViewModelTests {
     private let health = FakeHealthService()
     private let store = InMemoryPreferencesStore()
     private let notifications = FakeNotifications()
+    private let feedback = FakeFeedback()
 
     private func makeModel(rest: Int = 60) -> WorkoutSessionViewModel {
         var exercise = SampleData.exercise(sets: [
@@ -23,6 +24,7 @@ struct WorkoutSessionViewModelTests {
             repository: repository,
             exporter: HealthExporter(health: health, sessions: repository, activities: InMemoryActivitySessionRepository()),
             notifications: notifications,
+            feedback: feedback,
             settings: AppSettings(store: store),
             now: { clock.now }
         )
@@ -213,5 +215,21 @@ struct WorkoutSessionViewModelTests {
         #expect(model.finishSummary?.completedSets == 1)
         model.closeSummary()
         #expect(model.finishSummary == nil)
+    }
+
+    @Test func completingSetsGivesFeedback() {
+        let model = makeModel()
+        let ids = firstSet(model)
+        model.toggleCompletion(exerciseID: ids.exercise, setID: ids.set)
+        model.addCameraSet(exerciseID: ids.exercise, reps: 12)
+        #expect(feedback.completedSets == 2)
+    }
+
+    @Test func undoingASetGivesNoFeedback() {
+        let model = makeModel()
+        let ids = firstSet(model)
+        model.toggleCompletion(exerciseID: ids.exercise, setID: ids.set)
+        model.toggleCompletion(exerciseID: ids.exercise, setID: ids.set)
+        #expect(feedback.completedSets == 1)
     }
 }

@@ -29,6 +29,14 @@ struct RepCounterView: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbarBackground(AppColors.surface, for: .navigationBar)
         .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                Button {
+                    model.toggleSpeech()
+                } label: {
+                    Image(systemName: model.isSpeaking ? "speaker.wave.2.fill" : "speaker.slash.fill")
+                }
+                .accessibilityLabel(model.isSpeaking ? "Stop saying reps out loud" : "Say reps out loud")
+            }
             if model.canChangeExercise && model.exercise != nil {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button("Change") {

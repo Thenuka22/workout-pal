@@ -67,6 +67,16 @@ final class ProfileViewModel {
         set { settings.update { $0.units = newValue } }
     }
 
+    var hapticsEnabled: Bool {
+        get { settings.preferences.hapticsEnabled }
+        set { settings.update { $0.hapticsEnabled = newValue } }
+    }
+
+    var spokenRepCount: Bool {
+        get { settings.preferences.spokenRepCount }
+        set { settings.update { $0.spokenRepCount = newValue } }
+    }
+
     var appearance: AppearancePreference {
         get { settings.preferences.appearance }
         set { settings.update { $0.appearance = newValue } }
