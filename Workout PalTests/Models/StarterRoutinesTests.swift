@@ -34,6 +34,7 @@ struct StarterRoutinesTests {
 
     @Test func exercisesAreNotRepeatedInARoutine() {
         let routines = StarterRoutines.routines(for: .advanced, catalog: catalog, ownerID: "owner")
+        #expect(routines.count == 3)
         for routine in routines {
             let ids = routine.exercises.map(\.exerciseID)
             #expect(Set(ids).count == ids.count)

@@ -53,8 +53,10 @@ struct ExerciseCatalogTests {
 
     @Test func forYouMatchesTheFitnessLevel() {
         let beginner = CatalogGrouping.sections(items: items, scope: .forYou, difficulty: nil, query: "", fitnessLevel: .beginner)
+        #expect(beginner.flatMap(\.items).count == 3)
         #expect(beginner.flatMap(\.items).allSatisfy { $0.difficulty == .beginner })
         let intermediate = CatalogGrouping.sections(items: items, scope: .forYou, difficulty: nil, query: "", fitnessLevel: .intermediate)
+        #expect(intermediate.flatMap(\.items).count == 6)
         #expect(!intermediate.flatMap(\.items).contains { $0.difficulty == .advanced })
         let advanced = CatalogGrouping.sections(items: items, scope: .forYou, difficulty: nil, query: "", fitnessLevel: .advanced)
         #expect(advanced.flatMap(\.items).count == catalog.count)

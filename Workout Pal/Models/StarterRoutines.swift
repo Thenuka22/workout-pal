@@ -153,6 +153,9 @@ enum StarterRoutines {
         let inArea = available
             .filter { $0.area == slot.area }
             .sorted { $0.exercise.name.localizedCaseInsensitiveCompare($1.exercise.name) == .orderedAscending }
-        return inArea.first { $0.difficulty == slot.difficulty } ?? inArea.first
+        let easier = inArea.filter { $0.difficulty <= slot.difficulty }
+        return inArea.first { $0.difficulty == slot.difficulty }
+            ?? easier.max { $0.difficulty < $1.difficulty }
+            ?? inArea.min { $0.difficulty < $1.difficulty }
     }
 }

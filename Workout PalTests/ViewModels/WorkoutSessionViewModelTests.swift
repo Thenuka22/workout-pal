@@ -117,6 +117,7 @@ struct WorkoutSessionViewModelTests {
         model.finish()
         #expect(await eventually { model.errorMessage != nil })
         #expect(!model.isFinished)
+        #expect(!model.isFinishing)
     }
 
     @Test func cameraRepsFillTheNextOpenSet() {
@@ -213,8 +214,14 @@ struct WorkoutSessionViewModelTests {
         #expect(records.map(\.kind) == [.heaviestLoad])
         #expect(records.first?.value == 30)
         #expect(model.finishSummary?.completedSets == 1)
-        model.closeSummary()
-        #expect(model.finishSummary == nil)
+    }
+
+    @Test func finishingTwiceSavesOnce() async {
+        let model = makeModel()
+        model.finish()
+        model.finish()
+        #expect(await eventually { model.finishSummary != nil })
+        #expect(await repository.saveCount == 1)
     }
 
     @Test func completingSetsGivesFeedback() {

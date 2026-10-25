@@ -9,7 +9,8 @@ final class WorkoutSessionViewModel {
     private(set) var restEndsAt: Date?
     private(set) var errorMessage: String?
     private(set) var isFinished = false
-    var finishSummary: WorkoutFinishSummary?
+    private(set) var isFinishing = false
+    private(set) var finishSummary: WorkoutFinishSummary?
     var selectedExerciseID: UUID?
 
     private let repository: any WorkoutSessionRepository
@@ -210,6 +211,10 @@ final class WorkoutSessionViewModel {
     }
 
     func finish() {
+        guard !isFinishing else {
+            return
+        }
+        isFinishing = true
         skipRest()
         let end = now()
         session.pauses = SessionTiming.resuming(session.pauses, at: end)
@@ -225,6 +230,7 @@ final class WorkoutSessionViewModel {
                 self.isFinished = true
             } catch {
                 self.errorMessage = error.localizedDescription
+                self.isFinishing = false
                 return
             }
             let history = (try? await self.repository.completedSessions(ownerID: snapshot.ownerID)) ?? []
@@ -236,10 +242,6 @@ final class WorkoutSessionViewModel {
                 _ = await self.exporter.export(.workout(snapshot))
             }
         }
-    }
-
-    func closeSummary() {
-        finishSummary = nil
     }
 
     private func startRest(seconds: Int) {

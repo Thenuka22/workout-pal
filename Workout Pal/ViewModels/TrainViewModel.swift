@@ -91,10 +91,11 @@ final class TrainViewModel {
                     self.starterMessage = "Download the exercise library first, then add a starter plan."
                 } else {
                     let existing = Set(self.routines.map { $0.name.lowercased() })
-                    let starters = StarterRoutines
-                        .routines(for: level, catalog: exercises, ownerID: self.settings.ownerID)
-                        .filter { !existing.contains($0.name.lowercased()) }
-                    if starters.isEmpty {
+                    let built = StarterRoutines.routines(for: level, catalog: exercises, ownerID: self.settings.ownerID)
+                    let starters = built.filter { !existing.contains($0.name.lowercased()) }
+                    if built.isEmpty {
+                        self.starterMessage = "The exercise library has nothing for this plan yet. Refresh the library and try again."
+                    } else if starters.isEmpty {
                         self.starterMessage = "These routines are already in your list."
                     } else {
                         for routine in starters {

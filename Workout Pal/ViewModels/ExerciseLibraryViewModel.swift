@@ -46,7 +46,11 @@ final class ExerciseLibraryViewModel {
     }
 
     var scopeOptions: [LibraryScope] {
-        CatalogGrouping.scopes(for: items)
+        let scopes = CatalogGrouping.scopes(for: items)
+        guard settings.preferences.fitnessLevel == nil else {
+            return scopes
+        }
+        return scopes.filter { $0 != .forYou }
     }
 
     var sections: [ExerciseSection] {

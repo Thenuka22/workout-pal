@@ -30,6 +30,11 @@ struct ExerciseLibraryView: View {
             .task {
                 await model.load()
             }
+            .onChange(of: model.items) { _, items in
+                if let id = selectedItem?.id {
+                    selectedItem = items.first { $0.id == id }
+                }
+            }
     }
 
     @ViewBuilder

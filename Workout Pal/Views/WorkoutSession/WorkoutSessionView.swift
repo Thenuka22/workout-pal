@@ -21,6 +21,19 @@ struct WorkoutSessionView: View {
     }
 
     var body: some View {
+        if let summary = model.finishSummary {
+            WorkoutSummaryView(summary: summary, units: model.units) {
+                dismiss()
+            }
+            .navigationTitle("Workout complete")
+            .navigationBarTitleDisplayMode(.inline)
+            .navigationBarBackButtonHidden()
+        } else {
+            workoutContent
+        }
+    }
+
+    private var workoutContent: some View {
         Group {
             if horizontalSizeClass == .regular {
                 HStack(spacing: 0) {
@@ -84,11 +97,6 @@ struct WorkoutSessionView: View {
                         }
                     }
                 }
-            }
-        }
-        .sheet(item: $model.finishSummary, onDismiss: { dismiss() }) { summary in
-            WorkoutSummarySheet(summary: summary, units: model.units) {
-                model.closeSummary()
             }
         }
         .onAppear {
@@ -229,6 +237,7 @@ struct WorkoutSessionView: View {
                     Label("Finish", systemImage: "flag.checkered")
                 }
                 .buttonStyle(.primaryAction)
+                .disabled(model.isFinishing)
             }
         }
         .padding(.horizontal, AppSpacing.medium)

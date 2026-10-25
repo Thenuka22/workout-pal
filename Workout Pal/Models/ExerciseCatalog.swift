@@ -54,10 +54,12 @@ enum ExerciseDifficulty: Int, CaseIterable, Identifiable, Comparable, Sendable {
     case intermediate
     case advanced
 
+    static let easierVariantKeywords = ["assisted", "machine", "knee", "band"]
     static let advancedKeywords = [
         "deadlift", "snatch", "clean", "jerk", "muscle up", "muscle-up", "pistol", "handstand",
-        "dragon flag", "planche", "lever", "one arm", "one-arm", "archer", "deficit", "good morning",
-        "overhead squat", "weighted", "clap", "plyo",
+        "dragon flag", "planche", "front lever", "back lever", "one arm push", "one-arm push",
+        "one arm pull", "one-arm pull", "archer", "deficit", "good morning", "overhead squat",
+        "weighted", "clap", "plyo",
     ]
     static let intermediateKeywords = [
         "dip", "pull up", "pull-up", "pullup", "chin up", "chin-up", "burpee", "pike", "hanging",
@@ -85,6 +87,9 @@ enum ExerciseDifficulty: Int, CaseIterable, Identifiable, Comparable, Sendable {
 
     static func estimate(for exercise: Exercise) -> ExerciseDifficulty {
         let name = exercise.name.lowercased()
+        if easierVariantKeywords.contains(where: { name.contains($0) }) {
+            return .beginner
+        }
         if advancedKeywords.contains(where: { name.contains($0) }) {
             return .advanced
         }
@@ -162,7 +167,8 @@ enum CatalogGrouping {
 
     static func scopes(for items: [CatalogItem]) -> [LibraryScope] {
         let present = Set(items.map(\.area))
-        return [.forYou, .all] + BodyArea.allCases.filter { present.contains($0) }.map { .area($0) }
+        let areas: [LibraryScope] = BodyArea.allCases.filter { present.contains($0) }.map { .area($0) }
+        return [.forYou, .all] + areas
     }
 
     static func matches(_ exercise: Exercise, query: String, muscle: String?, equipment: String?) -> Bool {

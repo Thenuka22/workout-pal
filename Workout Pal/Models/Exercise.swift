@@ -16,11 +16,11 @@ struct Exercise: Identifiable, Hashable, Sendable {
 
 extension Exercise {
     var suggestedLoad: Load {
-        let usesBodyweight = equipment.isEmpty || equipment.contains { item in
-            let name = item.lowercased()
-            return name.contains("bodyweight") || name.contains("none") || name.contains("gym mat")
+        let weights = ["barbell", "sz-bar", "dumbbell", "kettlebell", "cable"]
+        let usesWeights = equipment.contains { item in
+            weights.contains { item.lowercased().contains($0) }
         }
-        return usesBodyweight ? .bodyweight : .kilograms(20)
+        return usesWeights ? .kilograms(20) : .bodyweight
     }
 }
 

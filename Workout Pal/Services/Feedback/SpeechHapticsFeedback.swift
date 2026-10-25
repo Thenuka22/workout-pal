@@ -17,11 +17,14 @@ final class SpeechHapticsFeedback: WorkoutFeedback {
     func repCounted(_ count: Int) {
         if settings.preferences.hapticsEnabled {
             impact.impactOccurred()
+            impact.prepare()
         }
         guard settings.preferences.spokenRepCount, !UIAccessibility.isVoiceOverRunning else {
             return
         }
-        synthesizer.stopSpeaking(at: .immediate)
+        if synthesizer.isSpeaking {
+            synthesizer.stopSpeaking(at: .immediate)
+        }
         synthesizer.speak(AVSpeechUtterance(string: "\(count)"))
     }
 
