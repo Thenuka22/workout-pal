@@ -210,6 +210,11 @@ final class WorkoutSessionViewModel {
         }
     }
 
+    func disappear() {
+        restTask?.cancel()
+        restTask = nil
+    }
+
     func finish() {
         guard !isFinishing else {
             return

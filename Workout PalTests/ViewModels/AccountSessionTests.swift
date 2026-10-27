@@ -127,6 +127,17 @@ struct AccountSessionTests {
         #expect(settings.ownerID == LocalProfile.ownerID)
     }
 
+    @Test func signingOutPausesThatAccountsUnfinishedSessions() async throws {
+        let (session, _) = makeSession()
+        try await session.signInWithGoogle()
+        try session.signOut()
+        let paused = await eventuallyValue { () async -> [String]? in
+            let owners = await records.pausedOwners
+            return owners.isEmpty ? nil : owners
+        }
+        #expect(paused == ["google-uid"])
+    }
+
     @Test func leavingOfflineModeDoesNotCallGoogle() throws {
         let (session, _) = makeSession()
         session.continueOffline()

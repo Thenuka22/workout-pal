@@ -102,6 +102,9 @@ struct WorkoutSessionView: View {
         .onAppear {
             model.start()
         }
+        .onDisappear {
+            model.disappear()
+        }
     }
 
     private var summaryCard: some View {

@@ -42,6 +42,7 @@ final class FakeAccountStateStore: AccountStateStore {
 actor RecordingAccountDataRepository: AccountDataRepository {
     private(set) var reassigned: [(from: String, to: String)] = []
     private(set) var deleted: [String] = []
+    private(set) var pausedOwners: [String] = []
 
     func reassignRecords(from oldOwnerID: String, to newOwnerID: String) async throws {
         reassigned.append((oldOwnerID, newOwnerID))
@@ -49,6 +50,10 @@ actor RecordingAccountDataRepository: AccountDataRepository {
 
     func deleteRecords(ownerID: String) async throws {
         deleted.append(ownerID)
+    }
+
+    func pauseUnfinishedSessions(ownerID: String, at date: Date) async throws {
+        pausedOwners.append(ownerID)
     }
 
     func reassignedPairs() -> [String] {

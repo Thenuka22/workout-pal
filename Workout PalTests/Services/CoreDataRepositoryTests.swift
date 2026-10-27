@@ -127,6 +127,41 @@ struct CoreDataRepositoryTests {
         #expect(try await routines.routines(ownerID: "someone-else").count == 1)
     }
 
+    @Test func signingOutPausesUnfinishedWorkoutsAndWalks() async throws {
+        let stack = try await makeStack()
+        let sessions = CoreDataWorkoutSessionRepository(stack: stack)
+        let activities = CoreDataActivitySessionRepository(stack: stack)
+        let start = SampleData.daysAgo(1)
+        try await sessions.save(SampleData.session(startedAt: start, status: .active, ownerID: "uid"))
+        var walk = ActivitySession.start(kind: .walk, ownerID: "uid", now: start)
+        walk.steps = 800
+        try await activities.save(walk)
+
+        try await CoreDataAccountDataRepository(stack: stack).pauseUnfinishedSessions(ownerID: "uid", at: SampleData.now)
+
+        let workout = try #require(try await sessions.activeSession(ownerID: "uid"))
+        let activity = try #require(try await activities.activeActivity(ownerID: "uid"))
+        #expect(workout.isPaused)
+        #expect(workout.pauses.last?.start == SampleData.now)
+        #expect(activity.isPaused)
+        #expect(activity.steps == 800)
+    }
+
+    @Test func pausingLeavesPausedSessionsAlone() async throws {
+        let stack = try await makeStack()
+        let sessions = CoreDataWorkoutSessionRepository(stack: stack)
+        var workout = SampleData.session(startedAt: SampleData.daysAgo(1), status: .active, ownerID: "uid")
+        let pausedAt = SampleData.daysAgo(1).addingTimeInterval(600)
+        workout.pauses = [PauseInterval(start: pausedAt, end: nil)]
+        try await sessions.save(workout)
+
+        try await CoreDataAccountDataRepository(stack: stack).pauseUnfinishedSessions(ownerID: "uid", at: SampleData.now)
+
+        let stored = try #require(try await sessions.activeSession(ownerID: "uid"))
+        #expect(stored.pauses.count == 1)
+        #expect(stored.pauses.first?.start == pausedAt)
+    }
+
     @Test func deletingAnAccountsRecordsKeepsOtherAccounts() async throws {
         let stack = try await makeStack()
         let routines = CoreDataRoutineRepository(stack: stack)

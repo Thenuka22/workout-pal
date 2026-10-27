@@ -73,10 +73,15 @@ final class AccountSession {
         if user?.provider == .google {
             try auth.signOut()
         }
+        let outgoingOwnerID = user?.id
+        let date = Date.now
         state.usesOfflineProfile = false
         user = nil
         settings.activate(ownerID: LocalProfile.ownerID)
         Task {
+            if let outgoingOwnerID {
+                try? await self.records.pauseUnfinishedSessions(ownerID: outgoingOwnerID, at: date)
+            }
             await self.notifications.cancelWorkoutReminders()
             await self.notifications.cancelRestAlert()
         }

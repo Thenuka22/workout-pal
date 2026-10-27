@@ -35,6 +35,19 @@ struct CoreDataAccountDataRepository: AccountDataRepository {
         }
     }
 
+    func pauseUnfinishedSessions(ownerID: String, at date: Date) async throws {
+        let workouts = CoreDataWorkoutSessionRepository(stack: stack)
+        if var workout = try await workouts.activeSession(ownerID: ownerID), !workout.isPaused {
+            workout.pauses = SessionTiming.pausing(workout.pauses, at: date)
+            try await workouts.save(workout)
+        }
+        let activities = CoreDataActivitySessionRepository(stack: stack)
+        if var activity = try await activities.activeActivity(ownerID: ownerID), !activity.isPaused {
+            activity.pauses = SessionTiming.pausing(activity.pauses, at: date)
+            try await activities.save(activity)
+        }
+    }
+
     private static func objects(
         named entityName: String,
         ownerID: String,
