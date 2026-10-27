@@ -10,6 +10,8 @@ struct OnboardingViewModelTests {
     }
 
     private func answerQuestions(_ model: OnboardingViewModel) {
+        model.displayName = "  Ana Silva  "
+        model.next()
         model.select(.unspecified)
         model.next()
         model.heightCentimetres = 181
@@ -18,23 +20,48 @@ struct OnboardingViewModelTests {
         model.next()
     }
 
-    @Test func cannotContinueUntilAnAnswerIsChosen() {
+    @Test func profileStepNeedsAName() {
         let model = makeModel()
-        #expect(model.step == .gender)
+        #expect(model.step == .profile)
         #expect(!model.canContinue)
         #expect(!model.canGoBack)
+        model.displayName = "   "
+        model.next()
+        #expect(model.step == .profile)
+        model.displayName = "Ana"
+        #expect(model.canContinue)
+        model.next()
+        #expect(model.step == .gender)
+    }
+
+    @Test func nameIsFilledInFromTheAccount() {
+        let settings = AppSettings(store: InMemoryPreferencesStore())
+        settings.update { $0.displayName = "Induwara Thenuka" }
+        let model = makeModel(settings: settings)
+        #expect(model.displayName == "Induwara Thenuka")
+        #expect(model.canContinue)
+    }
+
+    @Test func cannotContinueUntilAnAnswerIsChosen() {
+        let model = makeModel()
+        model.displayName = "Ana"
+        model.next()
+        #expect(model.step == .gender)
+        #expect(!model.canContinue)
+        #expect(model.canGoBack)
         model.select(.female)
         #expect(model.canContinue)
     }
 
-    @Test func withoutAPasscodeThePlanFinishesAfterThreeSteps() {
+    @Test func withoutAPasscodeThePlanFinishesAfterFourSteps() {
         deviceAuth.kind = .unavailable
         let settings = AppSettings(store: InMemoryPreferencesStore())
         let model = makeModel(settings: settings)
-        #expect(model.personaliseStepCount == 3)
+        #expect(model.personaliseStepCount == 4)
         answerQuestions(model)
         #expect(model.isFinished)
         #expect(settings.preferences.hasCompletedOnboarding)
+        #expect(settings.preferences.displayName == "Ana Silva")
         #expect(settings.preferences.gender == .unspecified)
         #expect(settings.preferences.heightCentimetres == 181)
         #expect(settings.preferences.weeklyGoal == FitnessLevel.advanced.suggestedWeeklyGoal)
@@ -74,12 +101,18 @@ struct OnboardingViewModelTests {
 
     @Test func backStepsThroughThePlan() {
         let model = makeModel()
+        model.displayName = "Ana"
+        model.next()
         model.select(.male)
         model.next()
         model.next()
         #expect(model.step == .fitnessLevel)
         model.back()
         #expect(model.step == .height)
-        #expect(model.personaliseStepNumber == 2)
+        #expect(model.personaliseStepNumber == 3)
+        model.back()
+        model.back()
+        #expect(model.step == .profile)
+        #expect(!model.canGoBack)
     }
 }

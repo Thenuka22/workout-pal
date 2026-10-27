@@ -56,8 +56,15 @@ struct AccountSessionTests {
         #expect(await records.reassignedPairs() == ["local->google-uid"])
         #expect(settings.ownerID == "google-uid")
         #expect(settings.preferences.weeklyGoal == 5)
-        #expect(settings.preferences.hasCompletedOnboarding)
+        #expect(!settings.preferences.hasCompletedOnboarding)
         #expect(state.hasSeenWalkthrough)
+    }
+
+    @Test func newAccountsSetUpTheirProfileWithTheirGoogleName() async throws {
+        let (session, settings) = makeSession()
+        try await session.signInWithGoogle()
+        #expect(!settings.preferences.hasCompletedOnboarding)
+        #expect(settings.preferences.displayName == "Induwara Thenuka")
     }
 
     @Test func returningAccountKeepsItsOwnPreferences() async throws {

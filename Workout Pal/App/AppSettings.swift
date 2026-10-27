@@ -21,7 +21,9 @@ final class AppSettings {
 
     func activate(ownerID: String, seedingFrom seedOwnerID: String? = nil) {
         if let seedOwnerID, seedOwnerID != ownerID, !store.hasPreferences(ownerID: ownerID) {
-            store.save(store.load(ownerID: seedOwnerID), ownerID: ownerID)
+            var seeded = store.load(ownerID: seedOwnerID)
+            seeded.hasCompletedOnboarding = false
+            store.save(seeded, ownerID: ownerID)
         }
         self.ownerID = ownerID
         preferences = store.load(ownerID: ownerID)

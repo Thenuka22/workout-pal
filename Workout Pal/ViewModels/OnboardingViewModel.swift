@@ -2,6 +2,7 @@ import Foundation
 import Observation
 
 enum OnboardingStep: Hashable {
+    case profile
     case gender
     case height
     case fitnessLevel
@@ -14,12 +15,13 @@ final class OnboardingViewModel {
     let heightRange = UserPreferences.heightRange
     let unlockKind: DeviceUnlockKind
 
-    private(set) var step: OnboardingStep = .gender
+    private(set) var step: OnboardingStep = .profile
     private(set) var isFinished = false
     private(set) var isAuthenticating = false
     private(set) var errorMessage: String?
     private(set) var gender: GenderPreference?
     private(set) var fitnessLevel: FitnessLevel?
+    var displayName: String
     var heightCentimetres = 170
 
     private let settings: AppSettings
@@ -29,6 +31,7 @@ final class OnboardingViewModel {
         self.settings = settings
         self.deviceAuth = deviceAuth
         unlockKind = deviceAuth.unlockKind()
+        displayName = settings.preferences.displayName
         gender = settings.preferences.gender
         fitnessLevel = settings.preferences.fitnessLevel
         if let height = settings.preferences.heightCentimetres {
@@ -41,15 +44,16 @@ final class OnboardingViewModel {
     }
 
     var personaliseStepCount: Int {
-        offersSecureUnlock ? 4 : 3
+        offersSecureUnlock ? 5 : 4
     }
 
     var personaliseStepNumber: Int {
         switch step {
-        case .gender: 1
-        case .height: 2
-        case .fitnessLevel: 3
-        case .secureUnlock: 4
+        case .profile: 1
+        case .gender: 2
+        case .height: 3
+        case .fitnessLevel: 4
+        case .secureUnlock: 5
         }
     }
 
@@ -58,11 +62,12 @@ final class OnboardingViewModel {
     }
 
     var canGoBack: Bool {
-        step != .gender
+        step != .profile
     }
 
     var canContinue: Bool {
         switch step {
+        case .profile: !trimmedName.isEmpty
         case .gender: gender != nil
         case .fitnessLevel: fitnessLevel != nil
         case .height: true
@@ -72,6 +77,11 @@ final class OnboardingViewModel {
 
     func next() {
         switch step {
+        case .profile:
+            guard canContinue else {
+                return
+            }
+            step = .gender
         case .gender:
             step = .height
         case .height:
@@ -89,8 +99,10 @@ final class OnboardingViewModel {
 
     func back() {
         switch step {
-        case .gender:
+        case .profile:
             break
+        case .gender:
+            step = .profile
         case .height:
             step = .gender
         case .fitnessLevel:
@@ -110,6 +122,10 @@ final class OnboardingViewModel {
 
     func select(_ level: FitnessLevel) {
         fitnessLevel = level
+    }
+
+    private var trimmedName: String {
+        displayName.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
     private func enableSecureUnlock() {
@@ -132,10 +148,12 @@ final class OnboardingViewModel {
     }
 
     private func finish(requiresUnlock: Bool) {
+        let name = trimmedName
         let gender = gender
         let height = heightCentimetres
         let level = fitnessLevel
         settings.update { preferences in
+            preferences.displayName = name
             preferences.gender = gender
             preferences.heightCentimetres = height
             preferences.fitnessLevel = level

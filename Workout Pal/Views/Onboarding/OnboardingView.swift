@@ -11,6 +11,8 @@ struct OnboardingView: View {
     var body: some View {
         Group {
             switch model.step {
+            case .profile:
+                profileStep
             case .gender:
                 genderStep
             case .height:
@@ -25,6 +27,47 @@ struct OnboardingView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .screenBackground()
         .animation(reduceMotion ? nil : .easeInOut(duration: 0.25), value: model.step)
+    }
+
+    private var profileStep: some View {
+        PersonaliseStepView(
+            stepNumber: model.personaliseStepNumber,
+            stepCount: model.personaliseStepCount,
+            title: "Let's start.",
+            subtitle: "Create a profile to make your plan yours.",
+            footnote: "Your name appears on your dashboard and profile. You can change it later.",
+            continueTitle: "Continue",
+            canContinue: model.canContinue,
+            canGoBack: model.canGoBack,
+            onBack: { model.back() },
+            onContinue: { model.next() }
+        ) {
+            VStack(alignment: .leading, spacing: AppSpacing.xSmall) {
+                Text("Name")
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(AppColors.textSecondary)
+                TextField("Your name", text: $model.displayName)
+                    .textContentType(.name)
+                    .textInputAutocapitalization(.words)
+                    .autocorrectionDisabled()
+                    .submitLabel(.continue)
+                    .onSubmit {
+                        model.next()
+                    }
+                    .font(.body)
+                    .foregroundStyle(AppColors.textPrimary)
+                    .padding(.horizontal, AppSpacing.medium)
+                    .frame(minHeight: 52)
+                    .background(
+                        AppColors.surfaceElevated,
+                        in: RoundedRectangle(cornerRadius: AppRadius.control, style: .continuous)
+                    )
+                    .overlay {
+                        RoundedRectangle(cornerRadius: AppRadius.control, style: .continuous)
+                            .strokeBorder(AppColors.outline, lineWidth: 1)
+                    }
+            }
+        }
     }
 
     private var genderStep: some View {
