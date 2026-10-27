@@ -1,6 +1,8 @@
 import SwiftUI
 
 struct ExerciseDetailView: View {
+    @Environment(AppContainer.self) private var container
+    @State private var isAddingToRoutine = false
     let item: CatalogItem
 
     private var exercise: Exercise {
@@ -73,6 +75,20 @@ struct ExerciseDetailView: View {
             .padding(AppSpacing.medium)
         }
         .screenBackground()
+        .safeAreaInset(edge: .bottom) {
+            Button {
+                isAddingToRoutine = true
+            } label: {
+                Label("Add to routine", systemImage: "plus")
+            }
+            .buttonStyle(.primaryAction)
+            .padding(.horizontal, AppSpacing.medium)
+            .padding(.vertical, AppSpacing.small)
+            .background(AppColors.surface)
+        }
+        .sheet(isPresented: $isAddingToRoutine) {
+            AddToRoutineSheet(model: container.makeAddToRoutineViewModel(exercise: exercise))
+        }
     }
 
     @ViewBuilder

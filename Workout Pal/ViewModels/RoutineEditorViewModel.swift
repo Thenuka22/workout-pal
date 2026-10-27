@@ -56,15 +56,7 @@ final class RoutineEditorViewModel {
     }
 
     func add(_ exercise: Exercise) {
-        draft.exercises.append(RoutineExercise(
-            id: UUID(),
-            exerciseID: exercise.id,
-            exerciseName: exercise.name,
-            plannedSets: 3,
-            plannedReps: 10,
-            plannedLoad: exercise.suggestedLoad,
-            restSeconds: 60
-        ))
+        draft.exercises.append(.planned(for: exercise))
     }
 
     func moveExercises(from source: IndexSet, to destination: Int) {

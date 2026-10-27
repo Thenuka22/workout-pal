@@ -32,4 +32,16 @@ struct RoutineExercise: Identifiable, Hashable, Sendable {
     var plannedReps: Int
     var plannedLoad: Load
     var restSeconds: Int
+
+    static func planned(for exercise: Exercise) -> RoutineExercise {
+        RoutineExercise(
+            id: UUID(),
+            exerciseID: exercise.id,
+            exerciseName: exercise.name,
+            plannedSets: 3,
+            plannedReps: 10,
+            plannedLoad: exercise.suggestedLoad,
+            restSeconds: 60
+        )
+    }
 }

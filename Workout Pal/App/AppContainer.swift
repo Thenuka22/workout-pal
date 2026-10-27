@@ -67,6 +67,10 @@ final class AppContainer {
         ExerciseLibraryViewModel(catalog: catalog, sync: catalogSync, settings: settings)
     }
 
+    func makeAddToRoutineViewModel(exercise: Exercise) -> AddToRoutineViewModel {
+        AddToRoutineViewModel(exercise: exercise, repository: routines, settings: settings)
+    }
+
     func makeTrainViewModel() -> TrainViewModel {
         TrainViewModel(repository: routines, catalog: catalog, settings: settings)
     }
