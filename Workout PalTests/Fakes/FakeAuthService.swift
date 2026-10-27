@@ -36,6 +36,7 @@ final class FakeAuthService: AuthService {
 final class FakeAccountStateStore: AccountStateStore {
     var usesOfflineProfile = false
     var hasSeenWalkthrough = false
+    var hasClaimedLocalData = false
 }
 
 actor RecordingAccountDataRepository: AccountDataRepository {

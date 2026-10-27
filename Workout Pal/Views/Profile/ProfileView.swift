@@ -67,7 +67,7 @@ struct ProfileView: View {
             }
             Button("Cancel", role: .cancel) {}
         } message: {
-            Text("This deletes the routines, workouts, walks and runs saved for this account on this device and resets your preferences. Copies saved to Apple Health stay in the Health app.")
+            Text("This deletes the routines, workouts, walks and runs saved for this account on this device and resets your preferences, so you'll set up your profile again. Copies saved to Apple Health stay in the Health app.")
         }
         .alert("Something went wrong", isPresented: $model.isShowingError) {
             Button("OK") {}

@@ -20,9 +20,15 @@ final class UserDefaultsAccountStateStore: AccountStateStore {
         set { defaults.set(newValue, forKey: Keys.hasSeenWalkthrough) }
     }
 
+    var hasClaimedLocalData: Bool {
+        get { defaults.bool(forKey: Keys.hasClaimedLocalData) }
+        set { defaults.set(newValue, forKey: Keys.hasClaimedLocalData) }
+    }
+
     private enum Keys {
         static let usesOfflineProfile = "account.usesOfflineProfile"
         static let hasSeenWalkthrough = "account.hasSeenWalkthrough"
+        static let hasClaimedLocalData = "account.hasClaimedLocalData"
         static let legacyOnboardingDone = "preferences.hasCompletedOnboarding"
     }
 }

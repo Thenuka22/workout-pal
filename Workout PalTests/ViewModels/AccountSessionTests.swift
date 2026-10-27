@@ -58,6 +58,34 @@ struct AccountSessionTests {
         #expect(settings.preferences.weeklyGoal == 5)
         #expect(!settings.preferences.hasCompletedOnboarding)
         #expect(state.hasSeenWalkthrough)
+        #expect(state.hasClaimedLocalData)
+    }
+
+    @Test func laterAccountsStartWithACleanProfile() async throws {
+        state.hasClaimedLocalData = true
+        var local = UserPreferences.standard
+        local.weeklyGoal = 5
+        local.displayName = "Previous person"
+        local.requiresUnlock = true
+        store.save(local, ownerID: LocalProfile.ownerID)
+        auth.nextSignIn = .success(AccountUser(id: "second-uid", displayName: "Ana", email: nil, provider: .google))
+        let (session, settings) = makeSession()
+        try await session.signInWithGoogle()
+        #expect(await records.reassignedPairs().isEmpty)
+        #expect(settings.ownerID == "second-uid")
+        #expect(settings.preferences.displayName == "Ana")
+        #expect(settings.preferences.weeklyGoal == UserPreferences.standard.weeklyGoal)
+        #expect(!settings.preferences.requiresUnlock)
+        #expect(!settings.preferences.hasCompletedOnboarding)
+    }
+
+    @Test func deviceDataIsClaimedOnlyOnce() async throws {
+        let (session, _) = makeSession()
+        try await session.signInWithGoogle()
+        try session.signOut()
+        auth.nextSignIn = .success(AccountUser(id: "second-uid", displayName: "Ana", email: nil, provider: .google))
+        try await session.signInWithGoogle()
+        #expect(await records.reassignedPairs() == ["local->google-uid"])
     }
 
     @Test func newAccountsSetUpTheirProfileWithTheirGoogleName() async throws {
@@ -115,6 +143,7 @@ struct AccountSessionTests {
         try await session.deleteLocalData()
         #expect(await records.deleted == ["google-uid"])
         #expect(!settings.preferences.hasCompletedOnboarding)
+        #expect(settings.ownerID == "google-uid")
     }
 
     @Test func signingInSchedulesThatAccountsReminders() async throws {

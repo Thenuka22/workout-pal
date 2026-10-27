@@ -52,10 +52,14 @@ final class AccountSession {
 
     func signInWithGoogle() async throws {
         let user = try await auth.signInWithGoogle()
-        try await records.reassignRecords(from: LocalProfile.ownerID, to: user.id)
+        let claimsDeviceData = !state.hasClaimedLocalData
+        if claimsDeviceData {
+            try await records.reassignRecords(from: LocalProfile.ownerID, to: user.id)
+            state.hasClaimedLocalData = true
+        }
         state.usesOfflineProfile = false
         state.hasSeenWalkthrough = true
-        activate(user, seedingFrom: LocalProfile.ownerID)
+        activate(user, seedingFrom: claimsDeviceData ? LocalProfile.ownerID : nil)
     }
 
     func continueOffline() {
