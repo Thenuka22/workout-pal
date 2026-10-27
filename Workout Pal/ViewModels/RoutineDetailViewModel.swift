@@ -9,8 +9,11 @@ final class RoutineDetailViewModel {
     private(set) var errorMessage: String?
     private(set) var activeSession: WorkoutSession?
     private(set) var startErrorMessage: String?
+    private(set) var deleteErrorMessage: String?
+    private(set) var isDeleted = false
     var startedSession: WorkoutSession?
     var isAskingAboutActiveSession = false
+    var isConfirmingDelete = false
 
     let routineID: UUID
     private let routines: any RoutineRepository
@@ -38,6 +41,26 @@ final class RoutineDetailViewModel {
         set {
             if !newValue {
                 startErrorMessage = nil
+            }
+        }
+    }
+
+    var isShowingDeleteError: Bool {
+        get { deleteErrorMessage != nil }
+        set {
+            if !newValue {
+                deleteErrorMessage = nil
+            }
+        }
+    }
+
+    func deleteRoutine() {
+        Task {
+            do {
+                try await self.routines.deleteRoutine(id: self.routineID)
+                self.isDeleted = true
+            } catch {
+                self.deleteErrorMessage = error.localizedDescription
             }
         }
     }

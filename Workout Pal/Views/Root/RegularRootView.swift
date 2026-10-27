@@ -15,7 +15,7 @@ struct RegularRootView: View {
             List(selection: $selection) {
                 Section {
                     ForEach(AppDestination.allCases) { destination in
-                        Label(sidebarTitle(for: destination), systemImage: destination.symbolName)
+                        Label(destination.title, systemImage: destination.symbolName)
                             .font(.body.weight(destination == selection ? .semibold : .regular))
                             .foregroundStyle(destination == selection ? AppColors.accent : AppColors.textPrimary)
                             .tag(destination)
@@ -72,15 +72,6 @@ struct RegularRootView: View {
             .id(selection ?? .home)
         }
         .navigationSplitViewStyle(.balanced)
-    }
-
-    private func sidebarTitle(for destination: AppDestination) -> String {
-        switch destination {
-        case .home: "Overview"
-        case .train: "Workouts"
-        case .progress: "Progress"
-        case .profile: "Profile"
-        }
     }
 }
 

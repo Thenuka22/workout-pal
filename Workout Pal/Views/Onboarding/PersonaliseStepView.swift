@@ -40,6 +40,33 @@ struct PersonaliseStepView<Content: View>: View {
     }
 
     var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: AppSpacing.medium) {
+                header
+                content
+                    .padding(.top, AppSpacing.small)
+                if let footnote {
+                    Text(footnote)
+                        .font(.footnote)
+                        .foregroundStyle(AppColors.textSecondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+            }
+            .padding(AppSpacing.medium)
+        }
+        .scrollBounceBehavior(.basedOnSize)
+        .safeAreaInset(edge: .bottom) {
+            Button(continueTitle, action: onContinue)
+                .buttonStyle(.primaryAction)
+                .disabled(!canContinue)
+                .padding(.horizontal, AppSpacing.medium)
+                .padding(.top, AppSpacing.small)
+                .padding(.bottom, AppSpacing.medium)
+                .background(AppColors.surface)
+        }
+    }
+
+    private var header: some View {
         VStack(alignment: .leading, spacing: AppSpacing.medium) {
             HStack {
                 Button(action: onBack) {
@@ -72,19 +99,7 @@ struct PersonaliseStepView<Content: View>: View {
                     .fixedSize(horizontal: false, vertical: true)
             }
             .padding(.top, AppSpacing.medium)
-            content
-                .padding(.top, AppSpacing.small)
-            if let footnote {
-                Text(footnote)
-                    .font(.footnote)
-                    .foregroundStyle(AppColors.textSecondary)
-            }
-            Spacer(minLength: 0)
-            Button(continueTitle, action: onContinue)
-                .buttonStyle(.primaryAction)
-                .disabled(!canContinue)
         }
-        .padding(AppSpacing.medium)
     }
 }
 

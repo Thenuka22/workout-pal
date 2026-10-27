@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct RoutineDetailView: View {
+    @Environment(\.dismiss) private var dismiss
     @Environment(AppContainer.self) private var container
     @State private var model: RoutineDetailViewModel
     @State private var isEditing = false
@@ -34,16 +35,51 @@ struct RoutineDetailView: View {
                 .screenBackground()
             }
         }
-        .navigationTitle("Workout details")
+        .navigationTitle("Routine")
         .navigationBarTitleDisplayMode(.inline)
         .toolbarBackground(AppColors.surface, for: .navigationBar)
         .toolbar {
-            if !embedded {
+            if !embedded && model.routine != nil {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button("Edit") {
                         isEditing = true
                     }
                 }
+                ToolbarItem(placement: .topBarTrailing) {
+                    Menu {
+                        Button(role: .destructive) {
+                            model.isConfirmingDelete = true
+                        } label: {
+                            Label("Delete routine", systemImage: "trash")
+                        }
+                    } label: {
+                        Image(systemName: "ellipsis.circle")
+                    }
+                    .accessibilityLabel("More options")
+                }
+            }
+        }
+        .confirmationDialog(
+            "Delete \(model.routine?.name ?? "this routine")?",
+            isPresented: $model.isConfirmingDelete,
+            titleVisibility: .visible
+        ) {
+            Button("Delete routine", role: .destructive) {
+                model.deleteRoutine()
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("Workouts you've already logged from it stay in your history.")
+        }
+        .alert("Could not delete routine", isPresented: $model.isShowingDeleteError) {
+            Button("OK") {}
+        } message: {
+            Text(model.deleteErrorMessage ?? "")
+        }
+        .onChange(of: model.isDeleted) { _, isDeleted in
+            if isDeleted {
+                onRoutineUpdated()
+                dismiss()
             }
         }
         .sheet(isPresented: $isEditing, onDismiss: { routineEdited() }) {

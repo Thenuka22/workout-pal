@@ -37,6 +37,14 @@ struct TrainView: View {
         .navigationDestination(isPresented: $isShowingLibrary) {
             ExerciseLibraryView(model: container.makeExerciseLibraryViewModel())
         }
+        .confirmationDialog(model.deleteTitle, isPresented: $model.isConfirmingDelete, titleVisibility: .visible) {
+            Button("Delete", role: .destructive) {
+                model.confirmDelete()
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("Workouts you've already logged stay in your history.")
+        }
         .alert("Starter plans", isPresented: $model.isShowingStarterMessage) {
             if model.pendingStarterLevel != nil {
                 Button("Download now") {
@@ -210,7 +218,7 @@ struct TrainView: View {
                 }
             }
             .onDelete { offsets in
-                model.delete(at: offsets)
+                model.requestDelete(at: offsets)
             }
         }
     }

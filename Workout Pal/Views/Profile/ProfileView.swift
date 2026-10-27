@@ -93,10 +93,16 @@ struct ProfileView: View {
         HStack(spacing: AppSpacing.medium) {
             AvatarBadge(initial: model.initial, size: 56)
             VStack(alignment: .leading, spacing: AppSpacing.xSmall) {
-                TextField("Your name", text: $model.displayName)
-                    .textContentType(.name)
-                    .font(.headline)
-                    .foregroundStyle(AppColors.textPrimary)
+                HStack(spacing: AppSpacing.xSmall) {
+                    TextField("Your name", text: $model.displayName)
+                        .textContentType(.name)
+                        .font(.headline)
+                        .foregroundStyle(AppColors.textPrimary)
+                    Image(systemName: "pencil")
+                        .font(.subheadline)
+                        .foregroundStyle(AppColors.textSecondary)
+                        .accessibilityHidden(true)
+                }
                 Text(model.profileSubtitle)
                     .font(.subheadline)
                     .foregroundStyle(AppColors.textSecondary)
@@ -279,7 +285,7 @@ struct ProfileView: View {
             .font(.subheadline.weight(.semibold))
             .frame(minHeight: 44)
             .disabled(model.isDeletingData)
-            Text("Your Google account is only used to sign in. Workouts are stored on this device.")
+            Text(model.storageNote)
                 .font(.footnote)
                 .foregroundStyle(AppColors.textSecondary)
         }

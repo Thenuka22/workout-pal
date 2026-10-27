@@ -12,6 +12,8 @@ final class TrainViewModel {
     private(set) var starterMessage: String?
     private(set) var isAddingStarter = false
     private(set) var pendingStarterLevel: FitnessLevel?
+    private(set) var pendingDeletion: [Routine] = []
+    var isConfirmingDelete = false
     var searchText = ""
 
     private let repository: any RoutineRepository
@@ -72,9 +74,21 @@ final class TrainViewModel {
         }
     }
 
-    func delete(at offsets: IndexSet) {
+    var deleteTitle: String {
+        if pendingDeletion.count == 1, let routine = pendingDeletion.first {
+            return "Delete \(routine.name)?"
+        }
+        return "Delete \(pendingDeletion.count) routines?"
+    }
+
+    func requestDelete(at offsets: IndexSet) {
         let visible = filteredRoutines
-        let targets = offsets.compactMap { visible.indices.contains($0) ? visible[$0] : nil }
+        pendingDeletion = offsets.compactMap { visible.indices.contains($0) ? visible[$0] : nil }
+        isConfirmingDelete = !pendingDeletion.isEmpty
+    }
+
+    func confirmDelete() {
+        let targets = pendingDeletion
         Task {
             do {
                 for routine in targets {

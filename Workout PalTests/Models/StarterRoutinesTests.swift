@@ -112,6 +112,18 @@ struct TrainViewModelTests {
         #expect(model.starterMessage?.hasPrefix("Added") == true)
     }
 
+    @Test func deletingARoutineNeedsConfirmation() async {
+        let model = makeModel(catalog: [SampleData.catalogExercise(id: 1, name: "Squats", category: "Legs")])
+        model.addStarterRoutines(level: .beginner)
+        #expect(await eventually { !model.isAddingStarter && model.routines.count == 1 })
+        model.requestDelete(at: IndexSet(integer: 0))
+        #expect(model.isConfirmingDelete)
+        #expect(model.deleteTitle == "Delete Full body foundations?")
+        #expect(model.routines.count == 1)
+        model.confirmDelete()
+        #expect(await eventually { model.routines.isEmpty })
+    }
+
     @Test func declinedDownloadAddsNothing() async {
         let model = makeModel(catalog: [])
         model.addStarterRoutines(level: .beginner)

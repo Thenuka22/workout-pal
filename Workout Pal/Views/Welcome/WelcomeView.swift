@@ -124,10 +124,12 @@ struct WelcomeView: View {
                 .buttonStyle(.secondaryAction)
             }
             .padding(.top, AppSpacing.small)
-            Text("Signing in needs an internet connection the first time. Your workouts are stored on this device and your Google account is only used to sign in.")
-                .font(.caption)
-                .foregroundStyle(AppColors.textSecondary)
-                .fixedSize(horizontal: false, vertical: true)
+            if model.canUseGoogle {
+                Text("Signing in needs an internet connection the first time. Your workouts are stored on this device and your Google account is only used to sign in.")
+                    .font(.caption)
+                    .foregroundStyle(AppColors.textSecondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
         }
         .padding(AppSpacing.medium)
     }

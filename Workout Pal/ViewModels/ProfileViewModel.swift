@@ -181,6 +181,13 @@ final class ProfileViewModel {
         account.user?.summary ?? "Not signed in"
     }
 
+    var storageNote: String {
+        if account.user?.provider == .google {
+            return "Your Google account is only used to sign in. Workouts are stored on this device."
+        }
+        return "You're using Workout Pal offline. Workouts are stored on this device."
+    }
+
     var signOutTitle: String {
         account.user?.provider == .google ? "Sign out" : "Leave offline mode"
     }
