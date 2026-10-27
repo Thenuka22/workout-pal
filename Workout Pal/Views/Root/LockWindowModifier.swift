@@ -7,6 +7,9 @@ struct LockWindowModifier: ViewModifier {
 
     func body(content: Content) -> some View {
         content
+            .background(SceneReader { scene in
+                presenter.scene = scene
+            })
             .onChange(of: model.showsLock, initial: true) { _, showsLock in
                 if showsLock {
                     presenter.show(LockScreen(model: model), style: model.appearance.interfaceStyle)
@@ -34,10 +37,11 @@ private struct LockScreen: View {
 
 @MainActor
 private final class LockWindowPresenter {
+    weak var scene: UIWindowScene?
     private var window: UIWindow?
 
     func show(_ content: some View, style: UIUserInterfaceStyle) {
-        guard window == nil, let scene = Self.scene() else {
+        guard window == nil, let scene = scene ?? Self.activeScene() else {
             return
         }
         let window = UIWindow(windowScene: scene)
@@ -58,9 +62,33 @@ private final class LockWindowPresenter {
         scene?.windows.first { $0.windowLevel == .normal && !$0.isHidden }?.makeKey()
     }
 
-    private static func scene() -> UIWindowScene? {
+    private static func activeScene() -> UIWindowScene? {
         let scenes = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }
         return scenes.first { $0.activationState == .foregroundActive } ?? scenes.first
+    }
+}
+
+private struct SceneReader: UIViewRepresentable {
+    let onChange: @MainActor (UIWindowScene?) -> Void
+
+    func makeUIView(context: Context) -> SceneReaderView {
+        let view = SceneReaderView()
+        view.isUserInteractionEnabled = false
+        view.onChange = onChange
+        return view
+    }
+
+    func updateUIView(_ view: SceneReaderView, context: Context) {
+        view.onChange = onChange
+    }
+}
+
+private final class SceneReaderView: UIView {
+    var onChange: (@MainActor (UIWindowScene?) -> Void)?
+
+    override func didMoveToWindow() {
+        super.didMoveToWindow()
+        onChange?(window?.windowScene)
     }
 }
 

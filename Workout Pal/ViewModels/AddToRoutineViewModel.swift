@@ -83,19 +83,21 @@ final class AddToRoutineViewModel {
             createdAt: date,
             updatedAt: date
         )
-        newRoutineName = ""
-        save(routine, message: "Created \(name) with \(exercise.name).")
+        save(routine, message: "Created \(name) with \(exercise.name).", clearsName: true)
     }
 
     private var trimmedName: String {
         newRoutineName.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
-    private func save(_ routine: Routine, message: String) {
+    private func save(_ routine: Routine, message: String, clearsName: Bool = false) {
         isSaving = true
         Task {
             do {
                 try await self.repository.save(routine)
+                if clearsName {
+                    self.newRoutineName = ""
+                }
                 if let index = self.routines.firstIndex(where: { $0.id == routine.id }) {
                     self.routines[index] = routine
                 } else {

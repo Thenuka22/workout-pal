@@ -101,6 +101,7 @@ final class WorkoutSessionViewModel {
 
     func start() {
         persist()
+        resumeRestIfNeeded()
         guard settings.preferences.restAlertsEnabled else {
             return
         }
@@ -302,6 +303,23 @@ final class WorkoutSessionViewModel {
                 await self.notifications.scheduleRestAlert(at: end, nextExercise: next)
             }
         }
+        armRest(for: TimeInterval(seconds))
+    }
+
+    private func resumeRestIfNeeded() {
+        guard restTask == nil, let end = restEndsAt else {
+            return
+        }
+        let remaining = end.timeIntervalSince(now())
+        if remaining > 0 {
+            armRest(for: remaining)
+        } else {
+            restStartedAt = nil
+            restEndsAt = nil
+        }
+    }
+
+    private func armRest(for seconds: TimeInterval) {
         restTask = Task {
             try? await Task.sleep(for: .seconds(seconds))
             if !Task.isCancelled {

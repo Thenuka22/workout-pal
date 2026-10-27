@@ -125,6 +125,25 @@ struct ActivityTrackerViewModelTests {
         #expect(model.errorMessage == nil)
     }
 
+    @Test func anUnsavedSessionCanBeDiscarded() async {
+        let model = makeModel()
+        #expect(await started(model))
+        let id = model.activity?.id ?? UUID()
+        #expect(await eventually { model.activity != nil })
+        _ = await eventuallyValue { await repository.stored(id: id) }
+        await repository.failSaves(with: CocoaError(.fileWriteUnknown))
+        model.finish()
+        #expect(await eventually { model.needsSaveRetry })
+        await repository.failSaves(with: nil)
+        model.discard()
+        #expect(model.finishedActivity == nil)
+        #expect(!model.needsSaveRetry)
+        let gone = await eventuallyValue { () async -> Bool? in
+            await repository.stored(id: id) == nil ? true : nil
+        }
+        #expect(gone == true)
+    }
+
     @Test func discardingClearsTheSession() async {
         let model = makeModel()
         #expect(await started(model))

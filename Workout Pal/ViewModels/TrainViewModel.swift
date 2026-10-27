@@ -12,6 +12,7 @@ final class TrainViewModel {
     private(set) var starterMessage: String?
     private(set) var isAddingStarter = false
     private(set) var pendingStarterLevel: FitnessLevel?
+    private(set) var downloadProgressText: String?
     private(set) var pendingDeletion: [Routine] = []
     var isConfirmingDelete = false
     var searchText = ""
@@ -107,14 +108,22 @@ final class TrainViewModel {
         }
         pendingStarterLevel = nil
         isAddingStarter = true
+        downloadProgressText = "Downloading the exercise library…"
         Task {
             do {
-                _ = try await self.sync.refresh { _, _ in }
+                _ = try await self.sync.refresh { done, total in
+                    guard total > 0 else {
+                        return
+                    }
+                    self.downloadProgressText = "Downloading the exercise library… \(done) of \(total)"
+                }
             } catch {
+                self.downloadProgressText = nil
                 self.isAddingStarter = false
                 self.starterMessage = "Couldn't download the exercise library. Check your connection and try again."
                 return
             }
+            self.downloadProgressText = nil
             self.isAddingStarter = false
             self.addStarterRoutines(level: level)
         }

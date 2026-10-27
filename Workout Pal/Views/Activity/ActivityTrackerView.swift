@@ -163,12 +163,13 @@ struct ActivityTrackerView: View {
                     }
                     .buttonStyle(.primaryAction)
                     .disabled(model.isFinishing)
-                    Button {
-                        model.startAnother()
+                    Button(role: .destructive) {
+                        isConfirmingDiscard = true
                     } label: {
-                        Label("Start another", systemImage: "arrow.counterclockwise")
+                        Label("Discard session", systemImage: "trash")
                     }
                     .buttonStyle(.secondaryAction)
+                    .disabled(model.isFinishing)
                 } else {
                     Label("Saved to your history", systemImage: "checkmark.circle.fill")
                         .font(.subheadline.weight(.semibold))

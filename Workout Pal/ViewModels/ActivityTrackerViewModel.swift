@@ -231,6 +231,10 @@ final class ActivityTrackerViewModel {
     }
 
     func discard() {
+        if needsSaveRetry {
+            discardUnsaved()
+            return
+        }
         guard let activity else {
             return
         }
@@ -239,6 +243,25 @@ final class ActivityTrackerViewModel {
         banked = .zero
         segment = .zero
         let id = activity.id
+        let previous = saveTask
+        saveTask = Task {
+            await previous?.value
+            do {
+                try await self.activities.deleteActivity(id: id)
+            } catch {
+                self.errorMessage = error.localizedDescription
+            }
+        }
+    }
+
+    private func discardUnsaved() {
+        guard let finished = finishedActivity, !isFinishing else {
+            return
+        }
+        needsSaveRetry = false
+        finishedActivity = nil
+        errorMessage = nil
+        let id = finished.id
         let previous = saveTask
         saveTask = Task {
             await previous?.value

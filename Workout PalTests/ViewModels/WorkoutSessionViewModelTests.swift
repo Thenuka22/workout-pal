@@ -226,6 +226,28 @@ struct WorkoutSessionViewModelTests {
         #expect(await repository.saveCount == 1)
     }
 
+    @Test func restThatEndedWhileAwayIsCleared() {
+        let model = makeModel(rest: 60)
+        let ids = firstSet(model)
+        model.toggleCompletion(exerciseID: ids.exercise, setID: ids.set)
+        model.disappear()
+        #expect(model.restEndsAt != nil)
+        clock.advance(by: 120)
+        model.start()
+        #expect(model.restEndsAt == nil)
+    }
+
+    @Test func restStillRunningWhenYouComeBackIsKept() {
+        let model = makeModel(rest: 60)
+        let ids = firstSet(model)
+        model.toggleCompletion(exerciseID: ids.exercise, setID: ids.set)
+        let end = model.restEndsAt
+        model.disappear()
+        clock.advance(by: 20)
+        model.start()
+        #expect(model.restEndsAt == end)
+    }
+
     @Test func onlyWorkoutsWithDoneSetsCanBeSaved() {
         let model = makeModel()
         #expect(!model.hasCompletedSets)

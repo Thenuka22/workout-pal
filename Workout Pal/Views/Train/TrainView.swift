@@ -62,6 +62,11 @@ struct TrainView: View {
         .task {
             await model.load()
         }
+        .onChange(of: model.routines) { _, routines in
+            if let selectedRoutineID, !routines.contains(where: { $0.id == selectedRoutineID }) {
+                self.selectedRoutineID = nil
+            }
+        }
     }
 
     private var routineList: some View {
@@ -153,7 +158,17 @@ struct TrainView: View {
         .screenBackground()
     }
 
+    @ViewBuilder
     private var starterPlanRows: some View {
+        if let progress = model.downloadProgressText {
+            HStack(spacing: AppSpacing.small) {
+                ProgressView()
+                Text(progress)
+                    .font(.subheadline)
+                    .foregroundStyle(AppColors.textSecondary)
+            }
+            .plainRow()
+        }
         ForEach(model.starterLevels) { level in
             Button {
                 model.addStarterRoutines(level: level)

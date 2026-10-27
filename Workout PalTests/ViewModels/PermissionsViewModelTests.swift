@@ -30,7 +30,7 @@ struct PermissionsViewModelTests {
         #expect(row(.motion, in: model)?.status == .notDetermined)
     }
 
-    @Test func healthShowsConnectedRatherThanAllowed() {
+    @Test func healthShowsAccessRequestedRatherThanAllowed() {
         #expect(AppPermission.health.statusText(.granted) == "Access requested")
         #expect(AppPermission.deviceUnlock.statusText(.unavailable) == "Set a passcode first")
     }
