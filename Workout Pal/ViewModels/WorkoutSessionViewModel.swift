@@ -10,6 +10,7 @@ final class WorkoutSessionViewModel {
     private(set) var errorMessage: String?
     private(set) var isFinished = false
     private(set) var isFinishing = false
+    private(set) var isDiscarded = false
     private(set) var finishSummary: WorkoutFinishSummary?
     var selectedExerciseID: UUID?
 
@@ -17,6 +18,7 @@ final class WorkoutSessionViewModel {
     private let exporter: HealthExporter
     private let notifications: any NotificationScheduling
     private let feedback: any WorkoutFeedback
+    private let permissions: any PermissionsProviding
     private let settings: AppSettings
     private let now: @MainActor () -> Date
     @ObservationIgnored private var saveTask: Task<Void, Never>?
@@ -28,6 +30,7 @@ final class WorkoutSessionViewModel {
         exporter: HealthExporter,
         notifications: any NotificationScheduling,
         feedback: any WorkoutFeedback,
+        permissions: any PermissionsProviding,
         settings: AppSettings,
         now: @escaping @MainActor () -> Date = { .now }
     ) {
@@ -36,6 +39,7 @@ final class WorkoutSessionViewModel {
         self.exporter = exporter
         self.notifications = notifications
         self.feedback = feedback
+        self.permissions = permissions
         self.settings = settings
         self.now = now
         selectedExerciseID = session.exercises.first?.id
@@ -51,6 +55,10 @@ final class WorkoutSessionViewModel {
 
     var selectedExercise: SessionExercise? {
         session.exercises.first { $0.id == selectedExerciseID } ?? session.exercises.first
+    }
+
+    var hasCompletedSets: Bool {
+        session.completedSetCount > 0
     }
 
     var progressText: String {
@@ -93,6 +101,14 @@ final class WorkoutSessionViewModel {
 
     func start() {
         persist()
+        guard settings.preferences.restAlertsEnabled else {
+            return
+        }
+        Task {
+            if await self.permissions.status(of: .notifications) == .notDetermined {
+                _ = await self.permissions.request(.notifications)
+            }
+        }
     }
 
     func pause() {
@@ -245,6 +261,26 @@ final class WorkoutSessionViewModel {
             )
             if self.settings.preferences.exportsToHealth {
                 _ = await self.exporter.export(.workout(snapshot))
+            }
+        }
+    }
+
+    func discard() {
+        guard !isFinishing else {
+            return
+        }
+        isFinishing = true
+        skipRest()
+        let id = session.id
+        let previous = saveTask
+        saveTask = Task {
+            await previous?.value
+            do {
+                try await self.repository.deleteSession(id: id)
+                self.isDiscarded = true
+            } catch {
+                self.errorMessage = error.localizedDescription
+                self.isFinishing = false
             }
         }
     }

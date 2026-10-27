@@ -10,6 +10,7 @@ struct WorkoutSessionViewModelTests {
     private let store = InMemoryPreferencesStore()
     private let notifications = FakeNotifications()
     private let feedback = FakeFeedback()
+    private let permissions = FakePermissions()
 
     private func makeModel(rest: Int = 60) -> WorkoutSessionViewModel {
         var exercise = SampleData.exercise(sets: [
@@ -25,6 +26,7 @@ struct WorkoutSessionViewModelTests {
             exporter: HealthExporter(health: health, sessions: repository, activities: InMemoryActivitySessionRepository()),
             notifications: notifications,
             feedback: feedback,
+            permissions: permissions,
             settings: AppSettings(store: store),
             now: { clock.now }
         )
@@ -222,6 +224,44 @@ struct WorkoutSessionViewModelTests {
         model.finish()
         #expect(await eventually { model.finishSummary != nil })
         #expect(await repository.saveCount == 1)
+    }
+
+    @Test func onlyWorkoutsWithDoneSetsCanBeSaved() {
+        let model = makeModel()
+        #expect(!model.hasCompletedSets)
+        let ids = firstSet(model)
+        model.toggleCompletion(exerciseID: ids.exercise, setID: ids.set)
+        #expect(model.hasCompletedSets)
+    }
+
+    @Test func discardingDeletesTheWorkout() async {
+        let model = makeModel()
+        model.start()
+        let started = await eventuallyValue { await repository.stored(id: model.session.id) }
+        #expect(started != nil)
+        model.discard()
+        #expect(await eventually { model.isDiscarded })
+        #expect(await repository.stored(id: model.session.id) == nil)
+        #expect(model.finishSummary == nil)
+    }
+
+    @Test func restAlertPermissionIsAskedForOnce() async {
+        let model = makeModel()
+        model.start()
+        #expect(await eventually { permissions.requested == [.notifications] })
+        model.start()
+        try? await Task.sleep(for: .milliseconds(50))
+        #expect(permissions.requested == [.notifications])
+    }
+
+    @Test func noPermissionPromptWhenRestAlertsAreOff() async {
+        var preferences = UserPreferences.standard
+        preferences.restAlertsEnabled = false
+        store.save(preferences, ownerID: LocalProfile.ownerID)
+        let model = makeModel()
+        model.start()
+        try? await Task.sleep(for: .milliseconds(50))
+        #expect(permissions.requested.isEmpty)
     }
 
     @Test func completingSetsGivesFeedback() {

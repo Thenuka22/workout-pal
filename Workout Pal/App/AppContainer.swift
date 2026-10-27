@@ -90,6 +90,7 @@ final class AppContainer {
             exporter: exporter,
             notifications: notifications,
             feedback: feedback,
+            permissions: permissions,
             settings: settings
         )
     }

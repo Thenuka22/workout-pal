@@ -70,13 +70,32 @@ struct WorkoutSessionView: View {
         .navigationTitle(model.session.routineName)
         .navigationBarTitleDisplayMode(.inline)
         .toolbarBackground(AppColors.surface, for: .navigationBar)
-        .confirmationDialog("Finish this workout?", isPresented: $isConfirmingFinish, titleVisibility: .visible) {
-            Button("Finish workout") {
-                model.finish()
+        .confirmationDialog(
+            model.hasCompletedSets ? "Finish this workout?" : "No sets done yet",
+            isPresented: $isConfirmingFinish,
+            titleVisibility: .visible
+        ) {
+            if model.hasCompletedSets {
+                Button("Finish workout") {
+                    model.finish()
+                }
+            } else {
+                Button("Discard workout", role: .destructive) {
+                    model.discard()
+                }
             }
             Button("Keep going", role: .cancel) {}
         } message: {
-            Text("\(model.progressText) are marked done.")
+            if model.hasCompletedSets {
+                Text("\(model.progressText) are marked done.")
+            } else {
+                Text("Mark at least one set as done to save this workout, or discard it.")
+            }
+        }
+        .onChange(of: model.isDiscarded) { _, isDiscarded in
+            if isDiscarded {
+                dismiss()
+            }
         }
         .alert("Could not save workout", isPresented: $model.isShowingError) {
             Button("OK") {}
