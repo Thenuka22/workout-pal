@@ -11,15 +11,23 @@ final class TrainViewModel {
     private(set) var errorMessage: String?
     private(set) var starterMessage: String?
     private(set) var isAddingStarter = false
+    private(set) var pendingStarterLevel: FitnessLevel?
     var searchText = ""
 
     private let repository: any RoutineRepository
     private let catalog: any ExerciseCatalogRepository
+    private let sync: any ExerciseCatalogSyncing
     private let settings: AppSettings
 
-    init(repository: any RoutineRepository, catalog: any ExerciseCatalogRepository, settings: AppSettings) {
+    init(
+        repository: any RoutineRepository,
+        catalog: any ExerciseCatalogRepository,
+        sync: any ExerciseCatalogSyncing,
+        settings: AppSettings
+    ) {
         self.repository = repository
         self.catalog = catalog
+        self.sync = sync
         self.settings = settings
     }
 
@@ -79,6 +87,29 @@ final class TrainViewModel {
         }
     }
 
+    func downloadLibraryForStarter() {
+        guard let level = pendingStarterLevel, !isAddingStarter else {
+            return
+        }
+        pendingStarterLevel = nil
+        isAddingStarter = true
+        Task {
+            do {
+                _ = try await self.sync.refresh { _, _ in }
+            } catch {
+                self.isAddingStarter = false
+                self.starterMessage = "Couldn't download the exercise library. Check your connection and try again."
+                return
+            }
+            self.isAddingStarter = false
+            self.addStarterRoutines(level: level)
+        }
+    }
+
+    func cancelStarterDownload() {
+        pendingStarterLevel = nil
+    }
+
     func addStarterRoutines(level: FitnessLevel) {
         guard !isAddingStarter else {
             return
@@ -88,7 +119,8 @@ final class TrainViewModel {
             do {
                 let exercises = try await self.catalog.exercises()
                 if exercises.isEmpty {
-                    self.starterMessage = "Download the exercise library first, then add a starter plan."
+                    self.pendingStarterLevel = level
+                    self.starterMessage = "Starter plans are built from the exercise library. Download it now? It needs an internet connection and takes about a minute."
                 } else {
                     let existing = Set(self.routines.map { $0.name.lowercased() })
                     let built = StarterRoutines.routines(for: level, catalog: exercises, ownerID: self.settings.ownerID)

@@ -68,8 +68,15 @@ struct ActivityTrackerView: View {
         } message: {
             Text("The steps and time from this session won't be saved.")
         }
-        .alert("Motion tracking stopped", isPresented: $model.isShowingError) {
-            Button("OK") {}
+        .alert(model.errorTitle, isPresented: $model.isShowingError) {
+            if model.needsSaveRetry {
+                Button("Try again") {
+                    model.retrySave()
+                }
+                Button("Not now", role: .cancel) {}
+            } else {
+                Button("OK") {}
+            }
         } message: {
             Text(model.errorMessage ?? "")
         }
@@ -145,15 +152,34 @@ struct ActivityTrackerView: View {
     private var controls: some View {
         if model.finishedActivity != nil {
             VStack(alignment: .leading, spacing: AppSpacing.small) {
-                Label("Saved to your history", systemImage: "checkmark.circle.fill")
-                    .font(.subheadline.weight(.semibold))
-                    .foregroundStyle(AppColors.accent)
-                Button {
-                    model.startAnother()
-                } label: {
-                    Label("Start another", systemImage: "arrow.counterclockwise")
+                if model.needsSaveRetry {
+                    Label("Not saved yet", systemImage: "exclamationmark.triangle.fill")
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(AppColors.warning)
+                    Button {
+                        model.retrySave()
+                    } label: {
+                        Label("Try saving again", systemImage: "arrow.clockwise")
+                    }
+                    .buttonStyle(.primaryAction)
+                    .disabled(model.isFinishing)
+                    Button {
+                        model.startAnother()
+                    } label: {
+                        Label("Start another", systemImage: "arrow.counterclockwise")
+                    }
+                    .buttonStyle(.secondaryAction)
+                } else {
+                    Label("Saved to your history", systemImage: "checkmark.circle.fill")
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(AppColors.accent)
+                    Button {
+                        model.startAnother()
+                    } label: {
+                        Label("Start another", systemImage: "arrow.counterclockwise")
+                    }
+                    .buttonStyle(.primaryAction)
                 }
-                .buttonStyle(.primaryAction)
             }
         } else if model.activity == nil {
             VStack(alignment: .leading, spacing: AppSpacing.medium) {

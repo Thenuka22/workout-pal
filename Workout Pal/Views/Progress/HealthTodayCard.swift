@@ -121,8 +121,12 @@ struct HealthTodayCard: View {
             "Connect to show your steps and distance. Workout Pal only reads them."
         case .loading:
             "Checking Apple Health…"
-        case .loaded(_, let updatedAt):
-            "Updated \(updatedAt.formatted(date: .omitted, time: .shortened)). Shown separately from your Workout Pal history."
+        case .loaded(let summary, let updatedAt):
+            if summary.steps == nil && summary.distanceMeters == nil {
+                "No steps or distance from Apple Health yet. If you expect some, allow access in the Health app under Sharing › Apps › Workout Pal."
+            } else {
+                "Updated \(updatedAt.formatted(date: .omitted, time: .shortened)). Shown separately from your Workout Pal history."
+            }
         case .failed(let message):
             message
         }

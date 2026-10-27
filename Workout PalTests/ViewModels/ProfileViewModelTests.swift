@@ -28,7 +28,7 @@ struct ProfileViewModelTests {
         permissions.statuses = [.health: .granted, .motion: .denied, .camera: .granted]
         let model = makeModel()
         await model.load()
-        #expect(service("health", in: model)?.value == "Connected")
+        #expect(service("health", in: model)?.value == "Access requested")
         #expect(service("motion", in: model)?.value == "Turned off")
         #expect(service("camera", in: model)?.value == "Ready")
         #expect(service("reminders", in: model)?.value == "Off")

@@ -29,6 +29,20 @@ actor InMemoryExerciseCatalogRepository: ExerciseCatalogRepository {
     }
 }
 
+struct SeedingCatalogSync: ExerciseCatalogSyncing {
+    let catalog: InMemoryExerciseCatalogRepository
+    let exercises: [Exercise]
+
+    func refresh(progress: @escaping @MainActor @Sendable (Int, Int) -> Void) async throws -> Int {
+        try await catalog.upsert(exercises)
+        return exercises.count
+    }
+
+    func lastRefresh() -> Date? {
+        SampleData.now
+    }
+}
+
 struct FakeCatalogSync: ExerciseCatalogSyncing {
     func refresh(progress: @escaping @MainActor @Sendable (Int, Int) -> Void) async throws -> Int {
         0

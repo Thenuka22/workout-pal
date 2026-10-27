@@ -72,7 +72,7 @@ final class AppContainer {
     }
 
     func makeTrainViewModel() -> TrainViewModel {
-        TrainViewModel(repository: routines, catalog: catalog, settings: settings)
+        TrainViewModel(repository: routines, catalog: catalog, sync: catalogSync, settings: settings)
     }
 
     func makeRoutineDetailViewModel(routineID: UUID) -> RoutineDetailViewModel {

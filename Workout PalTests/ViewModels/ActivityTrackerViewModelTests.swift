@@ -107,6 +107,24 @@ struct ActivityTrackerViewModelTests {
         #expect(model.finishedActivity?.distanceMeters == nil)
     }
 
+    @Test func aFailedSaveCanBeRetried() async {
+        let model = makeModel()
+        #expect(await started(model))
+        motion.send(PedometerReading(steps: 300, distanceMeters: 250))
+        #expect(await eventually { model.steps == 300 })
+        await repository.failSaves(with: CocoaError(.fileWriteUnknown))
+        model.finish()
+        #expect(await eventually { model.finishedActivity != nil && model.needsSaveRetry })
+        #expect(model.errorTitle == "Couldn't save this session")
+        let id = model.finishedActivity?.id ?? UUID()
+        #expect(await repository.stored(id: id)?.status != .completed)
+        await repository.failSaves(with: nil)
+        model.retrySave()
+        #expect(await eventually { !model.needsSaveRetry && !model.isFinishing })
+        #expect(await repository.stored(id: id)?.status == .completed)
+        #expect(model.errorMessage == nil)
+    }
+
     @Test func discardingClearsTheSession() async {
         let model = makeModel()
         #expect(await started(model))

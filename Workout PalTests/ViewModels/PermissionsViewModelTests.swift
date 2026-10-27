@@ -31,7 +31,7 @@ struct PermissionsViewModelTests {
     }
 
     @Test func healthShowsConnectedRatherThanAllowed() {
-        #expect(AppPermission.health.statusText(.granted) == "Connected")
+        #expect(AppPermission.health.statusText(.granted) == "Access requested")
         #expect(AppPermission.deviceUnlock.statusText(.unavailable) == "Set a passcode first")
     }
 }

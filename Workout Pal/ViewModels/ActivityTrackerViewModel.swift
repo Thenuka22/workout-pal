@@ -16,6 +16,7 @@ final class ActivityTrackerViewModel {
     private(set) var isStarting = false
     private(set) var isFinishing = false
     private(set) var errorMessage: String?
+    private(set) var needsSaveRetry = false
     private var banked = PedometerReading.zero
     private var segment = PedometerReading.zero
 
@@ -100,6 +101,10 @@ final class ActivityTrackerViewModel {
                 errorMessage = nil
             }
         }
+    }
+
+    var errorTitle: String {
+        needsSaveRetry ? "Couldn't save this session" : "Tracking stopped"
     }
 
     func elapsedSeconds(at date: Date) -> Double {
@@ -195,14 +200,32 @@ final class ActivityTrackerViewModel {
             do {
                 try await self.activities.save(finished)
             } catch {
+                self.needsSaveRetry = true
                 self.errorMessage = error.localizedDescription
                 self.complete(finished)
                 return
             }
             self.complete(finished)
-            if self.settings.preferences.exportsToHealth {
-                let status = await self.exporter.export(.activity(finished))
-                self.finishedActivity?.healthExport = status
+            await self.exportIfEnabled(finished)
+        }
+    }
+
+    func retrySave() {
+        guard needsSaveRetry, let finished = finishedActivity, !isFinishing else {
+            return
+        }
+        isFinishing = true
+        errorMessage = nil
+        Task {
+            do {
+                try await self.activities.save(finished)
+                self.needsSaveRetry = false
+            } catch {
+                self.errorMessage = error.localizedDescription
+            }
+            self.isFinishing = false
+            if !self.needsSaveRetry {
+                await self.exportIfEnabled(finished)
             }
         }
     }
@@ -229,6 +252,7 @@ final class ActivityTrackerViewModel {
 
     func startAnother() {
         finishedActivity = nil
+        needsSaveRetry = false
     }
 
     func suspendUpdates() {
@@ -275,6 +299,14 @@ final class ActivityTrackerViewModel {
         motionCounts = [:]
         detectedMotion = nil
         startUpdates(from: activity.startedAt)
+    }
+
+    private func exportIfEnabled(_ finished: ActivitySession) async {
+        guard settings.preferences.exportsToHealth else {
+            return
+        }
+        let status = await exporter.export(.activity(finished))
+        finishedActivity?.healthExport = status
     }
 
     private func complete(_ finished: ActivitySession) {

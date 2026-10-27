@@ -3,11 +3,16 @@ import Foundation
 
 actor InMemoryActivitySessionRepository: ActivitySessionRepository {
     private var activities: [UUID: ActivitySession] = [:]
+    private var failure: (any Error)?
 
     init(_ activities: [ActivitySession] = []) {
         for activity in activities {
             self.activities[activity.id] = activity
         }
+    }
+
+    func failSaves(with error: (any Error)?) {
+        failure = error
     }
 
     func stored(id: UUID) -> ActivitySession? {
@@ -25,6 +30,9 @@ actor InMemoryActivitySessionRepository: ActivitySessionRepository {
     }
 
     func save(_ activity: ActivitySession) async throws {
+        if let failure {
+            throw failure
+        }
         activities[activity.id] = activity
     }
 

@@ -38,7 +38,16 @@ struct TrainView: View {
             ExerciseLibraryView(model: container.makeExerciseLibraryViewModel())
         }
         .alert("Starter plans", isPresented: $model.isShowingStarterMessage) {
-            Button("OK") {}
+            if model.pendingStarterLevel != nil {
+                Button("Download now") {
+                    model.downloadLibraryForStarter()
+                }
+                Button("Not now", role: .cancel) {
+                    model.cancelStarterDownload()
+                }
+            } else {
+                Button("OK") {}
+            }
         } message: {
             Text(model.starterMessage ?? "")
         }

@@ -57,10 +57,12 @@ struct StarterRoutinesTests {
 struct TrainViewModelTests {
     private let routines = InMemoryRoutineRepository()
 
-    private func makeModel(catalog: [Exercise]) -> TrainViewModel {
-        TrainViewModel(
+    private func makeModel(catalog: [Exercise], downloadable: [Exercise] = []) -> TrainViewModel {
+        let repository = InMemoryExerciseCatalogRepository(catalog)
+        return TrainViewModel(
             repository: routines,
-            catalog: InMemoryExerciseCatalogRepository(catalog),
+            catalog: repository,
+            sync: SeedingCatalogSync(catalog: repository, exercises: downloadable),
             settings: AppSettings(store: InMemoryPreferencesStore())
         )
     }
@@ -92,6 +94,31 @@ struct TrainViewModelTests {
         model.addStarterRoutines(level: .advanced)
         #expect(await eventually { !model.isAddingStarter && model.starterMessage != nil })
         #expect(model.starterMessage?.contains("Download") == true)
+        #expect(model.pendingStarterLevel == .advanced)
         #expect(model.routines.isEmpty)
+    }
+
+    @Test func downloadingTheLibraryThenAddsThePlan() async {
+        let model = makeModel(catalog: [], downloadable: [
+            SampleData.catalogExercise(id: 1, name: "Squats", category: "Legs"),
+            SampleData.catalogExercise(id: 3, name: "Push-Ups", category: "Chest"),
+        ])
+        await model.load()
+        model.addStarterRoutines(level: .beginner)
+        #expect(await eventually { model.pendingStarterLevel == .beginner && !model.isAddingStarter })
+        model.downloadLibraryForStarter()
+        #expect(await eventually { !model.isAddingStarter && model.routines.count == 1 })
+        #expect(model.pendingStarterLevel == nil)
+        #expect(model.starterMessage?.hasPrefix("Added") == true)
+    }
+
+    @Test func declinedDownloadAddsNothing() async {
+        let model = makeModel(catalog: [])
+        model.addStarterRoutines(level: .beginner)
+        #expect(await eventually { model.pendingStarterLevel != nil && !model.isAddingStarter })
+        model.cancelStarterDownload()
+        model.downloadLibraryForStarter()
+        #expect(model.pendingStarterLevel == nil)
+        #expect(!model.isAddingStarter)
     }
 }

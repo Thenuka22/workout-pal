@@ -56,7 +56,7 @@ enum AppPermission: String, CaseIterable, Identifiable, Sendable {
             return "Not asked yet"
         case .granted:
             switch self {
-            case .health: return "Connected"
+            case .health: return "Access requested"
             case .deviceUnlock: return "Ready"
             default: return "Allowed"
             }

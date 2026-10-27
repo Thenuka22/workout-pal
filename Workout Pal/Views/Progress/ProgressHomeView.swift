@@ -54,11 +54,28 @@ struct ProgressHomeView: View {
                 model.retry()
             }
         } else if !model.hasHistory && !model.isLoading {
-            ContentUnavailableView(
-                "Nothing logged yet",
-                systemImage: "chart.line.uptrend.xyaxis",
-                description: Text("Finish a workout, walk or run to see your history and charts.")
-            )
+            ScrollView {
+                VStack(spacing: AppSpacing.large) {
+                    ContentUnavailableView(
+                        "Nothing logged yet",
+                        systemImage: "chart.line.uptrend.xyaxis",
+                        description: Text("Finish a workout, walk or run to see your history and charts.")
+                    )
+                    HealthTodayCard(
+                        state: model.healthState,
+                        todayActiveMinutes: model.todayActiveMinutes,
+                        units: model.units,
+                        onConnect: { model.connectHealth() },
+                        onRefresh: { model.refreshHealth() }
+                    )
+                }
+                .padding(AppSpacing.medium)
+                .frame(maxWidth: 640)
+                .frame(maxWidth: .infinity)
+            }
+            .task {
+                await model.loadHealth()
+            }
         } else if horizontalSizeClass == .regular {
             HStack(spacing: 0) {
                 WorkoutHistoryView(groups: model.historyGroups, units: model.units, selectedEntry: $selectedEntry)
