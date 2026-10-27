@@ -12,11 +12,7 @@ struct AppearanceModifier: ViewModifier {
     }
 
     private static func apply(_ preference: AppearancePreference) {
-        let style: UIUserInterfaceStyle = switch preference {
-        case .system: .unspecified
-        case .light: .light
-        case .dark: .dark
-        }
+        let style = preference.interfaceStyle
         for scene in UIApplication.shared.connectedScenes {
             guard let windowScene = scene as? UIWindowScene else {
                 continue
@@ -24,6 +20,16 @@ struct AppearanceModifier: ViewModifier {
             for window in windowScene.windows {
                 window.overrideUserInterfaceStyle = style
             }
+        }
+    }
+}
+
+extension AppearancePreference {
+    var interfaceStyle: UIUserInterfaceStyle {
+        switch self {
+        case .system: .unspecified
+        case .light: .light
+        case .dark: .dark
         }
     }
 }

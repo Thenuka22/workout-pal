@@ -75,6 +75,14 @@ final class RootViewModel {
         settings.preferences.displayName
     }
 
+    var accountActivation: Int {
+        account.activationCount
+    }
+
+    private var accountRequiresUnlock: Bool {
+        account.isSignedIn && settings.preferences.hasCompletedOnboarding && settings.preferences.requiresUnlock
+    }
+
     func loadStore() async {
         if case .ready = storeState {
             return
@@ -83,7 +91,7 @@ final class RootViewModel {
         do {
             try await store.load()
             account.restore()
-            isLocked = settings.preferences.requiresUnlock
+            isLocked = accountRequiresUnlock
             storeState = .ready
             if showsLock {
                 unlock()
@@ -103,9 +111,20 @@ final class RootViewModel {
         _ = account.handle(url)
     }
 
+    func accountDidActivate() {
+        guard case .ready = storeState else {
+            return
+        }
+        isLocked = accountRequiresUnlock
+        unlockMessage = nil
+        if showsLock {
+            unlock()
+        }
+    }
+
     func sceneDidEnterBackground() {
         returnedFromBackground = true
-        if account.isSignedIn && settings.preferences.requiresUnlock {
+        if accountRequiresUnlock {
             isLocked = true
             unlockMessage = nil
         }

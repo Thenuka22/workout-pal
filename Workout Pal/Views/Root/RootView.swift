@@ -42,18 +42,7 @@ struct RootView: View {
                 .accessibilityHidden(model.showsLock)
             }
         }
-        .overlay {
-            if model.showsLock {
-                LockView(
-                    unlockTitle: model.unlockTitle,
-                    symbolName: model.unlockSymbolName,
-                    message: model.unlockMessage,
-                    isUnlocking: model.isUnlocking,
-                    onUnlock: { model.unlock() },
-                    onSignOut: { model.signOutFromLock() }
-                )
-            }
-        }
+        .lockWindow(model)
         .environment(navigation)
         .tint(AppColors.accent)
         .appearance(model.appearance)
@@ -62,6 +51,10 @@ struct RootView: View {
         }
         .onOpenURL { url in
             model.handleOpenURL(url)
+        }
+        .onChange(of: model.accountActivation) {
+            navigation.selection = .home
+            model.accountDidActivate()
         }
         .onChange(of: scenePhase) { _, phase in
             switch phase {

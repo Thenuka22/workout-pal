@@ -5,6 +5,7 @@ import Observation
 @Observable
 final class AccountSession {
     private(set) var user: AccountUser?
+    private(set) var activationCount = 0
 
     private let auth: any AuthService
     private let records: any AccountDataRepository
@@ -94,6 +95,7 @@ final class AccountSession {
     private func activate(_ user: AccountUser, seedingFrom seedOwnerID: String? = nil) {
         self.user = user
         settings.activate(ownerID: user.id, seedingFrom: seedOwnerID)
+        activationCount += 1
         let name = user.displayName.trimmingCharacters(in: .whitespacesAndNewlines)
         if settings.preferences.displayName.isEmpty && !name.isEmpty {
             settings.update { $0.displayName = name }
