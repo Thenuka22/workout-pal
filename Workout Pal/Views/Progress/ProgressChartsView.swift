@@ -142,6 +142,10 @@ struct ProgressChartsView: View {
                     dotColor: AppColors.warning
                 )
             }
+            Text("Volume is load × reps of completed sets. Bodyweight sets aren't counted.")
+                .font(.footnote)
+                .foregroundStyle(AppColors.textSecondary)
+                .fixedSize(horizontal: false, vertical: true)
         }
     }
 
@@ -149,7 +153,7 @@ struct ProgressChartsView: View {
     private var recordsCard: some View {
         if !model.records.isEmpty {
             VStack(alignment: .leading, spacing: AppSpacing.small) {
-                Text("Personal records")
+                Text("Personal records · all time")
                     .eyebrow()
                 ForEach(model.records) { record in
                     HStack(alignment: .firstTextBaseline) {

@@ -41,6 +41,39 @@ struct ProgressHomeViewModelTests {
         #expect(model.todayActiveMinutes == 42)
     }
 
+    @Test func theRangeLimitsTheExerciseChartButNotRecords() async {
+        let recent = SampleData.session(
+            startedAt: SampleData.daysAgo(3),
+            exercises: [SampleData.exercise(sets: [SampleData.set(load: .kilograms(40))])]
+        )
+        let old = SampleData.session(
+            startedAt: SampleData.daysAgo(60),
+            exercises: [SampleData.exercise(sets: [SampleData.set(load: .kilograms(60))])]
+        )
+        let model = makeModel(sessions: [recent, old])
+        await model.load()
+        model.range = .fourWeeks
+        #expect(model.exerciseChartPoints.map(\.value) == [40])
+        #expect(model.exerciseSummary == "Squats: best load 40 kg across 1 workout in the last 4 weeks, latest 40 kg.")
+        model.range = .twelveWeeks
+        #expect(model.exerciseChartPoints.map(\.value) == [60, 40])
+        #expect(model.records.first { $0.kind == .heaviestLoad }?.value == 60)
+    }
+
+    @Test func theExerciseChartNamesItsUnit() async {
+        let model = makeModel(sessions: [SampleData.session(startedAt: SampleData.daysAgo(1))])
+        await model.load()
+        #expect(model.exerciseChartLabel == "Best load (kg)")
+    }
+
+    @Test func anExerciseWithNothingInRangeSaysSo() async {
+        let model = makeModel(sessions: [SampleData.session(startedAt: SampleData.daysAgo(60))])
+        await model.load()
+        model.range = .fourWeeks
+        #expect(model.exerciseChartPoints.isEmpty)
+        #expect(model.exerciseSummary == "No Squats sets in the last 4 weeks.")
+    }
+
     @Test func healthIsNotReadUntilConnected() async {
         let model = makeModel()
         await model.loadHealth()

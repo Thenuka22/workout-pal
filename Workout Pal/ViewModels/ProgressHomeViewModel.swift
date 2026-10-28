@@ -112,7 +112,14 @@ final class ProgressHomeViewModel {
     }
 
     var weekBuckets: [WeekBucket] {
-        ProgressCalculator.weekBuckets(sessions: sessions, activities: activities, weeks: range.rawValue)
+        ProgressCalculator.weekBuckets(sessions: sessions, activities: activities, weeks: range.rawValue, now: now())
+    }
+
+    var sessionsInRange: [WorkoutSession] {
+        guard let start = weekBuckets.first?.weekStart else {
+            return sessions
+        }
+        return sessions.filter { $0.startedAt >= start }
     }
 
     var currentWeekStart: Date? {
@@ -153,7 +160,7 @@ final class ProgressHomeViewModel {
         guard let exercise = currentExercise else {
             return []
         }
-        return ProgressCalculator.exerciseProgress(sessions: sessions, exerciseID: exercise.id)
+        return ProgressCalculator.exerciseProgress(sessions: sessionsInRange, exerciseID: exercise.id)
     }
 
     var exerciseChartUsesLoad: Bool {
@@ -161,7 +168,7 @@ final class ProgressHomeViewModel {
     }
 
     var exerciseChartLabel: String {
-        exerciseChartUsesLoad ? "Best load" : "Best reps"
+        exerciseChartUsesLoad ? "Best load (\(units.symbol))" : "Best reps"
     }
 
     var exerciseChartPoints: [ExerciseChartPoint] {
@@ -188,17 +195,21 @@ final class ProgressHomeViewModel {
 
     var exerciseSummary: String {
         let points = exerciseProgress
-        guard let name = currentExercise?.name, let last = points.last else {
+        guard let name = currentExercise?.name else {
             return "No completed sets yet."
         }
+        guard let last = points.last else {
+            return "No \(name) sets in the last \(range.rawValue) weeks."
+        }
+        let span = "\(Formatting.count(points.count, "workout")) in the last \(range.rawValue) weeks"
         if exerciseChartUsesLoad {
             let best = points.map(\.bestLoadKilograms).max() ?? 0
             let bestText = Formatting.load(.kilograms(best), units: units)
             let lastText = Formatting.load(.kilograms(last.bestLoadKilograms), units: units)
-            return "\(name): best load \(bestText) across \(Formatting.count(points.count, "workout")), latest \(lastText)."
+            return "\(name): best load \(bestText) across \(span), latest \(lastText)."
         }
         let best = points.map(\.bestReps).max() ?? 0
-        return "\(name): best \(Formatting.count(best, "rep")) across \(Formatting.count(points.count, "workout")), latest \(Formatting.count(last.bestReps, "rep"))."
+        return "\(name): best \(Formatting.count(best, "rep")) across \(span), latest \(Formatting.count(last.bestReps, "rep"))."
     }
 
     func load() async {
