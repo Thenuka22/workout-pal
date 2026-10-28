@@ -332,6 +332,38 @@ struct WorkoutSessionViewModelTests {
         #expect(await eventually { model.lastTimeText(for: exercise) == "Last time: 1 × 12 · 25 kg" })
     }
 
+    @Test func notesAreSavedShortlyAfterTyping() async {
+        let model = makeModel()
+        model.notes = "Felt strong, add weight next time"
+        let saved = await eventuallyValue { await repository.stored(id: model.session.id)?.notes }
+        #expect(saved == "Felt strong, add weight next time")
+    }
+
+    @Test func restCanBeLengthenedAndShortened() async {
+        let model = makeModel(rest: 60)
+        let ids = firstSet(model)
+        model.toggleCompletion(exerciseID: ids.exercise, setID: ids.set)
+        let end = clock.now.addingTimeInterval(60)
+        model.adjustRest(by: 15)
+        #expect(model.restEndsAt == end.addingTimeInterval(15))
+        model.adjustRest(by: -15)
+        #expect(model.restEndsAt == end)
+        let alerts = await eventuallyValue { () async -> [Date]? in
+            let alerts = await notifications.restAlerts
+            return alerts.count >= 3 ? alerts : nil
+        }
+        #expect(alerts?.last == end)
+    }
+
+    @Test func shorteningRestPastZeroEndsIt() {
+        let model = makeModel(rest: 30)
+        let ids = firstSet(model)
+        model.toggleCompletion(exerciseID: ids.exercise, setID: ids.set)
+        clock.advance(by: 20)
+        model.adjustRest(by: -15)
+        #expect(model.restEndsAt == nil)
+    }
+
     @Test func completingSetsGivesFeedback() {
         let model = makeModel()
         let ids = firstSet(model)

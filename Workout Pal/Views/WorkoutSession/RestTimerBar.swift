@@ -5,6 +5,7 @@ struct RestTimerBar: View {
     let startedAt: Date
     let endsAt: Date
     var nextExerciseName: String? = nil
+    let onAdjust: (Int) -> Void
     let onSkip: () -> Void
 
     private var interval: ClosedRange<Date> {
@@ -20,17 +21,13 @@ struct RestTimerBar: View {
                 Button("Skip", action: onSkip)
                     .font(.subheadline.weight(.semibold))
             }
-            HStack(alignment: .firstTextBaseline) {
+            HStack(alignment: .center) {
                 Text(timerInterval: interval, countsDown: true)
                     .metric(size: 28)
                     .foregroundStyle(AppColors.textPrimary)
                 Spacer()
-                if let nextExerciseName {
-                    Text("Next · \(nextExerciseName)")
-                        .font(.subheadline)
-                        .foregroundStyle(AppColors.textSecondary)
-                        .lineLimit(1)
-                }
+                adjustButton(-15, title: "−15 s", label: "Rest 15 seconds less")
+                adjustButton(15, title: "+15 s", label: "Rest 15 seconds more")
             }
             ProgressView(timerInterval: interval, countsDown: true) {
                 EmptyView()
@@ -38,13 +35,30 @@ struct RestTimerBar: View {
                 EmptyView()
             }
             .tint(AppColors.accent)
+            if let nextExerciseName {
+                Text("Next · \(nextExerciseName)")
+                    .font(.subheadline)
+                    .foregroundStyle(AppColors.textSecondary)
+                    .lineLimit(1)
+            }
         }
         .card()
+    }
+
+    private func adjustButton(_ seconds: Int, title: String, label: String) -> some View {
+        Button(title) {
+            onAdjust(seconds)
+        }
+        .font(.subheadline.weight(.semibold).monospacedDigit())
+        .buttonStyle(.bordered)
+        .tint(AppColors.accent)
+        .frame(minHeight: 44)
+        .accessibilityLabel(label)
     }
 }
 
 #Preview {
-    RestTimerBar(startedAt: .now, endsAt: .now.addingTimeInterval(60), nextExerciseName: "Bent-over row") {}
+    RestTimerBar(startedAt: .now, endsAt: .now.addingTimeInterval(60), nextExerciseName: "Bent-over row", onAdjust: { _ in }) {}
         .padding()
         .background(AppColors.surface)
 }

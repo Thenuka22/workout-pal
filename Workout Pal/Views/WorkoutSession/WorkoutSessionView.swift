@@ -16,6 +16,7 @@ struct WorkoutSessionView: View {
     @State private var isConfirmingFinish = false
     @State private var cameraTarget: CameraTarget?
     @FocusState private var focusedSet: UUID?
+    @FocusState private var isEditingNotes: Bool
 
     init(model: WorkoutSessionViewModel) {
         _model = State(initialValue: model)
@@ -60,6 +61,7 @@ struct WorkoutSessionView: View {
                         ForEach(Array(model.session.exercises.enumerated()), id: \.element.id) { index, exercise in
                             exerciseCard(exercise, index: index)
                         }
+                        notesCard
                     }
                     .padding(AppSpacing.medium)
                 }
@@ -72,6 +74,7 @@ struct WorkoutSessionView: View {
                 Spacer()
                 Button("Done") {
                     focusedSet = nil
+                    isEditingNotes = false
                 }
                 .fontWeight(.semibold)
             }
@@ -205,9 +208,23 @@ struct WorkoutSessionView: View {
                 }
                 .cardRow(isSelected: exercise.id == model.selectedExercise?.id)
             }
+            notesCard
+                .plainRow()
         }
         .listStyle(.plain)
         .screenBackground()
+    }
+
+    private var notesCard: some View {
+        VStack(alignment: .leading, spacing: AppSpacing.small) {
+            Text("Notes")
+                .eyebrow()
+            TextField("How did it feel? Anything to change next time?", text: $model.notes, axis: .vertical)
+                .lineLimit(2...6)
+                .focused($isEditingNotes)
+                .foregroundStyle(AppColors.textPrimary)
+        }
+        .card()
     }
 
     private func exerciseCard(_ exercise: SessionExercise, index: Int) -> some View {
@@ -271,9 +288,13 @@ struct WorkoutSessionView: View {
     private var bottomBar: some View {
         VStack(spacing: AppSpacing.small) {
             if let start = model.restStartedAt, let end = model.restEndsAt {
-                RestTimerBar(startedAt: start, endsAt: end, nextExerciseName: model.nextExerciseName) {
-                    model.skipRest()
-                }
+                RestTimerBar(
+                    startedAt: start,
+                    endsAt: end,
+                    nextExerciseName: model.nextExerciseName,
+                    onAdjust: { model.adjustRest(by: $0) },
+                    onSkip: { model.skipRest() }
+                )
             }
             HStack(spacing: AppSpacing.small) {
                 Button {

@@ -27,6 +27,8 @@ final class WorkoutSessionViewModel {
     @ObservationIgnored private var restTask: Task<Void, Never>?
     @ObservationIgnored private var hasCheckedStaleness = false
     @ObservationIgnored private var hasLoadedHistory = false
+    @ObservationIgnored private var notesTask: Task<Void, Never>?
+    @ObservationIgnored private var alertTask: Task<Void, Never>?
 
     init(
         session: WorkoutSession,
@@ -51,6 +53,21 @@ final class WorkoutSessionViewModel {
 
     var units: UnitPreference {
         settings.preferences.units
+    }
+
+    var notes: String {
+        get { session.notes }
+        set {
+            session.notes = newValue
+            notesTask?.cancel()
+            notesTask = Task {
+                try? await Task.sleep(for: .milliseconds(500))
+                if !Task.isCancelled {
+                    self.notesTask = nil
+                    self.persist()
+                }
+            }
+        }
     }
 
     var isPaused: Bool {
@@ -259,8 +276,30 @@ final class WorkoutSessionViewModel {
         restStartedAt = nil
         restEndsAt = nil
         if hadRest {
-            Task {
+            updateRestAlert {
                 await self.notifications.cancelRestAlert()
+            }
+        }
+    }
+
+    func adjustRest(by seconds: Int) {
+        guard let end = restEndsAt else {
+            return
+        }
+        let newEnd = end.addingTimeInterval(TimeInterval(seconds))
+        let remaining = newEnd.timeIntervalSince(now())
+        guard remaining > 0 else {
+            skipRest()
+            return
+        }
+        restTask?.cancel()
+        restEndsAt = newEnd
+        armRest(for: remaining)
+        if settings.preferences.restAlertsEnabled {
+            let next = nextExerciseName
+            updateRestAlert {
+                await self.notifications.cancelRestAlert()
+                await self.notifications.scheduleRestAlert(at: newEnd, nextExercise: next)
             }
         }
     }
@@ -268,6 +307,11 @@ final class WorkoutSessionViewModel {
     func disappear() {
         restTask?.cancel()
         restTask = nil
+        if notesTask != nil {
+            notesTask?.cancel()
+            notesTask = nil
+            persist()
+        }
     }
 
     func finish() {
@@ -361,11 +405,20 @@ final class WorkoutSessionViewModel {
         restEndsAt = end
         if settings.preferences.restAlertsEnabled {
             let next = nextExerciseName
-            Task {
+            updateRestAlert {
                 await self.notifications.scheduleRestAlert(at: end, nextExercise: next)
             }
         }
         armRest(for: TimeInterval(seconds))
+    }
+
+    /// Alert changes run one after another so a quick skip or adjust can't land out of order.
+    private func updateRestAlert(_ change: @escaping @MainActor @Sendable () async -> Void) {
+        let previous = alertTask
+        alertTask = Task {
+            await previous?.value
+            await change()
+        }
     }
 
     private func resumeRestIfNeeded() {
