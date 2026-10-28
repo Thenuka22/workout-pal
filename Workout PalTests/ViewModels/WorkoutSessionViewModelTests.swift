@@ -28,7 +28,8 @@ struct WorkoutSessionViewModelTests {
             feedback: feedback,
             permissions: permissions,
             settings: AppSettings(store: store),
-            now: { clock.now }
+            now: { clock.now },
+            undoWindow: .milliseconds(200)
         )
     }
 
@@ -362,6 +363,31 @@ struct WorkoutSessionViewModelTests {
         clock.advance(by: 20)
         model.adjustRest(by: -15)
         #expect(model.restEndsAt == nil)
+    }
+
+    @Test func undoPutsARemovedSetBackInPlace() async {
+        let model = makeModel()
+        let exercise = model.session.exercises[0]
+        model.removeSet(exerciseID: exercise.id, setID: exercise.sets[0].id)
+        #expect(model.session.exercises[0].sets.count == 1)
+        #expect(model.recentlyRemoved?.index == 0)
+        model.undoRemoveSet()
+        #expect(model.session.exercises[0].sets.map(\.id) == exercise.sets.map(\.id))
+        #expect(model.recentlyRemoved == nil)
+        let saved = await eventuallyValue { () async -> WorkoutSession? in
+            let stored = await repository.stored(id: model.session.id)
+            return stored?.exercises[0].sets.count == 2 ? stored : nil
+        }
+        #expect(saved != nil)
+    }
+
+    @Test func theUndoOfferExpires() async {
+        let model = makeModel()
+        let exercise = model.session.exercises[0]
+        model.removeSet(exerciseID: exercise.id, setID: exercise.sets[1].id)
+        #expect(model.recentlyRemoved != nil)
+        #expect(await eventually { model.recentlyRemoved == nil })
+        #expect(model.session.exercises[0].sets.count == 1)
     }
 
     @Test func completingSetsGivesFeedback() {

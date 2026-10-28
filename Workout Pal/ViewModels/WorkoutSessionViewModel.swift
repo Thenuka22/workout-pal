@@ -1,6 +1,12 @@
 import Foundation
 import Observation
 
+struct RemovedSet: Equatable {
+    let exerciseID: UUID
+    let set: WorkoutSet
+    let index: Int
+}
+
 @MainActor
 @Observable
 final class WorkoutSessionViewModel {
@@ -13,6 +19,7 @@ final class WorkoutSessionViewModel {
     private(set) var isDiscarded = false
     private(set) var finishSummary: WorkoutFinishSummary?
     private(set) var previousSets: [Int: [WorkoutSet]] = [:]
+    private(set) var recentlyRemoved: RemovedSet?
     var selectedExerciseID: UUID?
     var isAskingAboutStaleSession = false
 
@@ -23,7 +30,9 @@ final class WorkoutSessionViewModel {
     private let permissions: any PermissionsProviding
     private let settings: AppSettings
     private let now: @MainActor () -> Date
+    private let undoWindow: Duration
     @ObservationIgnored private var saveTask: Task<Void, Never>?
+    @ObservationIgnored private var undoTask: Task<Void, Never>?
     @ObservationIgnored private var restTask: Task<Void, Never>?
     @ObservationIgnored private var hasCheckedStaleness = false
     @ObservationIgnored private var hasLoadedHistory = false
@@ -38,7 +47,8 @@ final class WorkoutSessionViewModel {
         feedback: any WorkoutFeedback,
         permissions: any PermissionsProviding,
         settings: AppSettings,
-        now: @escaping @MainActor () -> Date = { .now }
+        now: @escaping @MainActor () -> Date = { .now },
+        undoWindow: Duration = .seconds(5)
     ) {
         self.session = session
         self.repository = repository
@@ -48,6 +58,7 @@ final class WorkoutSessionViewModel {
         self.permissions = permissions
         self.settings = settings
         self.now = now
+        self.undoWindow = undoWindow
         selectedExerciseID = session.exercises.first?.id
     }
 
@@ -191,10 +202,32 @@ final class WorkoutSessionViewModel {
     }
 
     func removeSet(exerciseID: UUID, setID: UUID) {
-        guard let index = exerciseIndex(exerciseID) else {
+        guard let index = exerciseIndex(exerciseID),
+              let setIndex = session.exercises[index].sets.firstIndex(where: { $0.id == setID })
+        else {
             return
         }
-        session.exercises[index].sets.removeAll { $0.id == setID }
+        let removed = session.exercises[index].sets.remove(at: setIndex)
+        recentlyRemoved = RemovedSet(exerciseID: exerciseID, set: removed, index: setIndex)
+        undoTask?.cancel()
+        let window = undoWindow
+        undoTask = Task {
+            try? await Task.sleep(for: window)
+            if !Task.isCancelled {
+                self.recentlyRemoved = nil
+            }
+        }
+        persist()
+    }
+
+    func undoRemoveSet() {
+        guard let removed = recentlyRemoved, let index = exerciseIndex(removed.exerciseID) else {
+            return
+        }
+        undoTask?.cancel()
+        recentlyRemoved = nil
+        let position = min(removed.index, session.exercises[index].sets.count)
+        session.exercises[index].sets.insert(removed.set, at: position)
         persist()
     }
 

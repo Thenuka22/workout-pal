@@ -51,9 +51,13 @@ struct SetRow: View {
         }
         .padding(AppSpacing.small + AppSpacing.xSmall)
         .background(
-            set.isCompleted ? AppColors.accentSoft : AppColors.surface,
+            set.isCompleted ? AppColors.accentSoft : AppColors.surfaceElevated,
             in: RoundedRectangle(cornerRadius: AppRadius.control, style: .continuous)
         )
+        .overlay {
+            RoundedRectangle(cornerRadius: AppRadius.control, style: .continuous)
+                .strokeBorder(set.isCompleted ? AppColors.accent.opacity(0.4) : AppColors.outline, lineWidth: 1)
+        }
         .contextMenu {
             Button("Remove set", role: .destructive, action: onRemove)
         }
@@ -83,7 +87,7 @@ struct SetRow: View {
                     .multilineTextAlignment(.trailing)
                     .padding(.horizontal, AppSpacing.small)
                     .frame(width: 64, height: 32)
-                    .background(AppColors.surfaceElevated, in: RoundedRectangle(cornerRadius: AppRadius.chip, style: .continuous))
+                    .background(AppColors.surface, in: RoundedRectangle(cornerRadius: AppRadius.chip, style: .continuous))
                 Text(units.symbol)
                     .font(.caption)
                     .foregroundStyle(AppColors.textSecondary)

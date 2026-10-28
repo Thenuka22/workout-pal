@@ -43,10 +43,10 @@ struct WorkoutSessionView: View {
                         .frame(width: 340)
                     Divider()
                     if let exercise = model.selectedExercise {
-                        ScrollView {
-                            exerciseCard(exercise, index: index(of: exercise))
-                                .padding(AppSpacing.medium)
+                        List {
+                            exerciseRows(exercise, index: index(of: exercise))
                         }
+                        .listStyle(.plain)
                         .scrollDismissesKeyboard(.interactively)
                         .screenBackground()
                     } else {
@@ -55,16 +55,16 @@ struct WorkoutSessionView: View {
                     }
                 }
             } else {
-                ScrollView {
-                    VStack(spacing: AppSpacing.medium) {
-                        summaryCard
-                        ForEach(Array(model.session.exercises.enumerated()), id: \.element.id) { index, exercise in
-                            exerciseCard(exercise, index: index)
-                        }
-                        notesCard
+                List {
+                    summaryCard
+                        .plainRow(top: AppSpacing.medium)
+                    ForEach(Array(model.session.exercises.enumerated()), id: \.element.id) { index, exercise in
+                        exerciseRows(exercise, index: index)
                     }
-                    .padding(AppSpacing.medium)
+                    notesCard
+                        .plainRow(top: AppSpacing.medium, bottom: AppSpacing.large)
                 }
+                .listStyle(.plain)
                 .scrollDismissesKeyboard(.interactively)
                 .screenBackground()
             }
@@ -227,66 +227,95 @@ struct WorkoutSessionView: View {
         .card()
     }
 
-    private func exerciseCard(_ exercise: SessionExercise, index: Int) -> some View {
-        VStack(alignment: .leading, spacing: AppSpacing.medium) {
-            HStack(spacing: AppSpacing.medium) {
-                NumberBadge(index: index)
-                VStack(alignment: .leading, spacing: AppSpacing.xSmall) {
-                    Text(exercise.exerciseName)
-                        .font(.headline)
-                        .foregroundStyle(AppColors.textPrimary)
-                    Text(detail(for: exercise))
-                        .font(.caption)
-                        .foregroundStyle(AppColors.textSecondary)
-                    if let lastTime = model.lastTimeText(for: exercise) {
-                        Text(lastTime)
-                            .font(.caption.weight(.semibold))
-                            .foregroundStyle(AppColors.accent)
-                    }
-                }
-                Spacer()
-                if isComplete(exercise) {
-                    Image(systemName: "checkmark.circle.fill")
-                        .foregroundStyle(AppColors.accent)
-                }
-            }
-            VStack(spacing: AppSpacing.small) {
-                ForEach(Array(exercise.sets.enumerated()), id: \.element.id) { setIndex, set in
-                    SetRow(
-                        index: setIndex,
-                        set: set,
-                        units: model.units,
-                        focusedSet: $focusedSet,
-                        onReps: { model.updateReps(exerciseID: exercise.id, setID: set.id, reps: $0) },
-                        onLoad: { model.updateLoad(exerciseID: exercise.id, setID: set.id, load: $0) },
-                        onBodyweight: { model.setBodyweight(exerciseID: exercise.id, setID: set.id, isOn: $0) },
-                        onToggle: { model.toggleCompletion(exerciseID: exercise.id, setID: set.id) },
-                        onRemove: { model.removeSet(exerciseID: exercise.id, setID: set.id) }
-                    )
-                }
-            }
-            HStack(spacing: AppSpacing.small) {
-                Button {
-                    model.addSet(to: exercise.id)
+    @ViewBuilder
+    private func exerciseRows(_ exercise: SessionExercise, index: Int) -> some View {
+        exerciseHeader(exercise, index: index)
+            .plainRow(top: AppSpacing.large, bottom: AppSpacing.xSmall)
+        ForEach(Array(exercise.sets.enumerated()), id: \.element.id) { setIndex, set in
+            SetRow(
+                index: setIndex,
+                set: set,
+                units: model.units,
+                focusedSet: $focusedSet,
+                onReps: { model.updateReps(exerciseID: exercise.id, setID: set.id, reps: $0) },
+                onLoad: { model.updateLoad(exerciseID: exercise.id, setID: set.id, load: $0) },
+                onBodyweight: { model.setBodyweight(exerciseID: exercise.id, setID: set.id, isOn: $0) },
+                onToggle: { model.toggleCompletion(exerciseID: exercise.id, setID: set.id) },
+                onRemove: { model.removeSet(exerciseID: exercise.id, setID: set.id) }
+            )
+            .plainRow(top: AppSpacing.xSmall, bottom: AppSpacing.xSmall)
+            .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                Button(role: .destructive) {
+                    model.removeSet(exerciseID: exercise.id, setID: set.id)
                 } label: {
-                    Label("Add set", systemImage: "plus")
-                }
-                .buttonStyle(.secondaryAction)
-                if let cameraExercise = model.cameraExercise(for: exercise) {
-                    Button {
-                        cameraTarget = CameraTarget(exerciseID: exercise.id, exercise: cameraExercise)
-                    } label: {
-                        Label("Count reps", systemImage: "camera.viewfinder")
-                    }
-                    .buttonStyle(.secondaryAction)
+                    Label("Remove", systemImage: "trash")
                 }
             }
         }
-        .card()
+        exerciseActions(exercise)
+            .plainRow(top: AppSpacing.xSmall)
+    }
+
+    private func exerciseHeader(_ exercise: SessionExercise, index: Int) -> some View {
+        HStack(spacing: AppSpacing.medium) {
+            NumberBadge(index: index)
+            VStack(alignment: .leading, spacing: AppSpacing.xSmall) {
+                Text(exercise.exerciseName)
+                    .font(.headline)
+                    .foregroundStyle(AppColors.textPrimary)
+                Text(detail(for: exercise))
+                    .font(.caption)
+                    .foregroundStyle(AppColors.textSecondary)
+                if let lastTime = model.lastTimeText(for: exercise) {
+                    Text(lastTime)
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(AppColors.accent)
+                }
+            }
+            Spacer()
+            if isComplete(exercise) {
+                Image(systemName: "checkmark.circle.fill")
+                    .foregroundStyle(AppColors.accent)
+            }
+        }
+    }
+
+    private func exerciseActions(_ exercise: SessionExercise) -> some View {
+        HStack(spacing: AppSpacing.small) {
+            Button {
+                model.addSet(to: exercise.id)
+            } label: {
+                Label("Add set", systemImage: "plus")
+            }
+            .buttonStyle(.secondaryAction)
+            if let cameraExercise = model.cameraExercise(for: exercise) {
+                Button {
+                    cameraTarget = CameraTarget(exerciseID: exercise.id, exercise: cameraExercise)
+                } label: {
+                    Label("Count reps", systemImage: "camera.viewfinder")
+                }
+                .buttonStyle(.secondaryAction)
+            }
+        }
     }
 
     private var bottomBar: some View {
         VStack(spacing: AppSpacing.small) {
+            if model.recentlyRemoved != nil {
+                HStack {
+                    Text("Set removed")
+                        .font(.subheadline)
+                        .foregroundStyle(AppColors.textPrimary)
+                    Spacer()
+                    Button("Undo") {
+                        model.undoRemoveSet()
+                    }
+                    .font(.subheadline.weight(.semibold))
+                    .frame(minHeight: 44)
+                }
+                .padding(.horizontal, AppSpacing.medium)
+                .background(AppColors.surfaceElevated, in: RoundedRectangle(cornerRadius: AppRadius.control, style: .continuous))
+            }
             if let start = model.restStartedAt, let end = model.restEndsAt {
                 RestTimerBar(
                     startedAt: start,
