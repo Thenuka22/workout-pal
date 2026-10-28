@@ -90,6 +90,31 @@ final class ProfileViewModel {
         settings.preferences.fitnessLevel
     }
 
+    var suggestedGoal: Int? {
+        fitnessLevel?.suggestedWeeklyGoal
+    }
+
+    var canApplySuggestedGoal: Bool {
+        guard let suggestedGoal else {
+            return false
+        }
+        return suggestedGoal != weeklyGoal
+    }
+
+    var suggestedGoalTitle: String {
+        guard let suggestedGoal else {
+            return ""
+        }
+        return "Use the suggested \(Formatting.count(suggestedGoal, "workout")) a week"
+    }
+
+    func applySuggestedGoal() {
+        guard let suggestedGoal else {
+            return
+        }
+        weeklyGoal = suggestedGoal
+    }
+
     var heightCentimetres: Int {
         get { settings.preferences.heightCentimetres ?? 170 }
         set { settings.update { $0.heightCentimetres = newValue } }

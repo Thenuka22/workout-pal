@@ -35,6 +35,24 @@ struct ProfileViewModelTests {
         #expect(service("health", in: model)?.route == .health)
     }
 
+    @Test func theSuggestedGoalIsOfferedOnlyWhenItDiffers() {
+        let model = makeModel()
+        model.select(.advanced)
+        model.weeklyGoal = 2
+        #expect(model.canApplySuggestedGoal)
+        #expect(model.suggestedGoalTitle == "Use the suggested 5 workouts a week")
+        model.applySuggestedGoal()
+        #expect(model.weeklyGoal == 5)
+        #expect(!model.canApplySuggestedGoal)
+    }
+
+    @Test func changingLevelLeavesTheGoalAlone() {
+        let model = makeModel()
+        model.weeklyGoal = 4
+        model.select(.beginner)
+        #expect(model.weeklyGoal == 4)
+    }
+
     @Test func turningOnSecureUnlockNeedsFaceID() async {
         let model = makeModel()
         model.setRequiresUnlock(true)

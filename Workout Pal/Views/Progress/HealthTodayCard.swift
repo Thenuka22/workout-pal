@@ -12,7 +12,7 @@ struct HealthTodayCard: View {
         VStack(alignment: .leading, spacing: AppSpacing.small) {
             Text("Today")
                 .cardTitle()
-            HStack(alignment: .top, spacing: AppSpacing.small) {
+            AdaptiveStack {
                 StatTile(
                     title: "Steps",
                     value: stepsText,

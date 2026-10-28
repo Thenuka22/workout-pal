@@ -116,11 +116,18 @@ struct ProfileView: View {
             Text("Weekly workout goal")
                 .eyebrow()
             HStack {
-                Text("\(model.weeklyGoal) sessions")
+                Text(Formatting.count(model.weeklyGoal, "session"))
                     .cardTitle()
                 Spacer()
                 Stepper("Weekly workout goal", value: $model.weeklyGoal, in: 1...14)
                     .labelsHidden()
+            }
+            if model.canApplySuggestedGoal {
+                Button(model.suggestedGoalTitle) {
+                    model.applySuggestedGoal()
+                }
+                .font(.subheadline.weight(.semibold))
+                .frame(minHeight: 44)
             }
         }
         .card()

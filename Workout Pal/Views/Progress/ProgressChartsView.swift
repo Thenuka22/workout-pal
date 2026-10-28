@@ -108,7 +108,7 @@ struct ProgressChartsView: View {
         return VStack(alignment: .leading, spacing: AppSpacing.small) {
             Text("This week")
                 .cardTitle()
-            HStack(alignment: .top, spacing: AppSpacing.small) {
+            AdaptiveStack {
                 StatTile(
                     title: "Workouts",
                     value: "\(summary.workoutCount) of \(summary.goal)",
@@ -128,7 +128,7 @@ struct ProgressChartsView: View {
                     dotColor: AppColors.infoPurple
                 )
             }
-            HStack(alignment: .top, spacing: AppSpacing.small) {
+            AdaptiveStack {
                 StatTile(
                     title: "Walks & runs",
                     value: model.weeklyStepsText,
