@@ -21,7 +21,7 @@ struct MovementCard: View {
                     Text("active minutes this week")
                         .font(.subheadline)
                         .foregroundStyle(AppColors.textSecondary)
-                    Text("of \(summary.minutesTarget) min target · \(summary.completedSets) sets done")
+                    Text("of \(summary.minutesTarget) min target · \(Formatting.count(summary.completedSets, "set")) done")
                         .font(.caption)
                         .foregroundStyle(AppColors.textSecondary)
                     if summary.steps > 0 {

@@ -178,12 +178,12 @@ final class ProgressHomeViewModel {
 
     var workoutsSummary: String {
         let best = weekBuckets.map(\.workouts).max() ?? 0
-        return "\(totalWorkouts) workouts in the last \(range.rawValue) weeks, best week \(best)."
+        return "\(Formatting.count(totalWorkouts, "workout")) in the last \(range.rawValue) weeks, best week \(best)."
     }
 
     var minutesSummary: String {
         let best = weekBuckets.map(\.activeMinutes).max() ?? 0
-        return "\(totalMinutes) active minutes in the last \(range.rawValue) weeks, best week \(best) minutes."
+        return "\(Formatting.count(totalMinutes, "active minute")) in the last \(range.rawValue) weeks, best week \(Formatting.count(best, "minute"))."
     }
 
     var exerciseSummary: String {
@@ -195,10 +195,10 @@ final class ProgressHomeViewModel {
             let best = points.map(\.bestLoadKilograms).max() ?? 0
             let bestText = Formatting.load(.kilograms(best), units: units)
             let lastText = Formatting.load(.kilograms(last.bestLoadKilograms), units: units)
-            return "\(name): best load \(bestText) across \(points.count) workouts, latest \(lastText)."
+            return "\(name): best load \(bestText) across \(Formatting.count(points.count, "workout")), latest \(lastText)."
         }
         let best = points.map(\.bestReps).max() ?? 0
-        return "\(name): best \(best) reps across \(points.count) workouts, latest \(last.bestReps) reps."
+        return "\(name): best \(Formatting.count(best, "rep")) across \(Formatting.count(points.count, "workout")), latest \(Formatting.count(last.bestReps, "rep"))."
     }
 
     func load() async {

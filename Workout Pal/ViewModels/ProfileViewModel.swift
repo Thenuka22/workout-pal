@@ -106,7 +106,7 @@ final class ProfileViewModel {
         guard let fitnessLevel else {
             return "Tell us your level and we'll suggest a weekly goal."
         }
-        return "\(fitnessLevel.title) · suggested \(fitnessLevel.suggestedWeeklyGoal) workouts a week"
+        return "\(fitnessLevel.title) · suggested \(Formatting.count(fitnessLevel.suggestedWeeklyGoal, "workout")) a week"
     }
 
     var reminderSummary: String {

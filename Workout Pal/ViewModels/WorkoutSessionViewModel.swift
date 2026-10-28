@@ -62,7 +62,7 @@ final class WorkoutSessionViewModel {
     }
 
     var progressText: String {
-        "\(session.completedSetCount) of \(session.totalSetCount) sets"
+        "\(session.completedSetCount) of \(Formatting.count(session.totalSetCount, "set"))"
     }
 
     var nextExerciseName: String? {
@@ -159,6 +159,14 @@ final class WorkoutSessionViewModel {
 
     func updateLoad(exerciseID: UUID, setID: UUID, load: Load) {
         update(exerciseID: exerciseID, setID: setID) { $0.load = load }
+    }
+
+    func setBodyweight(exerciseID: UUID, setID: UUID, isOn: Bool) {
+        guard let index = exerciseIndex(exerciseID) else {
+            return
+        }
+        let load: Load = isOn ? .bodyweight : .kilograms(lastKilograms(in: session.exercises[index]) ?? 20)
+        updateLoad(exerciseID: exerciseID, setID: setID, load: load)
     }
 
     func toggleCompletion(exerciseID: UUID, setID: UUID) {
@@ -338,6 +346,10 @@ final class WorkoutSessionViewModel {
         }
         change(&session.exercises[index].sets[setIndex])
         persist()
+    }
+
+    private func lastKilograms(in exercise: SessionExercise) -> Double? {
+        exercise.sets.reversed().compactMap(\.load.kilograms).first { $0 > 0 }
     }
 
     private func exerciseIndex(_ exerciseID: UUID) -> Int? {

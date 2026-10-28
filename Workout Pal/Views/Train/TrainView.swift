@@ -269,7 +269,7 @@ struct RoutineRow: View {
                 Text(routine.name)
                     .font(.body.weight(.semibold))
                     .foregroundStyle(AppColors.textPrimary)
-                Text("\(routine.exercises.count) exercises · about \(routine.estimatedMinutes) min")
+                Text("\(Formatting.count(routine.exercises.count, "exercise")) · about \(routine.estimatedMinutes) min")
                     .font(.caption)
                     .foregroundStyle(AppColors.textSecondary)
             }

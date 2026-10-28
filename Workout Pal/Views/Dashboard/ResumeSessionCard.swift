@@ -18,7 +18,7 @@ struct ResumeSessionCard: View {
             VStack(alignment: .leading, spacing: AppSpacing.xSmall) {
                 Text(session.routineName)
                     .cardTitle()
-                Text("Started \(Formatting.dateTime(session.startedAt)) · \(session.completedSetCount) of \(session.totalSetCount) sets done")
+                Text("Started \(Formatting.dateTime(session.startedAt)) · \(session.completedSetCount) of \(Formatting.count(session.totalSetCount, "set")) done")
                     .font(.subheadline)
                     .foregroundStyle(AppColors.textSecondary)
             }

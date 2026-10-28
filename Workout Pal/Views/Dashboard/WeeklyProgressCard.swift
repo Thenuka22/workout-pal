@@ -17,7 +17,7 @@ struct WeeklyProgressCard: View {
                 }
             }
             VStack(alignment: .leading, spacing: AppSpacing.xSmall) {
-                Text("\(summary.workoutCount) of \(summary.goal) workouts")
+                Text("\(summary.workoutCount) of \(Formatting.count(summary.goal, "workout"))")
                     .cardTitle()
                 Text(statusText)
                     .font(.subheadline)

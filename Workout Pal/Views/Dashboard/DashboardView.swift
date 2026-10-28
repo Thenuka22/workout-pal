@@ -131,7 +131,7 @@ struct DashboardView: View {
                 HeroCard(
                     eyebrow: "Today's plan",
                     title: routine.name,
-                    subtitle: "\(routine.exercises.count) exercises · about \(routine.estimatedMinutes) min",
+                    subtitle: "\(Formatting.count(routine.exercises.count, "exercise")) · about \(routine.estimatedMinutes) min",
                     symbolName: "dumbbell.fill",
                     imageName: AppImages.shoulderPressWide
                 )

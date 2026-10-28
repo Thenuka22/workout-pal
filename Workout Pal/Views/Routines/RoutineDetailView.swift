@@ -123,8 +123,8 @@ struct RoutineDetailView: View {
                 heroBlock(routine)
                 HStack(spacing: AppSpacing.small) {
                     TagPill(text: "about \(routine.estimatedMinutes) min", symbolName: "clock")
-                    TagPill(text: "\(routine.exercises.count) exercises", symbolName: "dumbbell")
-                    TagPill(text: "\(routine.plannedSetCount) sets", symbolName: "checkmark.circle")
+                    TagPill(text: Formatting.count(routine.exercises.count, "exercise"), symbolName: "dumbbell")
+                    TagPill(text: Formatting.count(routine.plannedSetCount, "set"), symbolName: "checkmark.circle")
                 }
                 Text("Your session")
                     .cardTitle()
@@ -240,7 +240,7 @@ struct RoutineExerciseRow: View {
     }
 
     private var detail: String {
-        var parts = ["\(item.plannedSets) sets · \(item.plannedReps) reps", Formatting.load(item.plannedLoad, units: units)]
+        var parts = ["\(Formatting.count(item.plannedSets, "set")) · \(Formatting.count(item.plannedReps, "rep"))", Formatting.load(item.plannedLoad, units: units)]
         if item.restSeconds > 0 {
             parts.append("rest \(item.restSeconds) s")
         }

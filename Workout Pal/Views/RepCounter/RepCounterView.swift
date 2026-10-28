@@ -311,7 +311,7 @@ struct RepCounterView: View {
                         Text("Set \(index + 1)")
                             .foregroundStyle(AppColors.textSecondary)
                         Spacer()
-                        Text("\(set.reps) reps")
+                        Text(Formatting.count(set.reps, "rep"))
                             .foregroundStyle(AppColors.textPrimary)
                         Image(systemName: "checkmark.circle.fill")
                             .foregroundStyle(AppColors.accent)

@@ -4,8 +4,10 @@ struct SetRow: View {
     let index: Int
     let set: WorkoutSet
     let units: UnitPreference
+    var focusedSet: FocusState<UUID?>.Binding
     let onReps: (Int) -> Void
     let onLoad: (Load) -> Void
+    let onBodyweight: (Bool) -> Void
     let onToggle: () -> Void
     let onRemove: () -> Void
 
@@ -76,6 +78,7 @@ struct SetRow: View {
             if !set.load.isBodyweight {
                 TextField("0", value: loadBinding, format: .number.precision(.fractionLength(0...1)))
                     .keyboardType(.decimalPad)
+                    .focused(focusedSet, equals: set.id)
                     .textFieldStyle(.plain)
                     .multilineTextAlignment(.trailing)
                     .padding(.horizontal, AppSpacing.small)
@@ -99,9 +102,7 @@ struct SetRow: View {
     private var bodyweightBinding: Binding<Bool> {
         Binding(
             get: { set.load.isBodyweight },
-            set: { isBodyweight in
-                onLoad(isBodyweight ? .bodyweight : .kilograms(20))
-            }
+            set: { onBodyweight($0) }
         )
     }
 

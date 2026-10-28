@@ -26,6 +26,13 @@ struct FormattingTests {
         #expect(Formatting.elapsed(seconds: -5) == "00:00")
     }
 
+    @Test func countsUseTheRightPlural() {
+        #expect(Formatting.count(1, "set") == "1 set")
+        #expect(Formatting.count(0, "set") == "0 sets")
+        #expect(Formatting.count(3, "exercise") == "3 exercises")
+        #expect(Formatting.count(2, "person", plural: "people") == "2 people")
+    }
+
     @Test func unitSymbols() {
         #expect(UnitPreference.kilograms.symbol == "kg")
         #expect(UnitPreference.pounds.symbol == "lb")

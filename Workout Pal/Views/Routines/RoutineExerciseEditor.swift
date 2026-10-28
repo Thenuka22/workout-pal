@@ -3,6 +3,8 @@ import SwiftUI
 struct RoutineExerciseEditor: View {
     @Binding var item: RoutineExercise
     let units: UnitPreference
+    @State private var lastKilograms: Double = 20
+    @FocusState private var isEditingLoad: Bool
 
     var body: some View {
         Form {
@@ -22,6 +24,7 @@ struct RoutineExerciseEditor: View {
                     HStack {
                         TextField("Load", value: loadBinding, format: .number.precision(.fractionLength(0...1)))
                             .keyboardType(.decimalPad)
+                            .focused($isEditingLoad)
                         Text(units.symbol)
                             .foregroundStyle(AppColors.textSecondary)
                     }
@@ -32,7 +35,17 @@ struct RoutineExerciseEditor: View {
             }
             .listRowBackground(AppColors.surfaceElevated)
         }
+        .scrollDismissesKeyboard(.interactively)
         .screenBackground()
+        .toolbar {
+            ToolbarItemGroup(placement: .keyboard) {
+                Spacer()
+                Button("Done") {
+                    isEditingLoad = false
+                }
+                .fontWeight(.semibold)
+            }
+        }
         .navigationTitle(item.exerciseName)
         .navigationBarTitleDisplayMode(.inline)
         .toolbarBackground(AppColors.surface, for: .navigationBar)
@@ -42,7 +55,14 @@ struct RoutineExerciseEditor: View {
         Binding(
             get: { item.plannedLoad.isBodyweight },
             set: { isBodyweight in
-                item.plannedLoad = isBodyweight ? .bodyweight : .kilograms(20)
+                if isBodyweight {
+                    if let kilograms = item.plannedLoad.kilograms, kilograms > 0 {
+                        lastKilograms = kilograms
+                    }
+                    item.plannedLoad = .bodyweight
+                } else {
+                    item.plannedLoad = .kilograms(lastKilograms)
+                }
             }
         )
     }

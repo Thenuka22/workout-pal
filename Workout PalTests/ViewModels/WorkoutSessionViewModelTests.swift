@@ -286,6 +286,16 @@ struct WorkoutSessionViewModelTests {
         #expect(permissions.requested.isEmpty)
     }
 
+    @Test func turningBodyweightOffRestoresALoadFromTheExercise() {
+        let model = makeModel()
+        let exercise = model.session.exercises[0]
+        let first = exercise.sets[0].id
+        model.setBodyweight(exerciseID: exercise.id, setID: first, isOn: true)
+        #expect(model.session.exercises[0].sets[0].load == .bodyweight)
+        model.setBodyweight(exerciseID: exercise.id, setID: first, isOn: false)
+        #expect(model.session.exercises[0].sets[0].load == .kilograms(30))
+    }
+
     @Test func completingSetsGivesFeedback() {
         let model = makeModel()
         let ids = firstSet(model)

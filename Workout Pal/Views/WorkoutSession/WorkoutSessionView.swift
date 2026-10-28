@@ -15,6 +15,7 @@ struct WorkoutSessionView: View {
     @State private var model: WorkoutSessionViewModel
     @State private var isConfirmingFinish = false
     @State private var cameraTarget: CameraTarget?
+    @FocusState private var focusedSet: UUID?
 
     init(model: WorkoutSessionViewModel) {
         _model = State(initialValue: model)
@@ -45,6 +46,7 @@ struct WorkoutSessionView: View {
                             exerciseCard(exercise, index: index(of: exercise))
                                 .padding(AppSpacing.medium)
                         }
+                        .scrollDismissesKeyboard(.interactively)
                         .screenBackground()
                     } else {
                         ContentUnavailableView("No exercises", systemImage: "dumbbell")
@@ -61,7 +63,17 @@ struct WorkoutSessionView: View {
                     }
                     .padding(AppSpacing.medium)
                 }
+                .scrollDismissesKeyboard(.interactively)
                 .screenBackground()
+            }
+        }
+        .toolbar {
+            ToolbarItemGroup(placement: .keyboard) {
+                Spacer()
+                Button("Done") {
+                    focusedSet = nil
+                }
+                .fontWeight(.semibold)
             }
         }
         .safeAreaInset(edge: .bottom) {
@@ -166,7 +178,7 @@ struct WorkoutSessionView: View {
                             Text(exercise.exerciseName)
                                 .font(.body.weight(.semibold))
                                 .foregroundStyle(AppColors.textPrimary)
-                            Text("\(exercise.completedSetCount) of \(exercise.sets.count) sets done")
+                            Text("\(exercise.completedSetCount) of \(Formatting.count(exercise.sets.count, "set")) done")
                                 .font(.caption)
                                 .foregroundStyle(AppColors.textSecondary)
                         }
@@ -208,8 +220,10 @@ struct WorkoutSessionView: View {
                         index: setIndex,
                         set: set,
                         units: model.units,
+                        focusedSet: $focusedSet,
                         onReps: { model.updateReps(exerciseID: exercise.id, setID: set.id, reps: $0) },
                         onLoad: { model.updateLoad(exerciseID: exercise.id, setID: set.id, load: $0) },
+                        onBodyweight: { model.setBodyweight(exerciseID: exercise.id, setID: set.id, isOn: $0) },
                         onToggle: { model.toggleCompletion(exerciseID: exercise.id, setID: set.id) },
                         onRemove: { model.removeSet(exerciseID: exercise.id, setID: set.id) }
                     )
@@ -276,7 +290,7 @@ struct WorkoutSessionView: View {
     }
 
     private func detail(for exercise: SessionExercise) -> String {
-        var parts = ["\(exercise.completedSetCount) of \(exercise.sets.count) sets done"]
+        var parts = ["\(exercise.completedSetCount) of \(Formatting.count(exercise.sets.count, "set")) done"]
         if exercise.restSeconds > 0 {
             parts.append("rest \(exercise.restSeconds) s")
         }

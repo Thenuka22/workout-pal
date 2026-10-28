@@ -71,7 +71,7 @@ struct WorkoutDetailView<Footer: View>: View {
                     .font(.headline)
                     .foregroundStyle(AppColors.textPrimary)
                 Spacer()
-                Text("\(exercise.completedSetCount) of \(exercise.sets.count) sets")
+                Text("\(exercise.completedSetCount) of \(Formatting.count(exercise.sets.count, "set"))")
                     .font(.caption)
                     .foregroundStyle(AppColors.textSecondary)
             }

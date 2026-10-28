@@ -71,7 +71,7 @@ struct HistoryRow: View {
         case .workout(let session):
             var parts = [
                 Formatting.minutes(fromSeconds: session.activeSeconds),
-                "\(session.completedSetCount) sets",
+                Formatting.count(session.completedSetCount, "set"),
             ]
             if session.loadedVolumeKilograms > 0 {
                 parts.append("\(Formatting.volume(kilograms: session.loadedVolumeKilograms, units: units)) lifted")

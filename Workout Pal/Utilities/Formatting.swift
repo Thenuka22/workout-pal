@@ -60,6 +60,10 @@ enum Formatting {
         }
     }
 
+    static func count(_ value: Int, _ singular: String, plural: String? = nil) -> String {
+        "\(value) \(value == 1 ? singular : plural ?? singular + "s")"
+    }
+
     static func steps(_ count: Int) -> String {
         count.formatted(.number)
     }
@@ -69,7 +73,7 @@ enum Formatting {
         case .heaviestLoad:
             "\(load(.kilograms(record.value), units: units)) × \(record.reps)"
         case .mostReps:
-            record.reps == 1 ? "1 rep" : "\(record.reps) reps"
+            count(record.reps, "rep")
         }
     }
 

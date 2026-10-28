@@ -17,8 +17,8 @@ struct RecentWorkoutCard: View {
                 }
                 HStack(spacing: AppSpacing.small) {
                     TagPill(text: Formatting.minutes(fromSeconds: session.activeSeconds), symbolName: "clock")
-                    TagPill(text: "\(session.completedSetCount) sets", symbolName: "checkmark.circle")
-                    TagPill(text: "\(session.exercises.count) exercises", symbolName: "dumbbell")
+                    TagPill(text: Formatting.count(session.completedSetCount, "set"), symbolName: "checkmark.circle")
+                    TagPill(text: Formatting.count(session.exercises.count, "exercise"), symbolName: "dumbbell")
                 }
             } else {
                 Text("No workouts yet")
