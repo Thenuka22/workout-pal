@@ -12,6 +12,7 @@ final class WorkoutSessionViewModel {
     private(set) var isFinishing = false
     private(set) var isDiscarded = false
     private(set) var finishSummary: WorkoutFinishSummary?
+    private(set) var previousSets: [Int: [WorkoutSet]] = [:]
     var selectedExerciseID: UUID?
     var isAskingAboutStaleSession = false
 
@@ -25,6 +26,7 @@ final class WorkoutSessionViewModel {
     @ObservationIgnored private var saveTask: Task<Void, Never>?
     @ObservationIgnored private var restTask: Task<Void, Never>?
     @ObservationIgnored private var hasCheckedStaleness = false
+    @ObservationIgnored private var hasLoadedHistory = false
 
     init(
         session: WorkoutSession,
@@ -97,6 +99,13 @@ final class WorkoutSessionViewModel {
         }
     }
 
+    func lastTimeText(for exercise: SessionExercise) -> String? {
+        guard let sets = previousSets[exercise.exerciseID] else {
+            return nil
+        }
+        return PreviousPerformance.summary(sets, units: units)
+    }
+
     func elapsedSeconds(at date: Date) -> Double {
         session.activeSeconds(at: date)
     }
@@ -118,6 +127,7 @@ final class WorkoutSessionViewModel {
             hasCheckedStaleness = true
             isAskingAboutStaleSession = session.isStale(at: now())
         }
+        loadHistoryIfNeeded()
         persist()
         resumeRestIfNeeded()
         guard settings.preferences.restAlertsEnabled else {
@@ -183,7 +193,9 @@ final class WorkoutSessionViewModel {
         guard let index = exerciseIndex(exerciseID) else {
             return
         }
-        let load: Load = isOn ? .bodyweight : .kilograms(lastKilograms(in: session.exercises[index]) ?? 20)
+        let exercise = session.exercises[index]
+        let previous = previousSets[exercise.exerciseID]?.reversed().compactMap(\.load.kilograms).first { $0 > 0 }
+        let load: Load = isOn ? .bodyweight : .kilograms(lastKilograms(in: exercise) ?? previous ?? 20)
         updateLoad(exerciseID: exerciseID, setID: setID, load: load)
     }
 
@@ -319,6 +331,20 @@ final class WorkoutSessionViewModel {
                 self.errorMessage = error.localizedDescription
                 self.isFinishing = false
             }
+        }
+    }
+
+    private func loadHistoryIfNeeded() {
+        guard !hasLoadedHistory else {
+            return
+        }
+        hasLoadedHistory = true
+        let ownerID = session.ownerID
+        let sessionID = session.id
+        let exerciseIDs = session.exercises.map(\.exerciseID)
+        Task {
+            let history = (try? await self.repository.completedSessions(ownerID: ownerID)) ?? []
+            self.previousSets = PreviousPerformance.latest(for: exerciseIDs, in: history, excluding: sessionID)
         }
     }
 

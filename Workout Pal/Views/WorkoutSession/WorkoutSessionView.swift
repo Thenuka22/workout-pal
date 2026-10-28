@@ -221,6 +221,11 @@ struct WorkoutSessionView: View {
                     Text(detail(for: exercise))
                         .font(.caption)
                         .foregroundStyle(AppColors.textSecondary)
+                    if let lastTime = model.lastTimeText(for: exercise) {
+                        Text(lastTime)
+                            .font(.caption.weight(.semibold))
+                            .foregroundStyle(AppColors.accent)
+                    }
                 }
                 Spacer()
                 if isComplete(exercise) {

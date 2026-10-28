@@ -321,6 +321,17 @@ struct WorkoutSessionViewModelTests {
         #expect(!model.isAskingAboutStaleSession)
     }
 
+    @Test func lastTimeIsShownForEachExercise() async throws {
+        try await repository.save(SampleData.session(
+            startedAt: SampleData.daysAgo(3),
+            exercises: [SampleData.exercise(sets: [SampleData.set(reps: 12, load: .kilograms(25))])]
+        ))
+        let model = makeModel()
+        model.start()
+        let exercise = model.session.exercises[0]
+        #expect(await eventually { model.lastTimeText(for: exercise) == "Last time: 1 × 12 · 25 kg" })
+    }
+
     @Test func completingSetsGivesFeedback() {
         let model = makeModel()
         let ids = firstSet(model)
