@@ -296,6 +296,31 @@ struct WorkoutSessionViewModelTests {
         #expect(model.session.exercises[0].sets[0].load == .kilograms(30))
     }
 
+    @Test func aWorkoutLeftOpenCanFinishAtItsLastSet() async {
+        let model = makeModel()
+        let ids = firstSet(model)
+        clock.advance(by: 600)
+        model.toggleCompletion(exerciseID: ids.exercise, setID: ids.set)
+        let lastSet = clock.now
+        model.disappear()
+        clock.advance(by: 5 * 3_600)
+        model.start()
+        #expect(model.isAskingAboutStaleSession)
+        #expect(model.lastSetTimeText != nil)
+        model.finishAtLastSet()
+        #expect(await eventually { model.isFinished })
+        let saved = await repository.stored(id: model.session.id)
+        #expect(saved?.endedAt == lastSet)
+        #expect(saved?.activeSeconds == 600)
+    }
+
+    @Test func aRecentWorkoutDoesNotAsk() {
+        let model = makeModel()
+        clock.advance(by: 3_600)
+        model.start()
+        #expect(!model.isAskingAboutStaleSession)
+    }
+
     @Test func completingSetsGivesFeedback() {
         let model = makeModel()
         let ids = firstSet(model)

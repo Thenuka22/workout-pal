@@ -13,6 +13,7 @@ final class WorkoutSessionViewModel {
     private(set) var isDiscarded = false
     private(set) var finishSummary: WorkoutFinishSummary?
     var selectedExerciseID: UUID?
+    var isAskingAboutStaleSession = false
 
     private let repository: any WorkoutSessionRepository
     private let exporter: HealthExporter
@@ -23,6 +24,7 @@ final class WorkoutSessionViewModel {
     private let now: @MainActor () -> Date
     @ObservationIgnored private var saveTask: Task<Void, Never>?
     @ObservationIgnored private var restTask: Task<Void, Never>?
+    @ObservationIgnored private var hasCheckedStaleness = false
 
     init(
         session: WorkoutSession,
@@ -99,7 +101,23 @@ final class WorkoutSessionViewModel {
         session.activeSeconds(at: date)
     }
 
+    var lastSetTimeText: String? {
+        session.lastSetAt.map { $0.formatted(date: .omitted, time: .shortened) }
+    }
+
+    var staleMessage: String {
+        let opened = "This workout has been open since \(Formatting.dateTime(session.startedAt))."
+        if lastSetTimeText != nil {
+            return "\(opened) Finish it at your last set so the time since then isn't counted."
+        }
+        return "\(opened) No sets are done yet."
+    }
+
     func start() {
+        if !hasCheckedStaleness {
+            hasCheckedStaleness = true
+            isAskingAboutStaleSession = session.isStale(at: now())
+        }
         persist()
         resumeRestIfNeeded()
         guard settings.preferences.restAlertsEnabled else {
@@ -241,12 +259,22 @@ final class WorkoutSessionViewModel {
     }
 
     func finish() {
+        finish(at: now())
+    }
+
+    func finishAtLastSet() {
+        guard let lastSet = session.lastSetAt else {
+            return
+        }
+        finish(at: lastSet)
+    }
+
+    private func finish(at end: Date) {
         guard !isFinishing else {
             return
         }
         isFinishing = true
         skipRest()
-        let end = now()
         session.pauses = SessionTiming.resuming(session.pauses, at: end)
         session.status = .completed
         session.endedAt = end

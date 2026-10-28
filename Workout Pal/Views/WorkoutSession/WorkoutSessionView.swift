@@ -104,6 +104,20 @@ struct WorkoutSessionView: View {
                 Text("Mark at least one set as done to save this workout, or discard it.")
             }
         }
+        .alert("Still training?", isPresented: $model.isAskingAboutStaleSession) {
+            if let time = model.lastSetTimeText {
+                Button("Finish at \(time)") {
+                    model.finishAtLastSet()
+                }
+            } else {
+                Button("Discard workout", role: .destructive) {
+                    model.discard()
+                }
+            }
+            Button("Keep going", role: .cancel) {}
+        } message: {
+            Text(model.staleMessage)
+        }
         .onChange(of: model.isDiscarded) { _, isDiscarded in
             if isDiscarded {
                 dismiss()

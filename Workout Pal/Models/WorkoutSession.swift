@@ -11,6 +11,8 @@ enum SetSource: String, Sendable {
 }
 
 struct WorkoutSession: Identifiable, Hashable, Sendable {
+    static let staleAfter: TimeInterval = 3 * 60 * 60
+
     let id: UUID
     var ownerID: String
     var routineID: UUID?
@@ -30,6 +32,20 @@ struct WorkoutSession: Identifiable, Hashable, Sendable {
 
     func activeSeconds(at now: Date) -> Double {
         SessionTiming.activeSeconds(startedAt: startedAt, endedAt: endedAt, pauses: pauses, now: now)
+    }
+
+    var lastSetAt: Date? {
+        exercises.flatMap(\.sets).compactMap(\.completedAt).max()
+    }
+
+    var lastActivityAt: Date {
+        let resumes = pauses.compactMap(\.end)
+        return ([startedAt] + resumes + [lastSetAt].compactMap { $0 }).max() ?? startedAt
+    }
+
+    /// An open workout nobody has touched for hours, usually because the app was closed mid-session.
+    func isStale(at date: Date) -> Bool {
+        status == .active && !isPaused && date.timeIntervalSince(lastActivityAt) > Self.staleAfter
     }
 
     var totalSetCount: Int {
