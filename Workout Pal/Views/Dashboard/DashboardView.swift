@@ -6,6 +6,7 @@ struct DashboardView: View {
     @Environment(AppNavigation.self) private var navigation
     @State private var model: DashboardViewModel
     @State private var isConfirmingDiscard = false
+    @State private var isConfirmingActivityDiscard = false
 
     init(model: DashboardViewModel) {
         _model = State(initialValue: model)
@@ -59,6 +60,18 @@ struct DashboardView: View {
         } message: {
             Text("The sets you logged in this workout will be deleted.")
         }
+        .confirmationDialog(
+            "Discard this \(model.activeActivity?.kind.title.lowercased() ?? "session")?",
+            isPresented: $isConfirmingActivityDiscard,
+            titleVisibility: .visible
+        ) {
+            Button("Discard", role: .destructive) {
+                model.discardActiveActivity()
+            }
+            Button("Keep it", role: .cancel) {}
+        } message: {
+            Text("The steps and time recorded so far will be deleted.")
+        }
         .task {
             await model.load()
         }
@@ -99,17 +112,24 @@ struct DashboardView: View {
     @ViewBuilder
     private var activityResumeCard: some View {
         if let activity = model.activeActivity {
-            NavigationLink(value: TrainRoute.activityTracker) {
-                LinkRow(
-                    title: "\(activity.kind.title) in progress",
-                    subtitle: "Started \(Formatting.dateTime(activity.startedAt))",
-                    symbolName: activity.kind.symbolName,
-                    value: activity.isPaused ? "Paused" : "Open",
-                    isHighlighted: true
-                )
-                .card()
+            VStack(alignment: .leading, spacing: AppSpacing.small) {
+                NavigationLink(value: TrainRoute.activityTracker) {
+                    LinkRow(
+                        title: "\(activity.kind.title) in progress",
+                        subtitle: "Started \(Formatting.dateTime(activity.startedAt))",
+                        symbolName: activity.kind.symbolName,
+                        value: activity.isPaused ? "Paused" : "Open",
+                        isHighlighted: true
+                    )
+                }
+                .buttonStyle(.plain)
+                Button("Discard \(activity.kind.title.lowercased())", role: .destructive) {
+                    isConfirmingActivityDiscard = true
+                }
+                .font(.subheadline.weight(.semibold))
+                .frame(minHeight: 44)
             }
-            .buttonStyle(.plain)
+            .card()
         }
     }
 

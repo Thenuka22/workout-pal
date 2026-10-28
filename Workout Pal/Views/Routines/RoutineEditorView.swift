@@ -5,6 +5,7 @@ struct RoutineEditorView: View {
     @Environment(AppContainer.self) private var container
     @State private var model: RoutineEditorViewModel
     @State private var isPickingExercise = false
+    @State private var isConfirmingCancel = false
 
     init(model: RoutineEditorViewModel) {
         _model = State(initialValue: model)
@@ -68,7 +69,11 @@ struct RoutineEditorView: View {
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") {
-                        dismiss()
+                        if model.hasChanges {
+                            isConfirmingCancel = true
+                        } else {
+                            dismiss()
+                        }
                     }
                 }
                 ToolbarItem(placement: .confirmationAction) {
@@ -84,6 +89,12 @@ struct RoutineEditorView: View {
                     model.add(exercise)
                 }
             }
+            .confirmationDialog("Discard your changes?", isPresented: $isConfirmingCancel, titleVisibility: .visible) {
+                Button("Discard changes", role: .destructive) {
+                    dismiss()
+                }
+                Button("Keep editing", role: .cancel) {}
+            }
             .alert("Could not save routine", isPresented: $model.isShowingError) {
                 Button("OK") {}
             } message: {
@@ -95,5 +106,6 @@ struct RoutineEditorView: View {
                 }
             }
         }
+        .interactiveDismissDisabled(model.hasChanges)
     }
 }

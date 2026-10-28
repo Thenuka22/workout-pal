@@ -11,6 +11,7 @@ final class RoutineEditorViewModel {
     private(set) var errorMessage: String?
 
     let isNew: Bool
+    private let original: Routine
     private let routines: any RoutineRepository
     private let settings: AppSettings
 
@@ -32,6 +33,11 @@ final class RoutineEditorViewModel {
             )
             isNew = true
         }
+        original = draft
+    }
+
+    var hasChanges: Bool {
+        draft != original
     }
 
     var title: String {

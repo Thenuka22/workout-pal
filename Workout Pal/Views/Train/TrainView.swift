@@ -149,9 +149,15 @@ struct TrainView: View {
                 }
             }
             if let message = model.errorMessage {
-                Label(message, systemImage: "exclamationmark.triangle.fill")
-                    .foregroundStyle(AppColors.warning)
-                    .plainRow()
+                VStack(alignment: .leading, spacing: AppSpacing.small) {
+                    Label(message, systemImage: "exclamationmark.triangle.fill")
+                        .foregroundStyle(AppColors.warning)
+                    Button("Try again") {
+                        model.reload()
+                    }
+                    .font(.subheadline.weight(.semibold))
+                }
+                .plainRow()
             }
         }
         .listStyle(.plain)

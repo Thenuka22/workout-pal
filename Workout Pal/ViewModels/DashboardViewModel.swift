@@ -95,6 +95,20 @@ final class DashboardViewModel {
         resumingSession = activeSession
     }
 
+    func discardActiveActivity() {
+        guard let activeActivity else {
+            return
+        }
+        Task {
+            do {
+                try await self.activities.deleteActivity(id: activeActivity.id)
+            } catch {
+                self.errorMessage = error.localizedDescription
+            }
+            await self.load()
+        }
+    }
+
     func discardActiveSession() {
         guard let activeSession else {
             return
