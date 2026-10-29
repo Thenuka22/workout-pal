@@ -17,7 +17,8 @@ struct ProgressHomeViewModelTests {
             health: health,
             permissions: permissions,
             settings: AppSettings(store: InMemoryPreferencesStore(), ownerID: SampleData.ownerID),
-            now: { SampleData.now }
+            now: { SampleData.now },
+            calendar: SampleData.calendar
         )
     }
 
@@ -72,6 +73,39 @@ struct ProgressHomeViewModelTests {
         model.range = .fourWeeks
         #expect(model.exerciseChartPoints.isEmpty)
         #expect(model.exerciseSummary == "No Squats sets in the last 4 weeks.")
+    }
+
+    @Test func theCalendarMovesBackButNotIntoTheFuture() async {
+        let model = makeModel(sessions: [SampleData.session(startedAt: SampleData.daysAgo(1))])
+        await model.load()
+        #expect(!model.canShowNextMonth)
+        #expect(model.trainingMonth.trainingDays == 1)
+        model.showPreviousMonth()
+        #expect(model.canShowNextMonth)
+        #expect(model.trainingMonth.trainingDays == 0)
+        model.showNextMonth()
+        #expect(!model.canShowNextMonth)
+        model.showNextMonth()
+        #expect(model.trainingMonth.trainingDays == 1)
+    }
+
+    @Test func choosingADayFiltersTheHistory() async throws {
+        let model = makeModel(
+            sessions: [SampleData.session(startedAt: SampleData.daysAgo(1)), SampleData.session(startedAt: SampleData.daysAgo(8))],
+            activities: [SampleData.activity(startedAt: SampleData.daysAgo(1))]
+        )
+        await model.load()
+        let yesterday = SampleData.calendar.startOfDay(for: SampleData.daysAgo(1))
+        let day = try #require(model.trainingMonth.days.first { $0.date == yesterday })
+        #expect(model.accessibilityLabel(for: day).hasSuffix("1 workout, 1 walk or run"))
+        model.select(day)
+        #expect(model.historyGroups.flatMap(\.entries).count == 2)
+        #expect(model.selectedDayTitle != nil)
+        model.select(day)
+        #expect(model.historyGroups.flatMap(\.entries).count == 3)
+        model.select(day)
+        model.clearSelectedDay()
+        #expect(model.selectedDay == nil)
     }
 
     @Test func healthIsNotReadUntilConnected() async {

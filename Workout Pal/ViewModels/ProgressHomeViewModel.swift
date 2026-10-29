@@ -34,6 +34,8 @@ final class ProgressHomeViewModel {
     private(set) var healthState: HealthCardState = .loading
     var range: ProgressRange = .twelveWeeks
     var selectedExerciseID: Int?
+    private(set) var calendarMonth: Date?
+    private(set) var selectedDay: Date?
 
     private let repository: any WorkoutSessionRepository
     private let activityRepository: any ActivitySessionRepository
@@ -41,6 +43,7 @@ final class ProgressHomeViewModel {
     private let permissions: any PermissionsProviding
     private let settings: AppSettings
     private let now: @MainActor () -> Date
+    private let calendar: Calendar
 
     init(
         repository: any WorkoutSessionRepository,
@@ -48,8 +51,10 @@ final class ProgressHomeViewModel {
         health: any HealthService,
         permissions: any PermissionsProviding,
         settings: AppSettings,
-        now: @escaping @MainActor () -> Date = { .now }
+        now: @escaping @MainActor () -> Date = { .now },
+        calendar: Calendar = .current
     ) {
+        self.calendar = calendar
         self.repository = repository
         self.activityRepository = activityRepository
         self.health = health
@@ -112,7 +117,79 @@ final class ProgressHomeViewModel {
     }
 
     var historyGroups: [HistoryGroup] {
-        ProgressCalculator.groupByWeek(entries: HistoryEntry.merge(workouts: sessions, activities: activities))
+        var entries = HistoryEntry.merge(workouts: sessions, activities: activities)
+        if let selectedDay {
+            entries = entries.filter { calendar.isDate($0.startedAt, inSameDayAs: selectedDay) }
+        }
+        return ProgressCalculator.groupByWeek(entries: entries, calendar: calendar)
+    }
+
+    var displayedMonth: Date {
+        calendarMonth ?? now()
+    }
+
+    var trainingMonth: TrainingMonth {
+        TrainingCalendar.month(containing: displayedMonth, sessions: sessions, activities: activities, calendar: calendar)
+    }
+
+    var weekdaySymbols: [String] {
+        TrainingCalendar.weekdaySymbols(calendar: calendar)
+    }
+
+    var monthTitle: String {
+        displayedMonth.formatted(.dateTime.month(.wide).year())
+    }
+
+    var monthSummary: String {
+        let month = displayedMonth.formatted(.dateTime.month(.wide))
+        return "\(Formatting.count(trainingMonth.trainingDays, "training day")) in \(month)"
+    }
+
+    var canShowNextMonth: Bool {
+        calendar.compare(displayedMonth, to: now(), toGranularity: .month) == .orderedAscending
+    }
+
+    var selectedDayTitle: String? {
+        selectedDay.map { "Showing \(Formatting.date($0))" }
+    }
+
+    func showPreviousMonth() {
+        calendarMonth = calendar.date(byAdding: .month, value: -1, to: displayedMonth)
+        selectedDay = nil
+    }
+
+    func showNextMonth() {
+        guard canShowNextMonth else {
+            return
+        }
+        calendarMonth = calendar.date(byAdding: .month, value: 1, to: displayedMonth)
+        selectedDay = nil
+    }
+
+    func select(_ day: CalendarDay) {
+        guard day.hasTraining else {
+            return
+        }
+        selectedDay = selectedDay == day.date ? nil : day.date
+    }
+
+    func clearSelectedDay() {
+        selectedDay = nil
+    }
+
+    func accessibilityLabel(for day: CalendarDay) -> String {
+        let date = day.date.formatted(.dateTime.day().month(.wide))
+        guard day.hasTraining else {
+            return "\(date), no training"
+        }
+        var parts = [date]
+        if day.workouts > 0 {
+            parts.append(Formatting.count(day.workouts, "workout"))
+        }
+        if day.activities > 0 {
+            parts.append(Formatting.count(day.activities, "walk or run", plural: "walks or runs"))
+        }
+        return parts.joined(separator: ", ")
     }
 
     var weekBuckets: [WeekBucket] {

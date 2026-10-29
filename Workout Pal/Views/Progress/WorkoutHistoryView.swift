@@ -1,12 +1,27 @@
 import SwiftUI
 
-struct WorkoutHistoryView: View {
+struct WorkoutHistoryView<Header: View>: View {
     let groups: [HistoryGroup]
     let units: UnitPreference
     let selectedEntry: Binding<HistoryEntry?>?
+    private let header: Header
+
+    init(
+        groups: [HistoryGroup],
+        units: UnitPreference,
+        selectedEntry: Binding<HistoryEntry?>?,
+        @ViewBuilder header: () -> Header
+    ) {
+        self.groups = groups
+        self.units = units
+        self.selectedEntry = selectedEntry
+        self.header = header()
+    }
 
     var body: some View {
         List {
+            header
+                .plainRow(top: AppSpacing.medium)
             ForEach(groups) { group in
                 Text("Week of \(Formatting.date(group.weekStart))")
                     .eyebrow()

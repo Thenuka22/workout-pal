@@ -81,8 +81,10 @@ struct ProgressHomeView: View {
             }
         } else if horizontalSizeClass == .regular {
             HStack(spacing: 0) {
-                WorkoutHistoryView(groups: model.historyGroups, units: model.units, selectedEntry: $selectedEntry)
-                    .frame(width: 380)
+                WorkoutHistoryView(groups: model.historyGroups, units: model.units, selectedEntry: $selectedEntry) {
+                    TrainingCalendarCard(model: model)
+                }
+                .frame(width: 380)
                 Divider()
                 if let selectedEntry {
                     VStack(spacing: 0) {
@@ -115,7 +117,9 @@ struct ProgressHomeView: View {
             case .charts:
                 ProgressChartsView(model: model)
             case .history:
-                WorkoutHistoryView(groups: model.historyGroups, units: model.units, selectedEntry: nil)
+                WorkoutHistoryView(groups: model.historyGroups, units: model.units, selectedEntry: nil) {
+                    TrainingCalendarCard(model: model)
+                }
             }
         }
     }
