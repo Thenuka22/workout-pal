@@ -4,6 +4,10 @@ struct WeekBucket: Identifiable, Hashable, Sendable {
     let weekStart: Date
     var workouts: Int
     var activeMinutes: Int
+    var activities = 0
+    var steps = 0
+    /// Only walks and runs that measured a distance add to this.
+    var distanceMeters: Double = 0
 
     var id: Date { weekStart }
 }
@@ -58,6 +62,9 @@ enum ProgressCalculator {
                 calendar.isDate($0.weekStart, equalTo: activity.startedAt, toGranularity: .weekOfYear)
             }) {
                 buckets[index].activeMinutes += Int((activity.activeSeconds / 60).rounded())
+                buckets[index].activities += 1
+                buckets[index].steps += activity.steps
+                buckets[index].distanceMeters += activity.distanceMeters ?? 0
             }
         }
         return buckets

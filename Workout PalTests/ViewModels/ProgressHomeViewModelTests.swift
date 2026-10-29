@@ -108,6 +108,21 @@ struct ProgressHomeViewModelTests {
         #expect(model.selectedDay == nil)
     }
 
+    @Test func walkTrendsSumTheRange() async {
+        let model = makeModel(activities: [
+            SampleData.activity(startedAt: SampleData.daysAgo(2), steps: 2_000, distanceMeters: 1_500),
+            SampleData.activity(startedAt: SampleData.daysAgo(9), steps: 3_000, distanceMeters: nil),
+            SampleData.activity(startedAt: SampleData.daysAgo(120), steps: 9_000),
+        ])
+        await model.load()
+        model.range = .fourWeeks
+        #expect(model.totalActivities == 2)
+        #expect(model.totalSteps == 5_000)
+        #expect(model.totalDistanceMeters == 1_500)
+        #expect(model.walksSummary.hasPrefix("2 walks and runs in the last 4 weeks"))
+        #expect(model.walksSummary.contains("estimated"))
+    }
+
     @Test func healthIsNotReadUntilConnected() async {
         let model = makeModel()
         await model.loadHealth()

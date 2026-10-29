@@ -16,6 +16,9 @@ struct ProgressChartsView: View {
                 ChipPicker(options: ProgressRange.allCases, selection: $model.range) { $0.title }
                 minutesCard
                 workoutsCard
+                if model.totalActivities > 0 {
+                    walksCard
+                }
                 thisWeekTiles
                 HealthTodayCard(
                     state: model.healthState,
@@ -99,6 +102,39 @@ struct ProgressChartsView: View {
             Text(model.workoutsSummary)
                 .font(.footnote)
                 .foregroundStyle(AppColors.textSecondary)
+        }
+        .card()
+    }
+
+    private var walksCard: some View {
+        VStack(alignment: .leading, spacing: AppSpacing.small) {
+            Text("Walks & runs")
+                .eyebrow()
+            HStack(alignment: .firstTextBaseline, spacing: AppSpacing.small) {
+                Text(Formatting.steps(model.totalSteps))
+                    .metric(size: 34)
+                    .foregroundStyle(AppColors.textPrimary)
+                Text("steps in the last \(model.range.rawValue) weeks")
+                    .font(.subheadline)
+                    .foregroundStyle(AppColors.textSecondary)
+            }
+            Chart(model.weekBuckets) { bucket in
+                BarMark(
+                    x: .value("Week", bucket.weekStart, unit: .weekOfYear),
+                    y: .value("Steps", bucket.steps)
+                )
+                .foregroundStyle(barColor(for: bucket))
+                .cornerRadius(6)
+            }
+            .chartXAxis {
+                AxisMarks(values: .automatic(desiredCount: 4))
+            }
+            .frame(height: chartHeight)
+            .accessibilityLabel(model.walksSummary)
+            Text(model.walksSummary)
+                .font(.footnote)
+                .foregroundStyle(AppColors.textSecondary)
+                .fixedSize(horizontal: false, vertical: true)
         }
         .card()
     }

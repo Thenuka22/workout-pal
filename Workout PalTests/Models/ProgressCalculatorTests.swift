@@ -3,6 +3,24 @@ import Testing
 @testable import Workout_Pal
 
 struct ProgressCalculatorTests {
+    @Test func walksAddStepsAndKnownDistancesToTheirWeek() {
+        let buckets = ProgressCalculator.weekBuckets(
+            sessions: [],
+            activities: [
+                SampleData.activity(startedAt: SampleData.now, steps: 3_000, distanceMeters: 2_000),
+                SampleData.activity(startedAt: SampleData.daysAgo(1), steps: 1_500, distanceMeters: nil),
+                SampleData.activity(startedAt: SampleData.daysAgo(8), steps: 4_000, distanceMeters: 3_100),
+            ],
+            weeks: 2,
+            now: SampleData.now,
+            calendar: SampleData.calendar
+        )
+        #expect(buckets.map(\.activities) == [1, 2])
+        #expect(buckets.map(\.steps) == [4_000, 4_500])
+        #expect(buckets.map(\.distanceMeters) == [3_100, 2_000])
+        #expect(buckets.map(\.workouts) == [0, 0])
+    }
+
     @Test func weekBucketsEndWithTheCurrentWeek() {
         let sessions = [
             SampleData.session(startedAt: SampleData.now, minutes: 30),

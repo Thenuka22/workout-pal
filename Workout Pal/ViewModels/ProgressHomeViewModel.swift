@@ -193,7 +193,13 @@ final class ProgressHomeViewModel {
     }
 
     var weekBuckets: [WeekBucket] {
-        ProgressCalculator.weekBuckets(sessions: sessions, activities: activities, weeks: range.rawValue, now: now())
+        ProgressCalculator.weekBuckets(
+            sessions: sessions,
+            activities: activities,
+            weeks: range.rawValue,
+            now: now(),
+            calendar: calendar
+        )
     }
 
     var sessionsInRange: [WorkoutSession] {
@@ -213,6 +219,28 @@ final class ProgressHomeViewModel {
 
     var totalMinutes: Int {
         weekBuckets.reduce(0) { $0 + $1.activeMinutes }
+    }
+
+    var totalActivities: Int {
+        weekBuckets.reduce(0) { $0 + $1.activities }
+    }
+
+    var totalSteps: Int {
+        weekBuckets.reduce(0) { $0 + $1.steps }
+    }
+
+    var totalDistanceMeters: Double {
+        weekBuckets.reduce(0) { $0 + $1.distanceMeters }
+    }
+
+    var walksSummary: String {
+        let sessionsText = Formatting.count(totalActivities, "walk or run", plural: "walks and runs")
+        var text = "\(sessionsText) in the last \(range.rawValue) weeks, \(Formatting.steps(totalSteps)) steps"
+        if totalDistanceMeters > 0 {
+            text += ", about \(Formatting.distance(meters: totalDistanceMeters, units: units)) estimated"
+        }
+        let best = weekBuckets.map(\.steps).max() ?? 0
+        return text + ". Best week \(Formatting.steps(best)) steps."
     }
 
     var subtitle: String {
