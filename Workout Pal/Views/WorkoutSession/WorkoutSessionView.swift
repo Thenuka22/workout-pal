@@ -17,6 +17,8 @@ struct WorkoutSessionView: View {
     @State private var cameraTarget: CameraTarget?
     @FocusState private var focusedSet: UUID?
     @FocusState private var isEditingNotes: Bool
+    private let removeSetTip = RemoveSetTip()
+    private let countRepsTip = CountRepsTip()
 
     init(model: WorkoutSessionViewModel) {
         _model = State(initialValue: model)
@@ -231,6 +233,11 @@ struct WorkoutSessionView: View {
     private func exerciseRows(_ exercise: SessionExercise, index: Int) -> some View {
         exerciseHeader(exercise, index: index)
             .plainRow(top: AppSpacing.large, bottom: AppSpacing.xSmall)
+        if index == 0 && !exercise.sets.isEmpty {
+            TipView(removeSetTip)
+                .tipBackground(AppColors.surfaceElevated)
+                .plainRow(top: AppSpacing.xSmall, bottom: AppSpacing.xSmall)
+        }
         ForEach(Array(exercise.sets.enumerated()), id: \.element.id) { setIndex, set in
             SetRow(
                 index: setIndex,
@@ -246,6 +253,7 @@ struct WorkoutSessionView: View {
             .plainRow(top: AppSpacing.xSmall, bottom: AppSpacing.xSmall)
             .swipeActions(edge: .trailing, allowsFullSwipe: true) {
                 Button(role: .destructive) {
+                    removeSetTip.invalidate(reason: .actionPerformed)
                     model.removeSet(exerciseID: exercise.id, setID: set.id)
                 } label: {
                     Label("Remove", systemImage: "trash")
@@ -289,13 +297,24 @@ struct WorkoutSessionView: View {
             }
             .buttonStyle(.secondaryAction)
             if let cameraExercise = model.cameraExercise(for: exercise) {
-                Button {
-                    cameraTarget = CameraTarget(exerciseID: exercise.id, exercise: cameraExercise)
-                } label: {
-                    Label("Count reps", systemImage: "camera.viewfinder")
-                }
-                .buttonStyle(.secondaryAction)
+                countRepsButton(exerciseID: exercise.id, cameraExercise: cameraExercise)
             }
+        }
+    }
+
+    @ViewBuilder
+    private func countRepsButton(exerciseID: UUID, cameraExercise: CameraExercise) -> some View {
+        let button = Button {
+            countRepsTip.invalidate(reason: .actionPerformed)
+            cameraTarget = CameraTarget(exerciseID: exerciseID, exercise: cameraExercise)
+        } label: {
+            Label("Count reps", systemImage: "camera.viewfinder")
+        }
+        .buttonStyle(.secondaryAction)
+        if exerciseID == firstCameraExerciseID {
+            button.popoverTip(countRepsTip)
+        } else {
+            button
         }
     }
 
@@ -348,6 +367,10 @@ struct WorkoutSessionView: View {
         .padding(.horizontal, AppSpacing.medium)
         .padding(.vertical, AppSpacing.small)
         .background(AppColors.surface)
+    }
+
+    private var firstCameraExerciseID: UUID? {
+        model.session.exercises.first { model.cameraExercise(for: $0) != nil }?.id
     }
 
     private func index(of exercise: SessionExercise) -> Int {

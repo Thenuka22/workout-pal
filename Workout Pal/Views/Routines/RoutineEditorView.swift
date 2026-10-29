@@ -6,6 +6,7 @@ struct RoutineEditorView: View {
     @State private var model: RoutineEditorViewModel
     @State private var isPickingExercise = false
     @State private var isConfirmingCancel = false
+    private let reorderTip = ReorderExercisesTip()
 
     init(model: RoutineEditorViewModel) {
         _model = State(initialValue: model)
@@ -36,10 +37,15 @@ struct RoutineEditorView: View {
                         }
                     }
                     .onMove { source, destination in
+                        reorderTip.invalidate(reason: .actionPerformed)
                         model.moveExercises(from: source, to: destination)
                     }
                     .onDelete { offsets in
                         model.removeExercises(at: offsets)
+                    }
+                    if model.draft.exercises.count >= 2 {
+                        TipView(reorderTip)
+                            .tipBackground(AppColors.surface)
                     }
                     Button {
                         isPickingExercise = true
