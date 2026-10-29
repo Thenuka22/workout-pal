@@ -37,6 +37,9 @@ struct ProgressHomeView: View {
                 onDeleted: { model.retry() }
             )
         }
+        .navigationDestination(for: ExerciseOption.self) { option in
+            ExerciseHistoryView(model: container.makeExerciseHistoryViewModel(exerciseID: option.id, name: option.name))
+        }
         .overlay {
             if model.isLoading {
                 ProgressView()

@@ -87,8 +87,12 @@ final class ProgressHomeViewModel {
         return "\(Formatting.number(value)) \(units.symbol)"
     }
 
+    var allRecords: [PersonalRecord] {
+        RecordBook.bests(sessions: sessions)
+    }
+
     var records: [PersonalRecord] {
-        Array(RecordBook.bests(sessions: sessions).prefix(5))
+        Array(allRecords.prefix(5))
     }
 
     var weekStreak: Int {

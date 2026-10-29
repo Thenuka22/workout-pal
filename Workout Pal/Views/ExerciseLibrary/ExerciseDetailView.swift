@@ -3,7 +3,13 @@ import SwiftUI
 struct ExerciseDetailView: View {
     @Environment(AppContainer.self) private var container
     @State private var isAddingToRoutine = false
+    @State private var history: ExerciseHistoryViewModel
     let item: CatalogItem
+
+    init(item: CatalogItem, history: ExerciseHistoryViewModel) {
+        self.item = item
+        _history = State(initialValue: history)
+    }
 
     private var exercise: Exercise {
         item.exercise
@@ -40,6 +46,8 @@ struct ExerciseDetailView: View {
                         .font(.caption)
                         .foregroundStyle(AppColors.textSecondary)
                 }
+
+                ExerciseHistoryCard(model: history)
 
                 detailCard(title: "Primary muscles", items: exercise.primaryMuscles)
                 detailCard(title: "Secondary muscles", items: exercise.secondaryMuscles)
@@ -88,6 +96,9 @@ struct ExerciseDetailView: View {
         }
         .sheet(isPresented: $isAddingToRoutine) {
             AddToRoutineSheet(model: container.makeAddToRoutineViewModel(exercise: exercise))
+        }
+        .task {
+            await history.load()
         }
     }
 

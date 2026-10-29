@@ -29,22 +29,6 @@ enum PreviousPerformance {
     }
 
     static func summary(_ sets: [WorkoutSet], units: UnitPreference) -> String {
-        let reps = sets.map(\.reps)
-        let repsText: String
-        if let first = reps.first, reps.allSatisfy({ $0 == first }) {
-            repsText = "\(sets.count) × \(first)"
-        } else {
-            repsText = reps.map(String.init).joined(separator: ", ") + " reps"
-        }
-        let loads = sets.map(\.load)
-        let loadText: String
-        if let first = loads.first, loads.allSatisfy({ $0 == first }) {
-            loadText = Formatting.load(first, units: units)
-        } else if let heaviest = loads.compactMap(\.kilograms).max() {
-            loadText = "up to \(Formatting.load(.kilograms(heaviest), units: units))"
-        } else {
-            loadText = Formatting.load(.bodyweight, units: units)
-        }
-        return "Last time: \(repsText) · \(loadText)"
+        "Last time: \(Formatting.sets(sets, units: units))"
     }
 }

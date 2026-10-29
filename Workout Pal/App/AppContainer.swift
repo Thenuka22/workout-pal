@@ -71,6 +71,10 @@ final class AppContainer {
         AddToRoutineViewModel(exercise: exercise, repository: routines, settings: settings)
     }
 
+    func makeExerciseHistoryViewModel(exerciseID: Int, name: String) -> ExerciseHistoryViewModel {
+        ExerciseHistoryViewModel(exerciseID: exerciseID, exerciseName: name, repository: sessions, settings: settings)
+    }
+
     func makeTrainViewModel() -> TrainViewModel {
         TrainViewModel(repository: routines, catalog: catalog, sync: catalogSync, settings: settings)
     }

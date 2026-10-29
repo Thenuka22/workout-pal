@@ -33,6 +33,13 @@ struct FormattingTests {
         #expect(Formatting.count(2, "person", plural: "people") == "2 people")
     }
 
+    @Test func setsAreSummarised() {
+        let same = [SampleData.set(reps: 8, load: .kilograms(60)), SampleData.set(reps: 8, load: .kilograms(60))]
+        #expect(Formatting.sets(same, units: .kilograms) == "2 × 8 · 60 kg")
+        let mixed = [SampleData.set(reps: 8, load: .bodyweight), SampleData.set(reps: 6, load: .bodyweight)]
+        #expect(Formatting.sets(mixed, units: .kilograms) == "8, 6 reps · Bodyweight")
+    }
+
     @Test func unitSymbols() {
         #expect(UnitPreference.kilograms.symbol == "kg")
         #expect(UnitPreference.pounds.symbol == "lb")

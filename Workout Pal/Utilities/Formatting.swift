@@ -64,6 +64,27 @@ enum Formatting {
         "\(value) \(value == 1 ? singular : plural ?? singular + "s")"
     }
 
+    /// "3 × 8 · 60 kg", or "8, 8, 6 reps · up to 70 kg" when the sets differ.
+    static func sets(_ sets: [WorkoutSet], units: UnitPreference) -> String {
+        let reps = sets.map(\.reps)
+        let repsText: String
+        if let first = reps.first, reps.allSatisfy({ $0 == first }) {
+            repsText = "\(sets.count) × \(first)"
+        } else {
+            repsText = reps.map(String.init).joined(separator: ", ") + " reps"
+        }
+        let loads = sets.map(\.load)
+        let loadText: String
+        if let first = loads.first, loads.allSatisfy({ $0 == first }) {
+            loadText = load(first, units: units)
+        } else if let heaviest = loads.compactMap(\.kilograms).max() {
+            loadText = "up to \(load(.kilograms(heaviest), units: units))"
+        } else {
+            loadText = load(.bodyweight, units: units)
+        }
+        return "\(repsText) · \(loadText)"
+    }
+
     static func steps(_ count: Int) -> String {
         count.formatted(.number)
     }

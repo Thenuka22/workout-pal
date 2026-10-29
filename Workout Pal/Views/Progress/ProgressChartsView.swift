@@ -153,27 +153,23 @@ struct ProgressChartsView: View {
     private var recordsCard: some View {
         if !model.records.isEmpty {
             VStack(alignment: .leading, spacing: AppSpacing.small) {
-                Text("Personal records · all time")
-                    .eyebrow()
-                ForEach(model.records) { record in
-                    HStack(alignment: .firstTextBaseline) {
-                        Image(systemName: "trophy.fill")
-                            .foregroundStyle(AppColors.warning)
-                            .accessibilityHidden(true)
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text(record.exerciseName)
-                                .font(.subheadline.weight(.semibold))
-                                .foregroundStyle(AppColors.textPrimary)
-                            Text("\(record.kind.title) · \(Formatting.date(record.date))")
-                                .font(.caption)
-                                .foregroundStyle(AppColors.textSecondary)
-                        }
-                        Spacer()
-                        Text(model.recordText(record))
+                HStack {
+                    Text("Personal records · all time")
+                        .eyebrow()
+                    Spacer()
+                    NavigationLink {
+                        PersonalRecordsView(records: model.allRecords, units: model.units)
+                    } label: {
+                        Text("See all")
                             .font(.subheadline.weight(.semibold))
-                            .foregroundStyle(AppColors.textPrimary)
+                            .frame(minHeight: 44)
                     }
-                    .accessibilityElement(children: .combine)
+                }
+                ForEach(model.records) { record in
+                    NavigationLink(value: ExerciseOption(id: record.exerciseID, name: record.exerciseName)) {
+                        PersonalRecordRow(record: record, units: model.units)
+                    }
+                    .buttonStyle(.plain)
                 }
             }
             .card()
@@ -196,6 +192,13 @@ struct ProgressChartsView: View {
                 }
                 .pickerStyle(.menu)
                 .tint(AppColors.accent)
+                if let exercise = model.currentExercise {
+                    NavigationLink(value: exercise) {
+                        Text("View history")
+                            .font(.subheadline.weight(.semibold))
+                            .frame(minHeight: 44)
+                    }
+                }
                 let label = model.exerciseChartLabel
                 Chart(model.exerciseChartPoints) { point in
                     LineMark(

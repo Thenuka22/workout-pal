@@ -2,6 +2,7 @@ import SwiftUI
 
 struct ExerciseLibraryView: View {
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+    @Environment(AppContainer.self) private var container
     @State private var model: ExerciseLibraryViewModel
     @State private var selectedItem: CatalogItem?
 
@@ -51,7 +52,7 @@ struct ExerciseLibraryView: View {
                     .frame(width: 380)
                 Divider()
                 if let selectedItem {
-                    ExerciseDetailView(item: selectedItem)
+                    ExerciseDetailView(item: selectedItem, history: historyModel(for: selectedItem))
                         .id(selectedItem.id)
                 } else {
                     ContentUnavailableView(
@@ -66,12 +67,16 @@ struct ExerciseLibraryView: View {
         } else {
             exerciseList
                 .navigationDestination(for: CatalogItem.self) { item in
-                    ExerciseDetailView(item: item)
+                    ExerciseDetailView(item: item, history: historyModel(for: item))
                         .navigationTitle(item.exercise.name)
                         .navigationBarTitleDisplayMode(.inline)
                         .toolbarBackground(AppColors.surface, for: .navigationBar)
                 }
         }
+    }
+
+    private func historyModel(for item: CatalogItem) -> ExerciseHistoryViewModel {
+        container.makeExerciseHistoryViewModel(exerciseID: item.exercise.id, name: item.exercise.name)
     }
 
     private var exerciseList: some View {
