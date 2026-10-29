@@ -1,4 +1,5 @@
 import SwiftUI
+import TipKit
 
 struct RoutineEditorView: View {
     @Environment(\.dismiss) private var dismiss
@@ -43,10 +44,6 @@ struct RoutineEditorView: View {
                     .onDelete { offsets in
                         model.removeExercises(at: offsets)
                     }
-                    if model.draft.exercises.count >= 2 {
-                        TipView(reorderTip)
-                            .tipBackground(AppColors.surface)
-                    }
                     Button {
                         isPickingExercise = true
                     } label: {
@@ -64,7 +61,13 @@ struct RoutineEditorView: View {
                         }
                     }
                 } footer: {
-                    Text("Tap an exercise to change its sets, reps, load and rest. Use Edit to reorder or remove.")
+                    VStack(alignment: .leading, spacing: AppSpacing.small) {
+                        if model.draft.exercises.count >= 2 {
+                            TipView(reorderTip)
+                                .tipBackground(AppColors.surfaceElevated)
+                        }
+                        Text("Tap an exercise to change its sets, reps, load and rest. Use Edit to reorder or remove.")
+                    }
                 }
                 .listRowBackground(AppColors.surfaceElevated)
             }

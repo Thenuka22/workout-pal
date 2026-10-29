@@ -9,7 +9,8 @@ struct ExportViewModelTests {
             sessions: InMemoryWorkoutSessionRepository(sessions),
             activities: InMemoryActivitySessionRepository(activities),
             settings: AppSettings(store: InMemoryPreferencesStore(), ownerID: SampleData.ownerID),
-            now: { SampleData.now }
+            now: { SampleData.now },
+            timeZone: TimeZone(secondsFromGMT: 0) ?? .current
         )
     }
 

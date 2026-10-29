@@ -94,6 +94,7 @@ struct SetRow: View {
             }
             Toggle("BW", isOn: bodyweightBinding)
                 .toggleStyle(.button)
+                .buttonStyle(.borderless)
                 .tint(AppColors.accent)
                 .accessibilityLabel("Bodyweight")
         }

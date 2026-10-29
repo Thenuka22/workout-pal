@@ -5,7 +5,7 @@ enum ShareSummary {
     static func text(for entry: HistoryEntry, units: UnitPreference) -> String {
         switch entry {
         case .workout(let session): workout(session, units: units)
-        case .activity(let activity): activity(activity, units: units)
+        case .activity(let walk): activity(walk, units: units)
         }
     }
 

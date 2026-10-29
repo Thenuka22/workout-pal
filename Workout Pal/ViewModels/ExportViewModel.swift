@@ -16,17 +16,20 @@ final class ExportViewModel {
     private let activities: any ActivitySessionRepository
     private let settings: AppSettings
     private let now: @MainActor () -> Date
+    private let timeZone: TimeZone
 
     init(
         sessions: any WorkoutSessionRepository,
         activities: any ActivitySessionRepository,
         settings: AppSettings,
-        now: @escaping @MainActor () -> Date = { .now }
+        now: @escaping @MainActor () -> Date = { .now },
+        timeZone: TimeZone = .current
     ) {
         self.sessions = sessions
         self.activities = activities
         self.settings = settings
         self.now = now
+        self.timeZone = timeZone
     }
 
     var hasData: Bool {
@@ -46,16 +49,16 @@ final class ExportViewModel {
             let workouts = try await sessions.completedSessions(ownerID: settings.ownerID)
             let walks = try await activities.completedActivities(ownerID: settings.ownerID)
             let units = settings.preferences.units
-            let day = now().formatted(.iso8601.year().month().day())
+            let day = now().formatted(Date.ISO8601FormatStyle(timeZone: timeZone).year().month().day())
             workoutCount = workouts.count
             setCount = workouts.reduce(0) { $0 + $1.completedSetCount }
             activityCount = walks.count
             workoutsFile = workouts.isEmpty
                 ? nil
-                : CSVFile(fileName: "Workout Pal workouts \(day).csv", text: WorkoutCSV.sets(sessions: workouts, units: units))
+                : CSVFile(fileName: "Workout Pal workouts \(day).csv", text: WorkoutCSV.sets(sessions: workouts, units: units, timeZone: timeZone))
             activitiesFile = walks.isEmpty
                 ? nil
-                : CSVFile(fileName: "Workout Pal walks and runs \(day).csv", text: WorkoutCSV.activities(walks, units: units))
+                : CSVFile(fileName: "Workout Pal walks and runs \(day).csv", text: WorkoutCSV.activities(walks, units: units, timeZone: timeZone))
             errorMessage = nil
         } catch {
             errorMessage = error.localizedDescription

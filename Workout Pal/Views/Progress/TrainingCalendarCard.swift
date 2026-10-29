@@ -15,6 +15,7 @@ struct TrainingCalendarCard: View {
                     Image(systemName: "chevron.left")
                         .frame(width: 44, height: 44)
                 }
+                .buttonStyle(.borderless)
                 .accessibilityLabel("Previous month")
                 Spacer()
                 VStack(spacing: 2) {
@@ -33,6 +34,7 @@ struct TrainingCalendarCard: View {
                     Image(systemName: "chevron.right")
                         .frame(width: 44, height: 44)
                 }
+                .buttonStyle(.borderless)
                 .disabled(!model.canShowNextMonth)
                 .accessibilityLabel("Next month")
             }
@@ -70,6 +72,7 @@ struct TrainingCalendarCard: View {
                     Button("Show all") {
                         model.clearSelectedDay()
                     }
+                    .buttonStyle(.borderless)
                     .font(.subheadline.weight(.semibold))
                     .frame(minHeight: 44)
                 }

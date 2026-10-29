@@ -18,22 +18,18 @@ final class RoutineEditorViewModel {
     init(routine: Routine?, routines: any RoutineRepository, settings: AppSettings) {
         self.routines = routines
         self.settings = settings
-        if let routine {
-            draft = routine
-            isNew = false
-        } else {
-            draft = Routine(
-                id: UUID(),
-                ownerID: settings.ownerID,
-                name: "",
-                notes: "",
-                exercises: [],
-                createdAt: .now,
-                updatedAt: .now
-            )
-            isNew = true
-        }
-        original = draft
+        let initial = routine ?? Routine(
+            id: UUID(),
+            ownerID: settings.ownerID,
+            name: "",
+            notes: "",
+            exercises: [],
+            createdAt: .now,
+            updatedAt: .now
+        )
+        isNew = routine == nil
+        draft = initial
+        original = initial
     }
 
     var hasChanges: Bool {

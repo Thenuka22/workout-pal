@@ -1,5 +1,6 @@
 import Foundation
 import SwiftUI
+import TipKit
 
 struct WorkoutSessionView: View {
     private struct CameraTarget: Identifiable {
@@ -11,6 +12,7 @@ struct WorkoutSessionView: View {
 
     @Environment(\.dismiss) private var dismiss
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+    @Environment(\.scenePhase) private var scenePhase
     @Environment(AppContainer.self) private var container
     @State private var model: WorkoutSessionViewModel
     @State private var isConfirmingFinish = false
@@ -49,6 +51,7 @@ struct WorkoutSessionView: View {
                             exerciseRows(exercise, index: index(of: exercise))
                         }
                         .listStyle(.plain)
+                        .environment(\.defaultMinListRowHeight, 0)
                         .scrollDismissesKeyboard(.interactively)
                         .screenBackground()
                     } else {
@@ -67,6 +70,7 @@ struct WorkoutSessionView: View {
                         .plainRow(top: AppSpacing.medium, bottom: AppSpacing.large)
                 }
                 .listStyle(.plain)
+                .environment(\.defaultMinListRowHeight, 0)
                 .scrollDismissesKeyboard(.interactively)
                 .screenBackground()
             }
@@ -151,6 +155,11 @@ struct WorkoutSessionView: View {
         }
         .onAppear {
             model.start()
+        }
+        .onChange(of: scenePhase) { _, phase in
+            if phase == .active {
+                model.sceneBecameActive()
+            }
         }
         .onDisappear {
             model.disappear()

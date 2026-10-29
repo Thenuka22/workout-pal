@@ -157,7 +157,7 @@ final class WorkoutSessionViewModel {
     func start() {
         if !hasCheckedStaleness {
             hasCheckedStaleness = true
-            isAskingAboutStaleSession = session.isStale(at: now())
+            checkForStaleSession()
         }
         loadHistoryIfNeeded()
         persist()
@@ -319,6 +319,10 @@ final class WorkoutSessionViewModel {
         }
     }
 
+    func sceneBecameActive() {
+        checkForStaleSession()
+    }
+
     func adjustRest(by seconds: Int) {
         guard let end = restEndsAt else {
             return
@@ -344,7 +348,7 @@ final class WorkoutSessionViewModel {
     func disappear() {
         restTask?.cancel()
         restTask = nil
-        if notesTask != nil {
+        if notesTask != nil && !isFinishing {
             notesTask?.cancel()
             notesTask = nil
             persist()
@@ -367,6 +371,7 @@ final class WorkoutSessionViewModel {
             return
         }
         isFinishing = true
+        cancelPendingNotesSave()
         skipRest()
         session.pauses = SessionTiming.resuming(session.pauses, at: end)
         session.status = .completed
@@ -400,6 +405,7 @@ final class WorkoutSessionViewModel {
             return
         }
         isFinishing = true
+        cancelPendingNotesSave()
         skipRest()
         let id = session.id
         let previous = saveTask
@@ -413,6 +419,19 @@ final class WorkoutSessionViewModel {
                 self.isFinishing = false
             }
         }
+    }
+
+    private func checkForStaleSession() {
+        guard !isFinishing, !isFinished, session.isStale(at: now()) else {
+            return
+        }
+        isAskingAboutStaleSession = true
+    }
+
+    /// The snapshot being finished or deleted already has the notes.
+    private func cancelPendingNotesSave() {
+        notesTask?.cancel()
+        notesTask = nil
     }
 
     private func loadHistoryIfNeeded() {

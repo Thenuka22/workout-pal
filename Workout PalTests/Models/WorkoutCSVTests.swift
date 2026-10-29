@@ -34,6 +34,7 @@ struct WorkoutCSVTests {
         #expect(WorkoutCSV.escape("Push, pull") == "\"Push, pull\"")
         #expect(WorkoutCSV.escape("The \"big\" day") == "\"The \"\"big\"\" day\"")
         #expect(WorkoutCSV.escape("Plain") == "Plain")
+        #expect(WorkoutCSV.escape("Two\r\nlines") == "\"Two\r\nlines\"")
         let session = SampleData.session(name: "Push, pull")
         let lines = rows(WorkoutCSV.sets(sessions: [session], units: .kilograms, timeZone: utc))
         #expect(lines[1].contains(",\"Push, pull\",Squats,"))

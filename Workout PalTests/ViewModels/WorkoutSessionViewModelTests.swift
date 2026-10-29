@@ -315,6 +315,27 @@ struct WorkoutSessionViewModelTests {
         #expect(saved?.activeSeconds == 600)
     }
 
+    @Test func comingBackHoursLaterAsksToo() {
+        let model = makeModel()
+        model.start()
+        #expect(!model.isAskingAboutStaleSession)
+        clock.advance(by: 4 * 3_600)
+        model.sceneBecameActive()
+        #expect(model.isAskingAboutStaleSession)
+    }
+
+    @Test func notesTypedJustBeforeDiscardDoNotBringTheWorkoutBack() async throws {
+        let model = makeModel()
+        model.start()
+        _ = await eventuallyValue { await repository.stored(id: model.session.id) }
+        model.notes = "Changed my mind"
+        model.discard()
+        #expect(await eventually { model.isDiscarded })
+        model.disappear()
+        try await Task.sleep(for: .milliseconds(700))
+        #expect(await repository.stored(id: model.session.id) == nil)
+    }
+
     @Test func aRecentWorkoutDoesNotAsk() {
         let model = makeModel()
         clock.advance(by: 3_600)
