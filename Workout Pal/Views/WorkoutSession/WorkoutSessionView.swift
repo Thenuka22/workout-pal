@@ -24,7 +24,7 @@ struct WorkoutSessionView: View {
 
     var body: some View {
         if let summary = model.finishSummary {
-            WorkoutSummaryView(summary: summary, units: model.units) {
+            WorkoutSummaryView(summary: summary, units: model.units, shareText: model.shareText) {
                 dismiss()
             }
             .navigationTitle("Workout complete")

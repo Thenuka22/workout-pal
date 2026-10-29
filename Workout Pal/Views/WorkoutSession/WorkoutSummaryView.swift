@@ -3,6 +3,7 @@ import SwiftUI
 struct WorkoutSummaryView: View {
     let summary: WorkoutFinishSummary
     let units: UnitPreference
+    let shareText: String
     let onDone: () -> Void
 
     var body: some View {
@@ -64,10 +65,16 @@ struct WorkoutSummaryView: View {
         }
         .screenBackground()
         .safeAreaInset(edge: .bottom) {
-            Button("Done", action: onDone)
-                .buttonStyle(.primaryAction)
-                .padding(AppSpacing.medium)
-                .background(AppColors.surface)
+            VStack(spacing: AppSpacing.small) {
+                ShareLink(item: shareText) {
+                    Label("Share workout", systemImage: "square.and.arrow.up")
+                }
+                .buttonStyle(.secondaryAction)
+                Button("Done", action: onDone)
+                    .buttonStyle(.primaryAction)
+            }
+            .padding(AppSpacing.medium)
+            .background(AppColors.surface)
         }
     }
 }

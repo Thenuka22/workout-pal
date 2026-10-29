@@ -89,6 +89,10 @@ final class WorkoutSessionViewModel {
         session.exercises.first { $0.id == selectedExerciseID } ?? session.exercises.first
     }
 
+    var shareText: String {
+        ShareSummary.text(for: .workout(session), units: units)
+    }
+
     var hasCompletedSets: Bool {
         session.completedSetCount > 0
     }

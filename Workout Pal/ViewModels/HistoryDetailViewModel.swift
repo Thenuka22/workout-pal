@@ -32,6 +32,10 @@ final class HistoryDetailViewModel {
         settings.preferences.units
     }
 
+    var shareText: String {
+        ShareSummary.text(for: entry, units: units)
+    }
+
     var exportStatus: HealthExportStatus {
         switch entry {
         case .workout(let session): session.healthExport

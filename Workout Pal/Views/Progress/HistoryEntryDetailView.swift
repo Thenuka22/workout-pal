@@ -26,11 +26,13 @@ struct HistoryEntryDetailView: View {
             case .workout(let session):
                 WorkoutDetailView(session: session, units: model.units) {
                     exportCard
+                    shareButton
                     deleteButton
                 }
             case .activity(let activity):
                 ActivityDetailView(activity: activity, units: model.units) {
                     exportCard
+                    shareButton
                     deleteButton
                 }
             }
@@ -59,6 +61,13 @@ struct HistoryEntryDetailView: View {
                 }
             }
         }
+    }
+
+    private var shareButton: some View {
+        ShareLink(item: model.shareText) {
+            Label("Share", systemImage: "square.and.arrow.up")
+        }
+        .buttonStyle(.secondaryAction)
     }
 
     private var deleteButton: some View {
