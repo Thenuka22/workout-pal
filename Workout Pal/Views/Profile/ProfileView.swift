@@ -6,6 +6,7 @@ struct ProfileView: View {
     @State private var isEditingHeight = false
     @State private var isConfirmingSignOut = false
     @State private var isConfirmingDelete = false
+    @State private var isExporting = false
 
     init(model: ProfileViewModel) {
         _model = State(initialValue: model)
@@ -38,6 +39,7 @@ struct ProfileView: View {
                     section("Security & privacy") {
                         securityCard
                         privacyCard
+                        exportCard
                     }
                     accountCard
                     aboutCard
@@ -52,6 +54,9 @@ struct ProfileView: View {
         .toolbar(.hidden, for: .navigationBar)
         .sheet(isPresented: $isEditingHeight) {
             heightSheet
+        }
+        .sheet(isPresented: $isExporting) {
+            ExportView(model: container.makeExportViewModel())
         }
         .confirmationDialog(model.signOutTitle, isPresented: $isConfirmingSignOut, titleVisibility: .visible) {
             Button(model.signOutTitle, role: .destructive) {
@@ -260,6 +265,20 @@ struct ProfileView: View {
                 title: "Privacy & permissions",
                 subtitle: "Camera, motion, Apple Health and notifications",
                 symbolName: "hand.raised.fill"
+            )
+            .card()
+        }
+        .buttonStyle(.plain)
+    }
+
+    private var exportCard: some View {
+        Button {
+            isExporting = true
+        } label: {
+            LinkRow(
+                title: "Export your data",
+                subtitle: "Workouts, walks and runs as CSV files",
+                symbolName: "square.and.arrow.up"
             )
             .card()
         }

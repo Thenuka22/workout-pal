@@ -117,6 +117,10 @@ final class AppContainer {
         ProfileViewModel(settings: settings, account: account, deviceAuth: deviceAuth, permissions: permissions)
     }
 
+    func makeExportViewModel() -> ExportViewModel {
+        ExportViewModel(sessions: sessions, activities: activities, settings: settings)
+    }
+
     func makeHistoryDetailViewModel(entry: HistoryEntry) -> HistoryDetailViewModel {
         HistoryDetailViewModel(
             entry: entry,
